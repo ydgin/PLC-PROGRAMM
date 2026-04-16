@@ -5,72 +5,71 @@
 }
 
 body {
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-    background: #f0f4f8;
-    padding: 16px;
-    color: #1e293b;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 20px 16px 40px;
+    color: #1c1c1e;
 }
 
 .container {
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
 }
 
-/* Картки */
+/* Картки в стилі прикладу */
 .card {
     background: white;
-    border-radius: 24px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    padding: 18px;
-    margin-bottom: 20px;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    padding: 18px 16px;
+    margin-bottom: 16px;
+    transition: all 0.2s;
 }
 
 .header-card {
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    background: linear-gradient(145deg, #1a3c6e, #0f2b4f);
     color: white;
     text-align: center;
+    border-radius: 24px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
 }
 
 .header-card h1 {
-    font-size: 1.6rem;
-    margin-bottom: 8px;
+    font-size: 1.7rem;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
 }
 
 .header-card .sub {
-    font-size: 0.85rem;
-    opacity: 0.9;
+    font-size: 0.8rem;
+    opacity: 0.85;
+    font-weight: 400;
 }
 
-h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-h3 {
-    font-size: 1.2rem;
-    margin-bottom: 12px;
-}
-
-/* Поля */
+/* Заголовки полів */
 .field-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
     flex-wrap: wrap;
-    gap: 10px;
     margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .field-label {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: #1e293b;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #2c3e66;
+    letter-spacing: -0.2px;
 }
 
 .digits-hint {
     font-size: 0.7rem;
     font-weight: normal;
-    color: #64748b;
+    color: #8e9aaf;
+    margin-left: 6px;
 }
 
 .input-with-scan {
@@ -82,90 +81,103 @@ h3 {
 .field-input {
     flex: 1;
     padding: 14px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
     font-size: 1rem;
-    background: white;
+    background: #fafcff;
     transition: 0.2s;
+    font-family: monospace;
 }
 
 .field-input:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
-}
-
-.btn-clear-input {
-    background: #f1f5f9;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 40px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: #64748b;
-    transition: 0.2s;
-}
-
-.btn-clear-input:hover {
-    background: #e2e8f0;
-    color: #ef4444;
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
 }
 
 /* Кнопки */
 .btn-scan {
     background: #eef2ff;
     border: none;
-    padding: 8px 14px;
+    padding: 10px 18px;
     border-radius: 40px;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 500;
     color: #2563eb;
     cursor: pointer;
     transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .btn-scan:active {
     transform: scale(0.96);
+    background: #e0e7ff;
 }
 
 .btn-primary {
-    background: #2563eb;
+    background: #2c3e66;
     color: white;
     border: none;
-    padding: 14px 20px;
-    border-radius: 40px;
+    padding: 16px 20px;
+    border-radius: 44px;
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     width: 100%;
     transition: 0.2s;
+    letter-spacing: -0.2px;
 }
 
 .btn-primary:active {
-    background: #1d4ed8;
+    background: #1f2f4f;
     transform: scale(0.98);
 }
 
 .btn-outline {
     background: white;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #d4dcec;
     padding: 8px 14px;
     border-radius: 40px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
+    color: #2c3e66;
 }
 
 .btn-danger {
-    background: #fee2e2;
+    background: #fff0f0;
     border: none;
     padding: 8px 14px;
     border-radius: 40px;
     font-size: 0.75rem;
-    font-weight: 600;
-    color: #b91c1c;
+    font-weight: 500;
+    color: #d14545;
     cursor: pointer;
+}
+
+.btn-clear-input {
+    background: #f1f3f8;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #7c8ba0;
+    transition: 0.2s;
+}
+
+.btn-clear-input:active {
+    background: #e2e6ef;
+    color: #d14545;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
 }
 
 .btn-block {
@@ -175,29 +187,30 @@ h3 {
 /* Сканер */
 .scanner-container {
     width: 100%;
-    margin-top: 12px;
-    background: #111827;
-    border-radius: 20px;
+    margin-top: 14px;
+    background: #1a1a1a;
+    border-radius: 24px;
     overflow: hidden;
 }
 
 .scan-result {
     font-size: 0.75rem;
-    padding: 8px 12px;
-    border-radius: 16px;
+    padding: 10px 14px;
+    border-radius: 20px;
     margin-top: 10px;
     background: #e6f7e6;
-    color: #166534;
+    color: #1f7840;
 }
 
 .hidden {
     display: none;
 }
 
-/* Таблиця (журнал) */
+/* Таблиця журналу */
 .table-wrapper {
     overflow-x: auto;
     margin-top: 12px;
+    border-radius: 20px;
 }
 
 table {
@@ -208,54 +221,71 @@ table {
 
 th, td {
     text-align: left;
-    padding: 10px 8px;
-    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 8px;
+    border-bottom: 1px solid #edf2f7;
 }
 
 th {
-    background: #f8fafc;
+    background: #f8fafd;
     font-weight: 600;
-    color: #0f172a;
+    color: #2c3e66;
+    font-size: 0.75rem;
+}
+
+.badge {
+    background: #eef2ff;
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    display: inline-block;
+    color: #2563eb;
 }
 
 .empty-row td {
     text-align: center;
-    color: #94a3b8;
-    padding: 24px;
+    color: #9aa8bf;
+    padding: 32px;
 }
 
 .action-icon {
     cursor: pointer;
     font-size: 1.1rem;
     margin: 0 4px;
-    opacity: 0.7;
+    opacity: 0.6;
+    transition: 0.1s;
 }
 
-.action-icon:hover {
+.action-icon:active {
     opacity: 1;
+    transform: scale(1.1);
 }
 
-/* Додаткове */
 .flex-between {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
+}
+
+h3 {
+    font-size: 1.2rem;
+    color: #2c3e66;
 }
 
 footer {
     text-align: center;
     font-size: 0.7rem;
-    color: #64748b;
-    margin-top: 20px;
+    color: #8e9aaf;
+    margin-top: 24px;
     padding-bottom: 20px;
 }
 
 /* Адаптація під телефони */
-@media (max-width: 600px) {
+@media (max-width: 550px) {
     body {
-        padding: 10px;
+        padding: 12px;
     }
     
     .card {
@@ -266,6 +296,7 @@ footer {
     .field-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 6px;
     }
     
     .btn-scan {
@@ -282,21 +313,11 @@ footer {
         padding: 8px 4px;
     }
     
-    h1 {
-        font-size: 1.3rem;
+    .header-card h1 {
+        font-size: 1.4rem;
     }
     
-    .btn-primary {
-        padding: 12px 16px;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-    .container {
-        max-width: 90%;
-    }
-    
-    .field-input {
-        font-size: 1rem;
+    .btn-group {
+        margin-top: 8px;
     }
 }
