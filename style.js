@@ -1,6 +1,6 @@
 // === Змінні ===
-let workLog = []; // Журнал виконаних робіт
-let activeScanners = {}; // Зберігає активні сканери
+let workLog = [];
+let activeScanners = {};
 
 // === Завантаження даних з localStorage ===
 function loadData() {
@@ -26,7 +26,7 @@ function generateId() {
     return Date.now() + Math.random() * 10000;
 }
 
-// === Отримання поточної дати (локальний формат) ===
+// === Отримання поточної дати ===
 function getCurrentDate() {
     return new Date().toLocaleString('uk-UA', {
         year: 'numeric',
@@ -45,7 +45,6 @@ function saveRecord() {
     const sealCover = document.getElementById('sealCoverNumber').value.trim();
     const sealOpto = document.getElementById('sealOptoNumber').value.trim();
     
-    // Валідація
     if (!account) {
         alert('❌ Введіть або відскануйте особовий рахунок (10 цифр)');
         return;
@@ -80,10 +79,9 @@ function saveRecord() {
         sealOpto: sealOpto
     };
     
-    workLog.unshift(newRecord); // нові записи зверху
+    workLog.unshift(newRecord);
     saveToLocal();
     
-    // Очищення форми
     document.getElementById('accountNumber').value = '';
     document.getElementById('meterNumber').value = '';
     document.getElementById('sealCoverNumber').value = '';
@@ -169,9 +167,7 @@ function escapeHtml(str) {
 // === Функції сканування QR ===
 async function startScanner(targetId, scannerContainerId, resultDivId, inputFieldId, expectedDigits = null) {
     const container = document.getElementById(scannerContainerId);
-    const startBtn = event.target;
     
-    // Закриваємо інші сканери
     for (let key in activeScanners) {
         if (activeScanners[key]) {
             try { await activeScanners[key].stop(); } catch(e) {}
@@ -179,7 +175,6 @@ async function startScanner(targetId, scannerContainerId, resultDivId, inputFiel
         }
     }
     
-    // Ховаємо всі контейнери
     document.querySelectorAll('.scanner-container').forEach(c => c.classList.add('hidden'));
     
     container.classList.remove('hidden');
@@ -192,10 +187,8 @@ async function startScanner(targetId, scannerContainerId, resultDivId, inputFiel
             { facingMode: "environment" },
             { fps: 10, qrbox: { width: 250, height: 250 } },
             (decodedText) => {
-                // Успішне сканування
                 let result = decodedText.trim();
                 
-                // Якщо очікується певна кількість цифр - фільтруємо
                 if (expectedDigits && expectedDigits > 0) {
                     const digitsOnly = result.replace(/\D/g, '');
                     if (digitsOnly.length === expectedDigits) {
@@ -213,7 +206,6 @@ async function startScanner(targetId, scannerContainerId, resultDivId, inputFiel
                     document.getElementById(resultDivId).classList.add('hidden');
                 }, 3000);
                 
-                // Зупиняємо сканер
                 html5QrCode.stop().catch(e => console.log);
                 delete activeScanners[scannerContainerId];
                 container.classList.add('hidden');
@@ -228,21 +220,55 @@ async function startScanner(targetId, scannerContainerId, resultDivId, inputFiel
     }
 }
 
-// === Очищення поля вводу ===
 function clearInput(fieldId) {
     document.getElementById(fieldId).value = '';
 }
+
+// === PWA: Реєстрація Service Worker ===
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/meter-counter/sw.js')
+        .then(reg => console.log('SW registered:', reg))
+        .catch(err => console.log('SW error:', err));
+}
+
+// === Підказка про встановлення на телефон ===
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    const installBtn = document.createElement('button');
+    installBtn.id = 'installAppBtn';
+    installBtn.innerText = '📲 Встановити додаток';
+    installBtn.className = 'btn btn-primary';
+    installBtn.style.marginTop = '10px';
+    
+    const container = document.querySelector('.header-card');
+    if (!document.getElementById('installAppBtn') && container) {
+        container.appendChild(installBtn);
+        
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('Користувач встановив додаток');
+                }
+                deferredPrompt = null;
+                installBtn.remove();
+            }
+        });
+    }
+});
 
 // === Ініціалізація подій ===
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     
-    // Кнопка збереження
     document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
     document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
     document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
     
-    // Кнопки сканування
     document.querySelectorAll('.btn-scan').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -279,7 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Кнопки очищення полів
     document.querySelectorAll('.btn-clear-input').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const target = btn.getAttribute('data-target');
@@ -289,18 +314,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Обмеження вводу для особового рахунку (тільки цифри, макс 10)
     document.getElementById('accountNumber').addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '').slice(0, 10);
     });
     
-    // Обмеження вводу для лічильника (тільки цифри, макс 8)
     document.getElementById('meterNumber').addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '').slice(0, 8);
     });
 });
 
-// Зупинка сканерів при виході
 window.addEventListener('beforeunload', async () => {
     for (let key in activeScanners) {
         if (activeScanners[key]) {
