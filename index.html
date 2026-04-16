@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>PLS INVEST | Облік лічильників та пломб</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <!-- Заголовок -->
+    <div class="card header-card">
+        <h1>🏦 PLS ІНВЕСТ ПРОГРАМА</h1>
+        <div class="sub">Мобільний облік встановлення лічильників та пломб</div>
+    </div>
+
+    <!-- 1. Особовий рахунок (10 цифр) -->
+    <div class="card">
+        <div class="field-header">
+            <label class="field-label">📋 ОСОБОВИЙ РАХУНОК <span class="digits-hint">(10 цифр)</span></label>
+            <button type="button" class="btn-scan" data-target="account" data-digits="10">📷 Скан QR</button>
+        </div>
+        <div class="input-with-scan">
+            <input type="text" id="accountNumber" class="field-input" placeholder="Введіть або відскануйте 10 цифр" maxlength="10" inputmode="numeric">
+            <button type="button" class="btn-clear-input" data-target="accountNumber">✖</button>
+        </div>
+        <div id="accountScanner" class="scanner-container hidden"></div>
+        <div id="accountResult" class="scan-result hidden"></div>
+    </div>
+
+    <!-- 2. Встановлений лічильник (8 цифр) -->
+    <div class="card">
+        <div class="field-header">
+            <label class="field-label">🔢 ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК <span class="digits-hint">(8 цифр)</span></label>
+            <button type="button" class="btn-scan" data-target="meter" data-digits="8">📷 Скан QR</button>
+        </div>
+        <div class="input-with-scan">
+            <input type="text" id="meterNumber" class="field-input" placeholder="Введіть або відскануйте 8 цифр" maxlength="8" inputmode="numeric">
+            <button type="button" class="btn-clear-input" data-target="meterNumber">✖</button>
+        </div>
+        <div id="meterScanner" class="scanner-container hidden"></div>
+        <div id="meterResult" class="scan-result hidden"></div>
+    </div>
+
+    <!-- 3. Пломба клемної кришки -->
+    <div class="card">
+        <div class="field-header">
+            <label class="field-label">🔒 ПЛОМБА КЛЕМНОЇ КРИШКИ</label>
+            <button type="button" class="btn-scan" data-target="sealCover" data-digits="0">📷 Скан QR</button>
+        </div>
+        <div class="input-with-scan">
+            <input type="text" id="sealCoverNumber" class="field-input" placeholder="Введіть або відскануйте номер пломби">
+            <button type="button" class="btn-clear-input" data-target="sealCoverNumber">✖</button>
+        </div>
+        <div id="sealCoverScanner" class="scanner-container hidden"></div>
+        <div id="sealCoverResult" class="scan-result hidden"></div>
+    </div>
+
+    <!-- 4. Пломба оптопорту -->
+    <div class="card">
+        <div class="field-header">
+            <label class="field-label">🔒 ПЛОМБА ОПТОПОРТУ</label>
+            <button type="button" class="btn-scan" data-target="sealOpto" data-digits="0">📷 Скан QR</button>
+        </div>
+        <div class="input-with-scan">
+            <input type="text" id="sealOptoNumber" class="field-input" placeholder="Введіть або відскануйте номер пломби">
+            <button type="button" class="btn-clear-input" data-target="sealOptoNumber">✖</button>
+        </div>
+        <div id="sealOptoScanner" class="scanner-container hidden"></div>
+        <div id="sealOptoResult" class="scan-result hidden"></div>
+    </div>
+
+    <!-- Кнопка збереження -->
+    <div class="card">
+        <button id="saveRecordBtn" class="btn btn-primary btn-block">💾 ЗБЕРЕГТИ В ЖУРНАЛ</button>
+    </div>
+
+    <!-- Журнал виконаних робіт -->
+    <div class="card">
+        <div class="flex-between">
+            <h3>📋 ЖУРНАЛ ВИКОНАНИХ РОБІТ</h3>
+            <div>
+                <button id="exportLogBtn" class="btn btn-outline btn-sm">📎 Експорт CSV</button>
+                <button id="clearLogBtn" class="btn btn-danger btn-sm">🗑️ Очистити</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="logTable">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Особовий рахунок</th>
+                        <th>Лічильник</th>
+                        <th>Пломба (кришка)</th>
+                        <th>Пломба (оптопорт)</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody id="logBody">
+                    <tr class="empty-row"><td colspan="6">Немає записів. Додайте нову роботу</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <footer>📱 Адаптовано для всіх пристроїв | Дані зберігаються в браузері</footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
