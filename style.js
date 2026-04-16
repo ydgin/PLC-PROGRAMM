@@ -12,6 +12,20 @@ function loadData() {
             workLog = [];
         }
     }
+    if (workLog.length === 0) {
+        // Демо-дані для прикладу
+        workLog = [
+            {
+                id: Date.now(),
+                date: new Date().toLocaleString('uk-UA'),
+                account: '1234567890',
+                meter: '12345678',
+                sealCover: 'PL7890',
+                sealOpto: 'OP5566'
+            }
+        ];
+        saveToLocal();
+    }
     renderLog();
 }
 
@@ -137,7 +151,7 @@ function exportToCSV() {
 // === Відображення журналу ===
 function renderLog() {
     const tbody = document.getElementById('logBody');
-    if (workLog.length === 0) {
+    if (!workLog.length) {
         tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Немає записів. Додайте нову роботу</td></tr>';
         return;
     }
@@ -164,10 +178,11 @@ function escapeHtml(str) {
     });
 }
 
-// === Функції сканування QR ===
+// === Функції сканування QR (виправлена) ===
 async function startScanner(targetId, scannerContainerId, resultDivId, inputFieldId, expectedDigits = null) {
     const container = document.getElementById(scannerContainerId);
     
+    // Зупиняємо всі активні сканери
     for (let key in activeScanners) {
         if (activeScanners[key]) {
             try { await activeScanners[key].stop(); } catch(e) {}
@@ -175,100 +190,89 @@ async function startScanner(targetId, scannerContainerId, resultDivId, inputFiel
         }
     }
     
+    // Ховаємо всі контейнери сканерів
     document.querySelectorAll('.scanner-container').forEach(c => c.classList.add('hidden'));
     
+    // Показуємо потрібний контейнер
     container.classList.remove('hidden');
+    
+    // Перевіряємо підтримку камери
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Ваш браузер не підтримує доступ до камери. Використовуйте Chrome, Safari або Firefox.');
+        container.classList.add('hidden');
+        return;
+    }
     
     const html5QrCode = new Html5Qrcode(scannerContainerId);
     activeScanners[scannerContainerId] = html5QrCode;
     
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+    };
+    
     try {
         await html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
+            { facingMode: "environment" }, // задня камера
+            config,
             (decodedText) => {
+                // Успішне сканування
                 let result = decodedText.trim();
                 
+                // Якщо очікується певна кількість цифр - фільтруємо
                 if (expectedDigits && expectedDigits > 0) {
                     const digitsOnly = result.replace(/\D/g, '');
                     if (digitsOnly.length === expectedDigits) {
                         result = digitsOnly;
                     } else if (digitsOnly.length > expectedDigits) {
                         result = digitsOnly.substring(0, expectedDigits);
+                    } else if (digitsOnly.length > 0) {
+                        // Якщо менше цифр, але щось є - використовуємо
+                        result = digitsOnly;
                     }
                 }
                 
+                // Заповнюємо поле
                 document.getElementById(inputFieldId).value = result;
-                document.getElementById(resultDivId).innerHTML = `✅ Відскановано: ${result}`;
-                document.getElementById(resultDivId).classList.remove('hidden');
+                
+                // Показуємо результат
+                const resultDiv = document.getElementById(resultDivId);
+                resultDiv.innerHTML = `✅ Відскановано: ${result}`;
+                resultDiv.classList.remove('hidden');
                 
                 setTimeout(() => {
-                    document.getElementById(resultDivId).classList.add('hidden');
+                    resultDiv.classList.add('hidden');
                 }, 3000);
                 
-                html5QrCode.stop().catch(e => console.log);
+                // Зупиняємо сканер
+                html5QrCode.stop().catch(e => console.log('Stop error:', e));
                 delete activeScanners[scannerContainerId];
                 container.classList.add('hidden');
             },
-            (errorMessage) => {}
+            (errorMessage) => {
+                // Ігноруємо помилки сканування (це нормально)
+                // console.log('Scan error:', errorMessage);
+            }
         );
     } catch(err) {
-        console.error(err);
-        alert('Не вдалося запустити камеру. Перевірте дозволи.');
+        console.error('Scanner start error:', err);
+        alert('❌ Не вдалося запустити камеру.\n\nПеревірте:\n1. Дозвіл на камеру в браузері\n2. HTTPS з'єднання\n3. Спробуйте перезавантажити сторінку');
         container.classList.add('hidden');
         delete activeScanners[scannerContainerId];
     }
 }
 
-function clearInput(fieldId) {
-    document.getElementById(fieldId).value = '';
-}
-
-// === PWA: Реєстрація Service Worker ===
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/meter-counter/sw.js')
-        .then(reg => console.log('SW registered:', reg))
-        .catch(err => console.log('SW error:', err));
-}
-
-// === Підказка про встановлення на телефон ===
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    const installBtn = document.createElement('button');
-    installBtn.id = 'installAppBtn';
-    installBtn.innerText = '📲 Встановити додаток';
-    installBtn.className = 'btn btn-primary';
-    installBtn.style.marginTop = '10px';
-    
-    const container = document.querySelector('.header-card');
-    if (!document.getElementById('installAppBtn') && container) {
-        container.appendChild(installBtn);
-        
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    console.log('Користувач встановив додаток');
-                }
-                deferredPrompt = null;
-                installBtn.remove();
-            }
-        });
-    }
-});
-
 // === Ініціалізація подій ===
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     
+    // Кнопки
     document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
     document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
     document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
     
+    // Кнопки сканування
     document.querySelectorAll('.btn-scan').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -305,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
+    // Кнопки очищення полів
     document.querySelectorAll('.btn-clear-input').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const target = btn.getAttribute('data-target');
@@ -314,19 +319,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    document.getElementById('accountNumber').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    });
+    // Валідація полів (тільки цифри)
+    const accountInput = document.getElementById('accountNumber');
+    if (accountInput) {
+        accountInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
     
-    document.getElementById('meterNumber').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 8);
-    });
+    const meterInput = document.getElementById('meterNumber');
+    if (meterInput) {
+        meterInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 8);
+        });
+    }
 });
 
+// Зупинка сканерів при виході
 window.addEventListener('beforeunload', async () => {
     for (let key in activeScanners) {
         if (activeScanners[key]) {
             try { await activeScanners[key].stop(); } catch(e) {}
+        }
+    }
+});
+
+// === PWA: Реєстрація Service Worker ===
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/PLC-PROGRAMM/sw.js')
+        .then(reg => console.log('SW registered:', reg))
+        .catch(err => console.log('SW error:', err));
+}
+
+// === Підказка про встановлення на телефон ===
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Перевіряємо чи кнопка вже існує
+    if (!document.getElementById('installAppBtn')) {
+        const installBtn = document.createElement('button');
+        installBtn.id = 'installAppBtn';
+        installBtn.innerText = '📲 Встановити додаток';
+        installBtn.className = 'btn btn-primary';
+        installBtn.style.marginTop = '10px';
+        
+        const container = document.querySelector('.header-card');
+        if (container) {
+            container.appendChild(installBtn);
+            
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        console.log('Користувач встановив додаток');
+                    }
+                    deferredPrompt = null;
+                    installBtn.remove();
+                }
+            });
         }
     }
 });
