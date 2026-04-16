@@ -1,0 +1,238 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: #f0f4f8;
+    padding: 20px 16px 40px;
+    color: #1e293b;
+}
+
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* карточки */
+.card {
+    background: white;
+    border-radius: 28px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    padding: 20px 18px;
+    margin-bottom: 24px;
+    transition: all 0.2s;
+}
+
+.header-card {
+    background: linear-gradient(120deg, #ffffff, #fefce8);
+}
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sub {
+    color: #475569;
+    font-size: 0.85rem;
+    border-left: 3px solid #3b82f6;
+    padding-left: 12px;
+    margin: 8px 0 4px;
+}
+
+.qr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.btn {
+    background: #eef2ff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 60px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1e40af;
+    cursor: pointer;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 4px 8px rgba(37,99,235,0.2);
+}
+
+.btn-primary:active { 
+    background: #1d4ed8; 
+    transform: scale(0.97);
+}
+
+.btn-outline {
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #1f2937;
+}
+
+.btn-danger {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+/* поле ввода */
+.input-group {
+    margin-bottom: 16px;
+}
+
+label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: block;
+    margin-bottom: 6px;
+    color: #334155;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    font-size: 1rem;
+    background: #ffffff;
+    transition: 0.2s;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* таблица */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+    background: #f8fafc;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.badge {
+    background: #dbeafe;
+    padding: 4px 10px;
+    border-radius: 40px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.action-icon {
+    cursor: pointer;
+    margin: 0 4px;
+    font-size: 1.2rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.action-icon:hover {
+    opacity: 1;
+}
+
+.empty-row td {
+    text-align: center;
+    color: #94a3b8;
+    padding: 32px;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* qr reader */
+#reader-container {
+    width: 100%;
+    background: #111827;
+    border-radius: 28px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.hidden {
+    display: none;
+}
+
+.info-note {
+    font-size: 0.75rem;
+    background: #f1f5f9;
+    padding: 8px 12px;
+    border-radius: 20px;
+    margin-top: 12px;
+    color: #334155;
+}
+
+.scan-result-info {
+    background: #e6f7e6;
+}
+
+@media (max-width: 500px) {
+    .card { 
+        padding: 16px; 
+    }
+    th, td { 
+        font-size: 0.75rem; 
+        padding: 8px 4px; 
+    }
+    .btn { 
+        padding: 8px 14px; 
+    }
+}
+
+footer {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 20px;
+}
