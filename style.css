@@ -333,3 +333,34 @@ footer {
         padding: 4px 8px;
     }
 }
+/* Стилі для сканера */
+.scanner-container {
+    position: relative;
+    width: 100%;
+    margin-top: 14px;
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.scanner-video {
+    width: 100%;
+    height: auto;
+    transform: scaleX(-1);
+}
+
+.scanner-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 8px;
+    font-size: 12px;
+}
+
+.scanner-canvas {
+    display: none;
+}
