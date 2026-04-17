@@ -16,6 +16,118 @@ body {
     margin: 0 auto;
 }
 
+.hidden {
+    display: none !important;
+}
+
+/* PIN-код екран */
+.pin-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #1a3c6e, #0f2b4f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.pin-card {
+    background: white;
+    border-radius: 48px;
+    padding: 40px 30px;
+    text-align: center;
+    width: 320px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.pin-lock {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.pin-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e3c72;
+    margin-bottom: 8px;
+}
+
+.pin-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.pin-display {
+    font-size: 32px;
+    letter-spacing: 12px;
+    font-family: monospace;
+    background: #f1f5f9;
+    padding: 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.pin-error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-bottom: 16px;
+    min-height: 30px;
+}
+
+.pin-keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pin-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.pin-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 70px;
+    border: none;
+    font-size: 28px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #1e3c72;
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+.pin-btn:active {
+    transform: scale(0.95);
+    background: #e2e8f0;
+}
+
+.pin-clear {
+    background: #fee2e2;
+    color: #ef4444;
+    font-size: 20px;
+}
+
+.pin-enter {
+    background: #22c55e;
+    color: white;
+}
+
+.pin-forgot {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #3b82f6;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 /* Картки */
 .card {
     background: white;
@@ -23,7 +135,6 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     padding: 20px 18px;
     margin-bottom: 16px;
-    transition: all 0.2s;
 }
 
 .header-card {
@@ -31,23 +142,19 @@ body {
     color: white;
     text-align: center;
     border-radius: 28px;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 }
 
 .header-card h1 {
     font-size: 1.8rem;
     font-weight: 700;
-    letter-spacing: -0.3px;
     margin-bottom: 8px;
 }
 
 .header-card .sub {
     font-size: 0.9rem;
     opacity: 0.9;
-    font-weight: 400;
 }
 
-/* Заголовки полів */
 .field-label {
     font-weight: 700;
     font-size: 1.05rem;
@@ -77,30 +184,23 @@ body {
     border-radius: 18px;
     font-size: 1rem;
     background: #fafcff;
-    transition: 0.2s;
     font-family: monospace;
 }
 
 .field-input:focus {
     outline: none;
     border-color: #3b82f6;
-    background: white;
     box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
 }
 
-.field-input::placeholder {
-    font-size: 0.9rem;
-    color: #a0aec0;
-}
-
-/* Кнопка сканера на всю ширину */
+/* Кнопка сканера */
 .btn-scan-full {
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: white;
     border: none;
-    padding: 16px 20px;
+    padding: 14px 20px;
     border-radius: 44px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
     width: 100%;
@@ -108,56 +208,47 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+    gap: 8px;
 }
 
 .btn-scan-full:active {
     transform: scale(0.97);
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
 }
 
-/* Кнопка очищення поля */
-.btn-clear-input {
-    background: #f1f3f8;
+/* Кругла кнопка збереження */
+.save-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-round-save {
+    width: 80px;
+    height: 80px;
+    border-radius: 80px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
     border: none;
-    width: 46px;
-    height: 46px;
-    border-radius: 46px;
-    font-size: 1.3rem;
     cursor: pointer;
-    color: #7c8ba0;
-    transition: 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.btn-clear-input:active {
-    background: #e2e6ef;
-    color: #d14545;
-}
-
-/* Головна кнопка збереження */
-.btn-primary {
-    background: linear-gradient(135deg, #2c3e66, #1f2f4f);
-    color: white;
-    border: none;
-    padding: 18px 22px;
-    border-radius: 44px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
+    box-shadow: 0 6px 20px rgba(34,197,94,0.4);
     transition: 0.2s;
-    letter-spacing: -0.2px;
 }
 
-.btn-primary:active {
-    transform: scale(0.98);
+.btn-round-save:active {
+    transform: scale(0.95);
 }
 
-/* Кнопки в журналі */
+.save-label {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #166534;
+}
+
+/* Кнопки журналу */
 .btn-outline {
     background: white;
     border: 1px solid #d4dcec;
@@ -183,6 +274,7 @@ body {
 .btn-group {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 /* Сканер */
@@ -196,19 +288,15 @@ body {
 
 .scan-result {
     font-size: 0.85rem;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 20px;
-    margin-top: 12px;
+    margin-top: 10px;
     background: #d4edda;
     color: #155724;
     font-weight: 500;
 }
 
-.hidden {
-    display: none;
-}
-
-/* Таблиця журналу */
+/* Таблиця */
 .table-wrapper {
     overflow-x: auto;
     margin-top: 14px;
@@ -218,7 +306,7 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 th, td {
@@ -231,14 +319,14 @@ th {
     background: #f8fafd;
     font-weight: 700;
     color: #2c3e66;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
 .badge {
     background: #eef2ff;
-    padding: 6px 10px;
+    padding: 4px 10px;
     border-radius: 30px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     display: inline-block;
     color: #2563eb;
@@ -253,7 +341,6 @@ th {
 .action-icon {
     cursor: pointer;
     font-size: 1.2rem;
-    margin: 0 4px;
     opacity: 0.6;
     transition: 0.1s;
 }
@@ -285,39 +372,38 @@ footer {
     padding-bottom: 20px;
 }
 
-/* Адаптація під телефони */
+/* Адаптація */
 @media (max-width: 550px) {
     body {
         padding: 12px;
-        background: #FFD700;
     }
     
     .card {
         padding: 16px;
-        margin-bottom: 14px;
     }
     
     .field-input {
-        padding: 14px 14px;
-        font-size: 0.95rem;
+        padding: 12px 14px;
+        font-size: 0.9rem;
     }
     
     th, td {
         font-size: 0.7rem;
-        padding: 10px 6px;
+        padding: 8px 4px;
     }
     
     .header-card h1 {
         font-size: 1.4rem;
     }
     
-    .btn-scan-full {
-        padding: 14px 18px;
-        font-size: 0.95rem;
+    .pin-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
     }
     
-    .btn-primary {
-        padding: 16px 20px;
-        font-size: 1rem;
+    .pin-card {
+        width: 280px;
+        padding: 30px 20px;
     }
 }
