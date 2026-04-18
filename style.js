@@ -195,7 +195,8 @@ function escapeHtml(str) {
 }
 
 // === QR СКАНЕР ===
-async function startScanner(scannerId, inputId, resultId, expectedDigits) {
+// === QR СКАНЕР ===
+async function startScanner(scannerId, inputId, resultId, expectedDigits, fieldType = null) {
     if (activeScanner) {
         try { await activeScanner.stop(); } catch(e) {}
         activeScanner = null;
@@ -215,15 +216,42 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits) {
             { fps: 10, qrbox: { width: 300, height: 300 } },
             (decodedText) => {
                 let result = decodedText.trim();
-                if (expectedDigits > 0) {
+                
+                // Спеціальна обробка для лічильника (видаляємо перші 2 та останні 2 цифри)
+                if (fieldType === 'meter') {
+                    // Залишаємо тільки цифри
+                    const digitsOnly = result.replace(/\D/g, '');
+                    if (digitsOnly.length >= 12) {
+                        // Беремо з 3-ї по (довжина-2) цифру
+                        result = digitsOnly.substring(2, digitsOnly.length - 2);
+                    } else if (digitsOnly.length === 12) {
+                        result = digitsOnly.substring(2, 10);
+                    } else if (digitsOnly.length === 10) {
+                        result = digitsOnly.substring(2, 10);
+                    } else if (digitsOnly.length === 8) {
+                        result = digitsOnly;
+                    } else {
+                        result = digitsOnly;
+                    }
+                    // Обмежуємо до 8 цифр
+                    if (result.length > 8) {
+                        result = result.substring(0, 8);
+                    }
+                } else if (expectedDigits > 0) {
                     const digitsOnly = result.replace(/\D/g, '');
                     if (digitsOnly.length >= expectedDigits) {
                         result = digitsOnly.substring(0, expectedDigits);
                     }
                 }
+                
                 document.getElementById(inputId).value = result;
                 const resultDiv = document.getElementById(resultId);
-                resultDiv.innerHTML = `✅ Відскановано: ${result}`;
+                
+                if (fieldType === 'meter') {
+                    resultDiv.innerHTML = `✅ Відскановано лічильник: ${result} (видалено перші 2 та останні 2 цифри)`;
+                } else {
+                    resultDiv.innerHTML = `✅ Відскановано: ${result}`;
+                }
                 resultDiv.classList.remove('hidden');
                 setTimeout(() => resultDiv.classList.add('hidden'), 3000);
                 
@@ -239,42 +267,7 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits) {
         container.classList.add('hidden');
         activeScanner = null;
     }
-}
-
-// === Ініціалізація ===
-document.addEventListener('DOMContentLoaded', () => {
-    // PIN-код події
-    document.querySelectorAll('.pin-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const num = btn.getAttribute('data-num');
-            if (num === 'clear') {
-                pinClear();
-            } else if (num === 'enter') {
-                checkPinEnter();
-            } else {
-                pinAddDigit(num);
-            }
-        });
-    });
-    document.getElementById('pinForgot').addEventListener('click', resetPin);
-    
-    // Головні кнопки
-    document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
-    document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
-    document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
-    
-    // Сканери
-    document.getElementById('scanAccountBtn').addEventListener('click', () => 
-        startScanner('accountScanner', 'accountNumber', 'accountResult', 10));
-    document.getElementById('scanMeterBtn').addEventListener('click', () => 
-        startScanner('meterScanner', 'meterNumber', 'meterResult', 8));
-    document.getElementById('scanSealCoverBtn').addEventListener('click', () => 
-        startScanner('sealCoverScanner', 'sealCoverNumber', 'sealCoverResult', 0));
-    document.getElementById('scanSealOptoBtn').addEventListener('click', () => 
-        startScanner('sealOptoScanner', 'sealOptoNumber', 'sealOptoResult', 0));
-    document.getElementById('scanAddressBtn').addEventListener('click', () => 
-        startScanner('addressScanner', 'address', 'addressResult', 0));
-    
+}    
     // Валідація полів
     document.getElementById('accountNumber').addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '').slice(0, 10);
