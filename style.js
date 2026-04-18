@@ -1,31 +1,26 @@
-// === Змінні ===
+// === ГЛОБАЛЬНІ ЗМІННІ ===
 let workLog = [];
 let activeScanner = null;
-let pinCode = "3268";  // Новий PIN-код
+let pinCode = "3268";
 let enteredPin = "";
 
-// === PIN-код логіка ===
+// === PIN-код функції ===
 function updatePinDisplay() {
     const display = document.getElementById('pinDisplay');
     let masked = "";
-    for (let i = 0; i < enteredPin.length; i++) {
-        masked += "●";
-    }
-    for (let i = enteredPin.length; i < 4; i++) {
-        masked += "●";
-    }
-    display.innerText = masked;
+    for (let i = 0; i < enteredPin.length; i++) masked += "●";
+    for (let i = enteredPin.length; i < 4; i++) masked += "●";
+    if (display) display.innerText = masked;
 }
 
-function pinAddDigit(digit) {
+function pinAddNum(num) {
     if (enteredPin.length < 4) {
-        enteredPin += digit;
+        enteredPin += num.toString();
         updatePinDisplay();
         document.getElementById('pinError').innerText = '';
-        
         if (enteredPin.length === 4) {
             if (enteredPin === pinCode) {
-                document.getElementById('pinScreen').classList.add('hidden');
+                document.getElementById('pinScreen').style.display = 'none';
                 document.getElementById('mainApp').classList.remove('hidden');
                 loadData();
             } else {
@@ -43,23 +38,23 @@ function pinClear() {
     document.getElementById('pinError').innerText = '';
 }
 
-function checkPinEnter() {
-    if (enteredPin.length === 4) {
-        if (enteredPin === pinCode) {
-            document.getElementById('pinScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            loadData();
-        } else {
-            document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
-            enteredPin = "";
-            updatePinDisplay();
-        }
-    } else {
+function pinCheck() {
+    if (enteredPin.length !== 4) {
         document.getElementById('pinError').innerText = '❌ Введіть 4 цифри';
+        return;
+    }
+    if (enteredPin === pinCode) {
+        document.getElementById('pinScreen').style.display = 'none';
+        document.getElementById('mainApp').classList.remove('hidden');
+        loadData();
+    } else {
+        document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
+        enteredPin = "";
+        updatePinDisplay();
     }
 }
 
-function resetPin() {
+function pinReset() {
     pinCode = "3268";
     enteredPin = "";
     updatePinDisplay();
@@ -152,14 +147,14 @@ function deleteRecord(id) {
 }
 
 function clearAllLog() {
-    if (confirm('⚠️ ВИДАЛИТИ ВСІ ЗАПИСИ? Це не можна скасувати.')) {
+    if (confirm('⚠️ ВИДАЛИТИ ВСІ ЗАПИСИ?')) {
         workLog = [];
         saveToLocal();
     }
 }
 
 function exportToCSV() {
-    if (!workLog.length) { alert('Немає даних для експорту'); return; }
+    if (!workLog.length) { alert('Немає даних'); return; }
     const headers = ['Дата', 'Особовий рахунок', 'Лічильник', 'Пломба (кришка)', 'Пломба (оптопорт)', 'Адреса'];
     const rows = workLog.map(r => [`"${r.date}"`,`"${r.account}"`,`"${r.meter}"`,`"${r.sealCover}"`,`"${r.sealOpto}"`,`"${r.address}"`]);
     const csv = headers.join(',') + '\n' + rows.map(r=>r.join(',')).join('\n');
@@ -174,7 +169,7 @@ function exportToCSV() {
 function renderLog() {
     const tbody = document.getElementById('logBody');
     if (!workLog.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Немає записів. Додайте нову роботу</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Немає записів</td></tr>';
         return;
     }
     tbody.innerHTML = '';
@@ -194,9 +189,129 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
 }
 
+// === Функція для фото з камери (OCR) ===
+async function openCamera(inputId, expectedDigits) {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const container = document.createElement('div');
+    
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.backgroundColor = 'black';
+    container.style.zIndex = '2000';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'center';
+    
+    video.style.width = '100%';
+    video.style.maxHeight = '70%';
+    video.style.objectFit = 'cover';
+    
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.gap = '20px';
+    buttonContainer.style.marginTop = '20px';
+    
+    const captureBtn = document.createElement('button');
+    captureBtn.innerText = '📸 Зробити фото';
+    captureBtn.style.padding = '15px 30px';
+    captureBtn.style.fontSize = '18px';
+    captureBtn.style.borderRadius = '40px';
+    captureBtn.style.border = 'none';
+    captureBtn.style.backgroundColor = '#22c55e';
+    captureBtn.style.color = 'white';
+    captureBtn.style.fontWeight = 'bold';
+    captureBtn.style.cursor = 'pointer';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.innerText = '❌ Закрити';
+    closeBtn.style.padding = '15px 30px';
+    closeBtn.style.fontSize = '18px';
+    closeBtn.style.borderRadius = '40px';
+    closeBtn.style.border = 'none';
+    closeBtn.style.backgroundColor = '#ef4444';
+    closeBtn.style.color = 'white';
+    closeBtn.style.fontWeight = 'bold';
+    closeBtn.style.cursor = 'pointer';
+    
+    buttonContainer.appendChild(captureBtn);
+    buttonContainer.appendChild(closeBtn);
+    container.appendChild(video);
+    container.appendChild(buttonContainer);
+    document.body.appendChild(container);
+    
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        await video.play();
+        
+        captureBtn.onclick = async () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            stream.getTracks().forEach(track => track.stop());
+            container.remove();
+            
+            const resultDivId = inputId === 'accountNumber' ? 'accountResult' :
+                                inputId === 'meterNumber' ? 'meterResult' :
+                                inputId === 'sealCoverNumber' ? 'sealCoverResult' :
+                                inputId === 'sealOptoNumber' ? 'sealOptoResult' : 'addressResult';
+            const resultDiv = document.getElementById(resultDivId);
+            
+            try {
+                const { data: { text } } = await Tesseract.recognize(canvas.toDataURL(), 'ukr+eng', {
+                    logger: m => console.log(m)
+                });
+                
+                let recognizedText = text.trim();
+                let finalResult = recognizedText;
+                
+                if (expectedDigits > 0) {
+                    const digitsOnly = recognizedText.replace(/\D/g, '');
+                    if (digitsOnly.length >= expectedDigits) {
+                        finalResult = digitsOnly.substring(0, expectedDigits);
+                    } else {
+                        finalResult = digitsOnly;
+                    }
+                }
+                
+                document.getElementById(inputId).value = finalResult;
+                if (resultDiv) {
+                    resultDiv.innerHTML = `✅ Розпізнано: ${finalResult}`;
+                    resultDiv.classList.remove('hidden');
+                    setTimeout(() => resultDiv.classList.add('hidden'), 3000);
+                }
+            } catch(err) {
+                console.error('OCR помилка:', err);
+                alert('❌ Не вдалося розпізнати текст. Спробуйте ще раз.');
+                if (resultDiv) {
+                    resultDiv.innerHTML = '❌ Помилка розпізнавання';
+                    resultDiv.classList.remove('hidden');
+                    setTimeout(() => resultDiv.classList.add('hidden'), 2000);
+                }
+            }
+        };
+        
+        closeBtn.onclick = () => {
+            stream.getTracks().forEach(track => track.stop());
+            container.remove();
+        };
+        
+    } catch(err) {
+        console.error(err);
+        alert('❌ Не вдалося відкрити камеру');
+        container.remove();
+    }
+}
+
 // === QR СКАНЕР ===
-// === QR СКАНЕР ===
-async function startScanner(scannerId, inputId, resultId, expectedDigits, fieldType = null) {
+async function startQrScanner(scannerId, inputId, resultId, expectedDigits) {
     if (activeScanner) {
         try { await activeScanner.stop(); } catch(e) {}
         activeScanner = null;
@@ -217,27 +332,7 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits, fieldT
             (decodedText) => {
                 let result = decodedText.trim();
                 
-                // Спеціальна обробка для лічильника (видаляємо перші 2 та останні 2 цифри)
-                if (fieldType === 'meter') {
-                    // Залишаємо тільки цифри
-                    const digitsOnly = result.replace(/\D/g, '');
-                    if (digitsOnly.length >= 12) {
-                        // Беремо з 3-ї по (довжина-2) цифру
-                        result = digitsOnly.substring(2, digitsOnly.length - 2);
-                    } else if (digitsOnly.length === 12) {
-                        result = digitsOnly.substring(2, 10);
-                    } else if (digitsOnly.length === 10) {
-                        result = digitsOnly.substring(2, 10);
-                    } else if (digitsOnly.length === 8) {
-                        result = digitsOnly;
-                    } else {
-                        result = digitsOnly;
-                    }
-                    // Обмежуємо до 8 цифр
-                    if (result.length > 8) {
-                        result = result.substring(0, 8);
-                    }
-                } else if (expectedDigits > 0) {
+                if (expectedDigits > 0) {
                     const digitsOnly = result.replace(/\D/g, '');
                     if (digitsOnly.length >= expectedDigits) {
                         result = digitsOnly.substring(0, expectedDigits);
@@ -246,12 +341,7 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits, fieldT
                 
                 document.getElementById(inputId).value = result;
                 const resultDiv = document.getElementById(resultId);
-                
-                if (fieldType === 'meter') {
-                    resultDiv.innerHTML = `✅ Відскановано лічильник: ${result} (видалено перші 2 та останні 2 цифри)`;
-                } else {
-                    resultDiv.innerHTML = `✅ Відскановано: ${result}`;
-                }
+                resultDiv.innerHTML = `✅ Відскановано: ${result}`;
                 resultDiv.classList.remove('hidden');
                 setTimeout(() => resultDiv.classList.add('hidden'), 3000);
                 
@@ -267,18 +357,49 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits, fieldT
         container.classList.add('hidden');
         activeScanner = null;
     }
-}    
-    // Валідація полів
-    document.getElementById('accountNumber').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    });
-    document.getElementById('meterNumber').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 8);
-    });
-});
+}
 
-window.addEventListener('beforeunload', async () => {
-    if (activeScanner) {
-        try { await activeScanner.stop(); } catch(e) {}
-    }
-});
+// === Ініціалізація ===
+document.addEventListener('DOMContentLoaded', () => {
+    // PIN-код події
+    document.querySelectorAll('.pin-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const num = btn.getAttribute('data-num');
+            if (num === 'clear') pinClear();
+            else if (num === 'enter') pinCheck();
+            else pinAddNum(num);
+        });
+    });
+    document.getElementById('pinForgot').addEventListener('click', pinReset);
+    
+    // Головні кнопки
+    document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
+    document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
+    document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
+    
+    // Кнопки камери (фото)
+    document.querySelectorAll('.btn-camera').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-target');
+            const digits = parseInt(btn.getAttribute('data-digits')) || 0;
+            openCamera(target, digits);
+        });
+    });
+    
+    // Кнопки QR сканера
+    document.querySelectorAll('.btn-scan-qr').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-target');
+            const digits = parseInt(btn.getAttribute('data-digits')) || 0;
+            
+            let scannerId, resultId;
+            switch(target) {
+                case 'accountNumber':
+                    scannerId = 'accountScanner';
+                    resultId = 'accountResult';
+                    break;
+                case 'meterNumber':
+                    scannerId = 'meterScanner';
+                    resultId = 'meterResult';
+                    break;
+                case 'seal
