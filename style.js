@@ -1,35 +1,33 @@
-// === Змінні ===
+// === ГЛОБАЛЬНІ ЗМІННІ ===
 let workLog = [];
 let activeScanner = null;
-let pinCode = "3268";  // Новий PIN-код
+let pinCode = "3268";
 let enteredPin = "";
 
-// === PIN-код логіка ===
+// === PIN-код функції ===
 function updatePinDisplay() {
     const display = document.getElementById('pinDisplay');
+    if (!display) return;
     let masked = "";
-    for (let i = 0; i < enteredPin.length; i++) {
-        masked += "●";
-    }
-    for (let i = enteredPin.length; i < 4; i++) {
-        masked += "●";
-    }
+    for (let i = 0; i < enteredPin.length; i++) masked += "●";
+    for (let i = enteredPin.length; i < 4; i++) masked += "●";
     display.innerText = masked;
 }
 
-function pinAddDigit(digit) {
+function pinAddNum(num) {
     if (enteredPin.length < 4) {
-        enteredPin += digit;
+        enteredPin += num.toString();
         updatePinDisplay();
-        document.getElementById('pinError').innerText = '';
+        const errorDiv = document.getElementById('pinError');
+        if (errorDiv) errorDiv.innerText = '';
         
         if (enteredPin.length === 4) {
             if (enteredPin === pinCode) {
-                document.getElementById('pinScreen').classList.add('hidden');
+                document.getElementById('pinScreen').style.display = 'none';
                 document.getElementById('mainApp').classList.remove('hidden');
                 loadData();
             } else {
-                document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
+                if (errorDiv) errorDiv.innerText = '❌ Невірний PIN-код';
                 enteredPin = "";
                 updatePinDisplay();
             }
@@ -40,33 +38,37 @@ function pinAddDigit(digit) {
 function pinClear() {
     enteredPin = "";
     updatePinDisplay();
-    document.getElementById('pinError').innerText = '';
+    const errorDiv = document.getElementById('pinError');
+    if (errorDiv) errorDiv.innerText = '';
 }
 
-function checkPinEnter() {
-    if (enteredPin.length === 4) {
-        if (enteredPin === pinCode) {
-            document.getElementById('pinScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            loadData();
-        } else {
-            document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
-            enteredPin = "";
-            updatePinDisplay();
-        }
+function pinCheck() {
+    if (enteredPin.length !== 4) {
+        const errorDiv = document.getElementById('pinError');
+        if (errorDiv) errorDiv.innerText = '❌ Введіть 4 цифри';
+        return;
+    }
+    if (enteredPin === pinCode) {
+        document.getElementById('pinScreen').style.display = 'none';
+        document.getElementById('mainApp').classList.remove('hidden');
+        loadData();
     } else {
-        document.getElementById('pinError').innerText = '❌ Введіть 4 цифри';
+        const errorDiv = document.getElementById('pinError');
+        if (errorDiv) errorDiv.innerText = '❌ Невірний PIN-код';
+        enteredPin = "";
+        updatePinDisplay();
     }
 }
 
-function resetPin() {
+function pinReset() {
     pinCode = "3268";
     enteredPin = "";
     updatePinDisplay();
-    document.getElementById('pinError').innerText = '✅ PIN скинуто на 3268';
-    setTimeout(() => {
-        document.getElementById('pinError').innerText = '';
-    }, 2000);
+    const errorDiv = document.getElementById('pinError');
+    if (errorDiv) {
+        errorDiv.innerText = '✅ PIN скинуто на 3268';
+        setTimeout(() => { errorDiv.innerText = ''; }, 2000);
+    }
 }
 
 // === Основна логіка ===
@@ -76,6 +78,18 @@ function loadData() {
         try {
             workLog = JSON.parse(stored);
         } catch(e) { workLog = []; }
+    }
+    if (workLog.length === 0) {
+        workLog = [{
+            id: Date.now(),
+            date: new Date().toLocaleString('uk-UA'),
+            account: '1234567890',
+            meter: '21113352',
+            sealCover: 'PL7890',
+            sealOpto: 'OP5566',
+            address: 'вул. Тестова, 1'
+        }];
+        saveToLocal();
     }
     renderLog();
 }
@@ -152,27 +166,31 @@ function deleteRecord(id) {
 }
 
 function clearAllLog() {
-    if (confirm('⚠️ ВИДАЛИТИ ВСІ ЗАПИСИ? Це не можна скасувати.')) {
+    if (confirm('⚠️ ВИДАЛИТИ ВСІ ЗАПИСИ?')) {
         workLog = [];
         saveToLocal();
     }
 }
 
 function exportToCSV() {
-    if (!workLog.length) { alert('Немає даних для експорту'); return; }
+    if (!workLog.length) { alert('Немає даних'); return; }
     const headers = ['Дата', 'Особовий рахунок', 'Лічильник', 'Пломба (кришка)', 'Пломба (оптопорт)', 'Адреса'];
-    const rows = workLog.map(r => [`"${r.date}"`,`"${r.account}"`,`"${r.meter}"`,`"${r.sealCover}"`,`"${r.sealOpto}"`,`"${r.address}"`]);
-    const csv = headers.join(',') + '\n' + rows.map(r=>r.join(',')).join('\n');
-    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+    const rows = workLog.map(r => [
+        `"${r.date}"`, `"${r.account}"`, `"${r.meter}"`,
+        `"${r.sealCover}"`, `"${r.sealOpto}"`, `"${r.address}"`
+    ]);
+    const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `pls_${new Date().toISOString().slice(0,19)}.csv`;
+    link.download = `pls_${new Date().toISOString().slice(0, 19)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
 }
 
 function renderLog() {
     const tbody = document.getElementById('logBody');
+    if (!tbody) return;
     if (!workLog.length) {
         tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Немає записів. Додайте нову роботу</td></tr>';
         return;
@@ -195,7 +213,7 @@ function escapeHtml(str) {
 }
 
 // === QR СКАНЕР ===
-async function startScanner(scannerId, inputId, resultId, expectedDigits) {
+async function startQrScanner(scannerId, inputId, resultId, expectedDigits) {
     if (activeScanner) {
         try { await activeScanner.stop(); } catch(e) {}
         activeScanner = null;
@@ -204,6 +222,7 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits) {
     document.querySelectorAll('.scanner-container').forEach(c => c.classList.add('hidden'));
     
     const container = document.getElementById(scannerId);
+    if (!container) return;
     container.classList.remove('hidden');
     
     const html5QrCode = new Html5Qrcode(scannerId);
@@ -215,17 +234,21 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits) {
             { fps: 10, qrbox: { width: 300, height: 300 } },
             (decodedText) => {
                 let result = decodedText.trim();
+                
                 if (expectedDigits > 0) {
                     const digitsOnly = result.replace(/\D/g, '');
                     if (digitsOnly.length >= expectedDigits) {
                         result = digitsOnly.substring(0, expectedDigits);
                     }
                 }
+                
                 document.getElementById(inputId).value = result;
                 const resultDiv = document.getElementById(resultId);
-                resultDiv.innerHTML = `✅ Відскановано: ${result}`;
-                resultDiv.classList.remove('hidden');
-                setTimeout(() => resultDiv.classList.add('hidden'), 3000);
+                if (resultDiv) {
+                    resultDiv.innerHTML = `✅ Відскановано: ${result}`;
+                    resultDiv.classList.remove('hidden');
+                    setTimeout(() => resultDiv.classList.add('hidden'), 3000);
+                }
                 
                 html5QrCode.stop().catch(e => console.log);
                 activeScanner = null;
@@ -242,38 +265,59 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits) {
 }
 
 // === Ініціалізація ===
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     // PIN-код події
     document.querySelectorAll('.pin-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const num = btn.getAttribute('data-num');
-            if (num === 'clear') {
-                pinClear();
-            } else if (num === 'enter') {
-                checkPinEnter();
-            } else {
-                pinAddDigit(num);
-            }
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const num = this.getAttribute('data-num');
+            if (num === 'clear') pinClear();
+            else if (num === 'enter') pinCheck();
+            else pinAddNum(num);
         });
     });
-    document.getElementById('pinForgot').addEventListener('click', resetPin);
+    
+    document.getElementById('pinForgot').addEventListener('click', pinReset);
     
     // Головні кнопки
     document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
     document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
     document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
     
-    // Сканери
-    document.getElementById('scanAccountBtn').addEventListener('click', () => 
-        startScanner('accountScanner', 'accountNumber', 'accountResult', 10));
-    document.getElementById('scanMeterBtn').addEventListener('click', () => 
-        startScanner('meterScanner', 'meterNumber', 'meterResult', 8));
-    document.getElementById('scanSealCoverBtn').addEventListener('click', () => 
-        startScanner('sealCoverScanner', 'sealCoverNumber', 'sealCoverResult', 0));
-    document.getElementById('scanSealOptoBtn').addEventListener('click', () => 
-        startScanner('sealOptoScanner', 'sealOptoNumber', 'sealOptoResult', 0));
-    document.getElementById('scanAddressBtn').addEventListener('click', () => 
-        startScanner('addressScanner', 'address', 'addressResult', 0));
+    // Кнопки QR сканера
+    document.querySelectorAll('.btn-scan-qr').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            const digits = parseInt(this.getAttribute('data-digits')) || 0;
+            
+            let scannerId, resultId;
+            switch(target) {
+                case 'accountNumber':
+                    scannerId = 'accountScanner';
+                    resultId = 'accountResult';
+                    break;
+                case 'meterNumber':
+                    scannerId = 'meterScanner';
+                    resultId = 'meterResult';
+                    break;
+                case 'sealCoverNumber':
+                    scannerId = 'sealCoverScanner';
+                    resultId = 'sealCoverResult';
+                    break;
+                case 'sealOptoNumber':
+                    scannerId = 'sealOptoScanner';
+                    resultId = 'sealOptoResult';
+                    break;
+                case 'address':
+                    scannerId = 'addressScanner';
+                    resultId = 'addressResult';
+                    break;
+                default: return;
+            }
+            startQrScanner(scannerId, target, resultId, digits);
+        });
+    });
     
     // Валідація полів
     document.getElementById('accountNumber').addEventListener('input', function(e) {
