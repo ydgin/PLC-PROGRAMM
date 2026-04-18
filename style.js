@@ -4,17 +4,13 @@ let activeScanner = null;
 let pinCode = "3268";
 let enteredPin = "";
 
-// === PIN-код функції (виправлені) ===
+// === PIN-код функції ===
 function updatePinDisplay() {
     const display = document.getElementById('pinDisplay');
     if (!display) return;
     let masked = "";
-    for (let i = 0; i < enteredPin.length; i++) {
-        masked += "●";
-    }
-    for (let i = enteredPin.length; i < 4; i++) {
-        masked += "●";
-    }
+    for (let i = 0; i < enteredPin.length; i++) masked += "●";
+    for (let i = enteredPin.length; i < 4; i++) masked += "●";
     display.innerText = masked;
 }
 
@@ -25,17 +21,12 @@ function pinAddNum(num) {
         const errorDiv = document.getElementById('pinError');
         if (errorDiv) errorDiv.innerText = '';
         
-        // Автоматична перевірка після введення 4 цифр
         if (enteredPin.length === 4) {
             if (enteredPin === pinCode) {
-                // Правильний PIN
-                const pinScreen = document.getElementById('pinScreen');
-                const mainApp = document.getElementById('mainApp');
-                if (pinScreen) pinScreen.style.display = 'none';
-                if (mainApp) mainApp.classList.remove('hidden');
+                document.getElementById('pinScreen').style.display = 'none';
+                document.getElementById('mainApp').classList.remove('hidden');
                 loadData();
             } else {
-                const errorDiv = document.getElementById('pinError');
                 if (errorDiv) errorDiv.innerText = '❌ Невірний PIN-код';
                 enteredPin = "";
                 updatePinDisplay();
@@ -58,10 +49,8 @@ function pinCheck() {
         return;
     }
     if (enteredPin === pinCode) {
-        const pinScreen = document.getElementById('pinScreen');
-        const mainApp = document.getElementById('mainApp');
-        if (pinScreen) pinScreen.style.display = 'none';
-        if (mainApp) mainApp.classList.remove('hidden');
+        document.getElementById('pinScreen').style.display = 'none';
+        document.getElementById('mainApp').classList.remove('hidden');
         loadData();
     } else {
         const errorDiv = document.getElementById('pinError');
@@ -78,9 +67,7 @@ function pinReset() {
     const errorDiv = document.getElementById('pinError');
     if (errorDiv) {
         errorDiv.innerText = '✅ PIN скинуто на 3268';
-        setTimeout(() => {
-            errorDiv.innerText = '';
-        }, 2000);
+        setTimeout(() => { errorDiv.innerText = ''; }, 2000);
     }
 }
 
@@ -90,12 +77,9 @@ function loadData() {
     if (stored) {
         try {
             workLog = JSON.parse(stored);
-        } catch(e) { 
-            workLog = []; 
-        }
+        } catch(e) { workLog = []; }
     }
     if (workLog.length === 0) {
-        // Демо-дані
         workLog = [{
             id: Date.now(),
             date: new Date().toLocaleString('uk-UA'),
@@ -115,18 +99,12 @@ function saveToLocal() {
     renderLog();
 }
 
-function generateId() { 
-    return Date.now() + Math.random() * 10000; 
-}
+function generateId() { return Date.now() + Math.random() * 10000; }
 
 function getCurrentDate() {
     return new Date().toLocaleString('uk-UA', {
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit',
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit'
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
     });
 }
 
@@ -142,7 +120,7 @@ function saveRecord() {
         return;
     }
     if (!meter || meter.length !== 8 || !/^\d+$/.test(meter)) {
-        alert('❌ Введіть 8 цифр лічильника (наприклад: 21113352)');
+        alert('❌ Введіть 8 цифр лічильника');
         return;
     }
     if (!sealCover) {
@@ -195,18 +173,11 @@ function clearAllLog() {
 }
 
 function exportToCSV() {
-    if (!workLog.length) { 
-        alert('Немає даних для експорту'); 
-        return; 
-    }
+    if (!workLog.length) { alert('Немає даних'); return; }
     const headers = ['Дата', 'Особовий рахунок', 'Лічильник', 'Пломба (кришка)', 'Пломба (оптопорт)', 'Адреса'];
     const rows = workLog.map(r => [
-        `"${r.date}"`,
-        `"${r.account}"`, 
-        `"${r.meter}"`,
-        `"${r.sealCover}"`, 
-        `"${r.sealOpto}"`, 
-        `"${r.address}"`
+        `"${r.date}"`, `"${r.account}"`, `"${r.meter}"`,
+        `"${r.sealCover}"`, `"${r.sealOpto}"`, `"${r.address}"`
     ]);
     const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv' });
@@ -238,135 +209,7 @@ function renderLog() {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-// === Функція для фото з камери (OCR) ===
-async function openCamera(inputId, expectedDigits) {
-    const video = document.createElement('video');
-    const canvas = document.createElement('canvas');
-    const container = document.createElement('div');
-    
-    container.style.position = 'fixed';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.backgroundColor = 'black';
-    container.style.zIndex = '2000';
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.alignItems = 'center';
-    container.style.justifyContent = 'center';
-    
-    video.style.width = '100%';
-    video.style.maxHeight = '70%';
-    video.style.objectFit = 'cover';
-    
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.gap = '20px';
-    buttonContainer.style.marginTop = '20px';
-    
-    const captureBtn = document.createElement('button');
-    captureBtn.innerText = '📸 Зробити фото';
-    captureBtn.style.padding = '15px 30px';
-    captureBtn.style.fontSize = '18px';
-    captureBtn.style.borderRadius = '40px';
-    captureBtn.style.border = 'none';
-    captureBtn.style.backgroundColor = '#22c55e';
-    captureBtn.style.color = 'white';
-    captureBtn.style.fontWeight = 'bold';
-    captureBtn.style.cursor = 'pointer';
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.innerText = '❌ Закрити';
-    closeBtn.style.padding = '15px 30px';
-    closeBtn.style.fontSize = '18px';
-    closeBtn.style.borderRadius = '40px';
-    closeBtn.style.border = 'none';
-    closeBtn.style.backgroundColor = '#ef4444';
-    closeBtn.style.color = 'white';
-    closeBtn.style.fontWeight = 'bold';
-    closeBtn.style.cursor = 'pointer';
-    
-    buttonContainer.appendChild(captureBtn);
-    buttonContainer.appendChild(closeBtn);
-    container.appendChild(video);
-    container.appendChild(buttonContainer);
-    document.body.appendChild(container);
-    
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        video.srcObject = stream;
-        await video.play();
-        
-        captureBtn.onclick = async () => {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            stream.getTracks().forEach(track => track.stop());
-            container.remove();
-            
-            let resultDivId = 'accountResult';
-            if (inputId === 'meterNumber') resultDivId = 'meterResult';
-            else if (inputId === 'sealCoverNumber') resultDivId = 'sealCoverResult';
-            else if (inputId === 'sealOptoNumber') resultDivId = 'sealOptoResult';
-            else if (inputId === 'address') resultDivId = 'addressResult';
-            
-            const resultDiv = document.getElementById(resultDivId);
-            
-            try {
-                const { data: { text } } = await Tesseract.recognize(canvas.toDataURL(), 'ukr+eng', {
-                    logger: m => console.log(m)
-                });
-                
-                let recognizedText = text.trim();
-                let finalResult = recognizedText;
-                
-                if (expectedDigits > 0) {
-                    const digitsOnly = recognizedText.replace(/\D/g, '');
-                    if (digitsOnly.length >= expectedDigits) {
-                        finalResult = digitsOnly.substring(0, expectedDigits);
-                    } else {
-                        finalResult = digitsOnly;
-                    }
-                }
-                
-                document.getElementById(inputId).value = finalResult;
-                if (resultDiv) {
-                    resultDiv.innerHTML = `✅ Розпізнано: ${finalResult}`;
-                    resultDiv.classList.remove('hidden');
-                    setTimeout(() => resultDiv.classList.add('hidden'), 3000);
-                }
-            } catch(err) {
-                console.error('OCR помилка:', err);
-                alert('❌ Не вдалося розпізнати текст. Спробуйте ще раз.');
-                if (resultDiv) {
-                    resultDiv.innerHTML = '❌ Помилка розпізнавання';
-                    resultDiv.classList.remove('hidden');
-                    setTimeout(() => resultDiv.classList.add('hidden'), 2000);
-                }
-            }
-        };
-        
-        closeBtn.onclick = () => {
-            stream.getTracks().forEach(track => track.stop());
-            container.remove();
-        };
-        
-    } catch(err) {
-        console.error(err);
-        alert('❌ Не вдалося відкрити камеру');
-        container.remove();
-    }
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
 }
 
 // === QR СКАНЕР ===
@@ -423,66 +266,30 @@ async function startQrScanner(scannerId, inputId, resultId, expectedDigits) {
 
 // === Ініціалізація ===
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Додаток завантажено');
-    
     // PIN-код події
-    const pinButtons = document.querySelectorAll('.pin-btn');
-    console.log('Знайдено кнопок PIN:', pinButtons.length);
-    
-    pinButtons.forEach(btn => {
+    document.querySelectorAll('.pin-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             const num = this.getAttribute('data-num');
-            console.log('Натиснуто кнопку:', num);
-            if (num === 'clear') {
-                pinClear();
-            } else if (num === 'enter') {
-                pinCheck();
-            } else {
-                pinAddNum(num);
-            }
+            if (num === 'clear') pinClear();
+            else if (num === 'enter') pinCheck();
+            else pinAddNum(num);
         });
     });
     
-    const pinForgot = document.getElementById('pinForgot');
-    if (pinForgot) {
-        pinForgot.addEventListener('click', pinReset);
-    }
+    document.getElementById('pinForgot').addEventListener('click', pinReset);
     
     // Головні кнопки
-    const saveBtn = document.getElementById('saveRecordBtn');
-    if (saveBtn) saveBtn.addEventListener('click', saveRecord);
-    
-    const exportBtn = document.getElementById('exportLogBtn');
-    if (exportBtn) exportBtn.addEventListener('click', exportToCSV);
-    
-    const clearBtn = document.getElementById('clearLogBtn');
-    if (clearBtn) clearBtn.addEventListener('click', clearAllLog);
-    
-    // Кнопки камери (фото)
-    const cameraBtns = document.querySelectorAll('.btn-camera');
-    console.log('Знайдено кнопок камери:', cameraBtns.length);
-    
-    cameraBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = this.getAttribute('data-target');
-            const digits = parseInt(this.getAttribute('data-digits')) || 0;
-            console.log('Відкриття камери для:', target);
-            openCamera(target, digits);
-        });
-    });
+    document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
+    document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
+    document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
     
     // Кнопки QR сканера
-    const qrBtns = document.querySelectorAll('.btn-scan-qr');
-    console.log('Знайдено кнопок QR:', qrBtns.length);
-    
-    qrBtns.forEach(btn => {
+    document.querySelectorAll('.btn-scan-qr').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             const target = this.getAttribute('data-target');
             const digits = parseInt(this.getAttribute('data-digits')) || 0;
-            console.log('Запуск QR сканера для:', target);
             
             let scannerId, resultId;
             switch(target) {
@@ -513,19 +320,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Валідація полів
-    const accountInput = document.getElementById('accountNumber');
-    if (accountInput) {
-        accountInput.addEventListener('input', function(e) {
-            this.value = this.value.replace(/\D/g, '').slice(0, 10);
-        });
-    }
-    
-    const meterInput = document.getElementById('meterNumber');
-    if (meterInput) {
-        meterInput.addEventListener('input', function(e) {
-            this.value = this.value.replace(/\D/g, '').slice(0, 8);
-        });
-    }
+    document.getElementById('accountNumber').addEventListener('input', function(e) {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
+    document.getElementById('meterNumber').addEventListener('input', function(e) {
+        this.value = this.value.replace(/\D/g, '').slice(0, 8);
+    });
 });
 
 window.addEventListener('beforeunload', async () => {
