@@ -61,10 +61,11 @@
         <!-- 1. Особовий рахунок -->
         <div class="card">
             <label class="field-label">📋 ОСОБОВИЙ РАХУНОК <span class="digits-hint">(10 цифр)</span></label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="accountNumber" class="field-input" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
+                <button class="btn-camera" data-target="accountNumber" data-digits="10">📷</button>
+                <button class="btn-scan-qr" data-target="accountNumber" data-digits="10">📱</button>
             </div>
-            <button type="button" id="scanAccountBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="accountScanner" class="scanner-container hidden"></div>
             <div id="accountResult" class="scan-result hidden"></div>
         </div>
@@ -72,21 +73,24 @@
         <!-- 2. Лічильник -->
         <div class="card">
             <label class="field-label">🔢 ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК <span class="digits-hint">(8 цифр)</span></label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="meterNumber" class="field-input" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
+                <button class="btn-camera" data-target="meterNumber" data-digits="8">📷</button>
+                <button class="btn-scan-qr" data-target="meterNumber" data-digits="8">📱</button>
             </div>
-            <button type="button" id="scanMeterBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="meterScanner" class="scanner-container hidden"></div>
             <div id="meterResult" class="scan-result hidden"></div>
+            <div class="info-hint">ℹ️ Скануйте номер на лічильнику (напр. 21113352)</div>
         </div>
 
         <!-- 3. Пломба клемної кришки -->
         <div class="card">
             <label class="field-label">🔒 ПЛОМБА КЛЕМНОЇ КРИШКИ</label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="sealCoverNumber" class="field-input" placeholder="Введіть номер пломби">
+                <button class="btn-camera" data-target="sealCoverNumber" data-digits="0">📷</button>
+                <button class="btn-scan-qr" data-target="sealCoverNumber" data-digits="0">📱</button>
             </div>
-            <button type="button" id="scanSealCoverBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="sealCoverScanner" class="scanner-container hidden"></div>
             <div id="sealCoverResult" class="scan-result hidden"></div>
         </div>
@@ -94,21 +98,23 @@
         <!-- 4. Пломба оптопорту -->
         <div class="card">
             <label class="field-label">🔒 ПЛОМБА ОПТОПОРТУ</label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="sealOptoNumber" class="field-input" placeholder="Введіть номер пломби">
+                <button class="btn-camera" data-target="sealOptoNumber" data-digits="0">📷</button>
+                <button class="btn-scan-qr" data-target="sealOptoNumber" data-digits="0">📱</button>
             </div>
-            <button type="button" id="scanSealOptoBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="sealOptoScanner" class="scanner-container hidden"></div>
             <div id="sealOptoResult" class="scan-result hidden"></div>
         </div>
 
-        <!-- Поле Адреса -->
+        <!-- 5. Адреса -->
         <div class="card">
             <label class="field-label">📍 АДРЕСА ОБ'ЄКТУ</label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="address" class="field-input" placeholder="Введіть повну адресу">
+                <button class="btn-camera" data-target="address" data-digits="0">📷</button>
+                <button class="btn-scan-qr" data-target="address" data-digits="0">📱</button>
             </div>
-            <button type="button" id="scanAddressBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="addressScanner" class="scanner-container hidden"></div>
             <div id="addressResult" class="scan-result hidden"></div>
         </div>
@@ -150,7 +156,7 @@
                 </table>
             </div>
         </div>
-        <footer>📱 Натисніть "Сканувати QR-код" та дозвольте доступ до камери</footer>
+        <footer>📱 Натисніть 📷 для фото, 📱 для QR-коду</footer>
     </div>
 </div>
 
