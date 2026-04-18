@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>PLS INVEST | Облік лічильників та пломб</title>
+    <title>PLC INVEST | Облік лічильників та пломб</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
@@ -26,23 +26,23 @@
         <div class="pin-error" id="pinError"></div>
         <div class="pin-keyboard">
             <div class="pin-row">
-                <button class="pin-btn" data-num="1" onclick="pinAddNum(1)">1</button>
-                <button class="pin-btn" data-num="2" onclick="pinAddNum(2)">2</button>
-                <button class="pin-btn" data-num="3" onclick="pinAddNum(3)">3</button>
+                <button class="pin-btn" onclick="pinAddNum(1)">1</button>
+                <button class="pin-btn" onclick="pinAddNum(2)">2</button>
+                <button class="pin-btn" onclick="pinAddNum(3)">3</button>
             </div>
             <div class="pin-row">
-                <button class="pin-btn" data-num="4" onclick="pinAddNum(4)">4</button>
-                <button class="pin-btn" data-num="5" onclick="pinAddNum(5)">5</button>
-                <button class="pin-btn" data-num="6" onclick="pinAddNum(6)">6</button>
+                <button class="pin-btn" onclick="pinAddNum(4)">4</button>
+                <button class="pin-btn" onclick="pinAddNum(5)">5</button>
+                <button class="pin-btn" onclick="pinAddNum(6)">6</button>
             </div>
             <div class="pin-row">
-                <button class="pin-btn" data-num="7" onclick="pinAddNum(7)">7</button>
-                <button class="pin-btn" data-num="8" onclick="pinAddNum(8)">8</button>
-                <button class="pin-btn" data-num="9" onclick="pinAddNum(9)">9</button>
+                <button class="pin-btn" onclick="pinAddNum(7)">7</button>
+                <button class="pin-btn" onclick="pinAddNum(8)">8</button>
+                <button class="pin-btn" onclick="pinAddNum(9)">9</button>
             </div>
             <div class="pin-row">
                 <button class="pin-btn pin-clear" onclick="pinClear()">⌫</button>
-                <button class="pin-btn" data-num="0" onclick="pinAddNum(0)">0</button>
+                <button class="pin-btn" onclick="pinAddNum(0)">0</button>
                 <button class="pin-btn pin-enter" onclick="pinCheck()">✓</button>
             </div>
         </div>
@@ -54,7 +54,7 @@
 <div id="mainApp" class="main-app hidden">
     <div class="container">
         <div class="card header-card">
-            <h1>🏦 PLS ІНВЕСТ ПРОГРАМА</h1>
+            <h1>🏦 PLC ІНВЕСТ ПРОГРАМА</h1>
             <div class="sub">Мобільний облік встановлення лічильників та пломб</div>
         </div>
 
@@ -69,15 +69,16 @@
             <div id="accountResult" class="scan-result hidden"></div>
         </div>
 
-        <!-- 2. Лічильник -->
+        <!-- 2. Лічильник (з видаленням перших 2 та останніх 2 цифр) -->
         <div class="card">
             <label class="field-label">🔢 ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК <span class="digits-hint">(8 цифр)</span></label>
             <div class="input-with-scan">
                 <input type="text" id="meterNumber" class="field-input" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
             </div>
-            <button type="button" id="scanMeterBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
+            <button type="button" id="scanMeterBtn" class="btn-scan-full">📷 Сканувати QR-код (авто-очищення)</button>
             <div id="meterScanner" class="scanner-container hidden"></div>
             <div id="meterResult" class="scan-result hidden"></div>
+            <div class="info-hint">ℹ️ При скануванні автоматично видаляються перші 2 та останні 2 цифри</div>
         </div>
 
         <!-- 3. Пломба клемної кришки -->
@@ -161,7 +162,7 @@ let activeScanner = null;
 let pinCode = "3268";
 let enteredPin = "";
 
-// === PIN-код функції (глобальні) ===
+// === PIN-код функції ===
 function updatePinDisplay() {
     const display = document.getElementById('pinDisplay');
     let masked = "";
@@ -340,7 +341,7 @@ function escapeHtml(str) {
 }
 
 // === QR СКАНЕР ===
-async function startScanner(scannerId, inputId, resultId, expectedDigits) {
+async function startScanner(scannerId, inputId, resultId, expectedDigits, fieldType = null) {
     if (activeScanner) {
         try { await activeScanner.stop(); } catch(e) {}
         activeScanner = null;
@@ -360,15 +361,40 @@ async function startScanner(scannerId, inputId, resultId, expectedDigits) {
             { fps: 10, qrbox: { width: 300, height: 300 } },
             (decodedText) => {
                 let result = decodedText.trim();
-                if (expectedDigits > 0) {
+                
+                // Спеціальна обробка для лічильника (видаляємо перші 2 та останні 2 цифри)
+                if (fieldType === 'meter') {
+                    const digitsOnly = result.replace(/\D/g, '');
+                    if (digitsOnly.length >= 12) {
+                        // Беремо з 3-ї по (довжина-2) цифру
+                        result = digitsOnly.substring(2, digitsOnly.length - 2);
+                    } else if (digitsOnly.length === 12) {
+                        result = digitsOnly.substring(2, 10);
+                    } else if (digitsOnly.length === 10) {
+                        result = digitsOnly.substring(2, 10);
+                    } else if (digitsOnly.length === 8) {
+                        result = digitsOnly;
+                    } else {
+                        result = digitsOnly;
+                    }
+                    if (result.length > 8) {
+                        result = result.substring(0, 8);
+                    }
+                } else if (expectedDigits > 0) {
                     const digitsOnly = result.replace(/\D/g, '');
                     if (digitsOnly.length >= expectedDigits) {
                         result = digitsOnly.substring(0, expectedDigits);
                     }
                 }
+                
                 document.getElementById(inputId).value = result;
                 const resultDiv = document.getElementById(resultId);
-                resultDiv.innerHTML = `✅ Відскановано: ${result}`;
+                
+                if (fieldType === 'meter') {
+                    resultDiv.innerHTML = `✅ Лічильник: ${result} (видалено перші 2 та останні 2 цифри)`;
+                } else {
+                    resultDiv.innerHTML = `✅ Відскановано: ${result}`;
+                }
                 resultDiv.classList.remove('hidden');
                 setTimeout(() => resultDiv.classList.add('hidden'), 3000);
                 
@@ -393,17 +419,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
     document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
     
-    // Сканери
+    // Сканери (для лічильника передаємо fieldType = 'meter')
     document.getElementById('scanAccountBtn').addEventListener('click', () => 
-        startScanner('accountScanner', 'accountNumber', 'accountResult', 10));
+        startScanner('accountScanner', 'accountNumber', 'accountResult', 10, null));
     document.getElementById('scanMeterBtn').addEventListener('click', () => 
-        startScanner('meterScanner', 'meterNumber', 'meterResult', 8));
+        startScanner('meterScanner', 'meterNumber', 'meterResult', 8, 'meter'));
     document.getElementById('scanSealCoverBtn').addEventListener('click', () => 
-        startScanner('sealCoverScanner', 'sealCoverNumber', 'sealCoverResult', 0));
+        startScanner('sealCoverScanner', 'sealCoverNumber', 'sealCoverResult', 0, null));
     document.getElementById('scanSealOptoBtn').addEventListener('click', () => 
-        startScanner('sealOptoScanner', 'sealOptoNumber', 'sealOptoResult', 0));
+        startScanner('sealOptoScanner', 'sealOptoNumber', 'sealOptoResult', 0, null));
     document.getElementById('scanAddressBtn').addEventListener('click', () => 
-        startScanner('addressScanner', 'address', 'addressResult', 0));
+        startScanner('addressScanner', 'address', 'addressResult', 0, null));
     
     // Валідація полів
     document.getElementById('accountNumber').addEventListener('input', function(e) {
