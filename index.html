@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>PLC INVEST | Облік лічильників та пломб</title>
+    <title>PLS INVEST | Облік лічильників та пломб</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,27 +27,27 @@
         <div class="pin-error" id="pinError"></div>
         <div class="pin-keyboard">
             <div class="pin-row">
-                <button class="pin-btn" onclick="pinAddNum(1)">1</button>
-                <button class="pin-btn" onclick="pinAddNum(2)">2</button>
-                <button class="pin-btn" onclick="pinAddNum(3)">3</button>
+                <button class="pin-btn" data-num="1">1</button>
+                <button class="pin-btn" data-num="2">2</button>
+                <button class="pin-btn" data-num="3">3</button>
             </div>
             <div class="pin-row">
-                <button class="pin-btn" onclick="pinAddNum(4)">4</button>
-                <button class="pin-btn" onclick="pinAddNum(5)">5</button>
-                <button class="pin-btn" onclick="pinAddNum(6)">6</button>
+                <button class="pin-btn" data-num="4">4</button>
+                <button class="pin-btn" data-num="5">5</button>
+                <button class="pin-btn" data-num="6">6</button>
             </div>
             <div class="pin-row">
-                <button class="pin-btn" onclick="pinAddNum(7)">7</button>
-                <button class="pin-btn" onclick="pinAddNum(8)">8</button>
-                <button class="pin-btn" onclick="pinAddNum(9)">9</button>
+                <button class="pin-btn" data-num="7">7</button>
+                <button class="pin-btn" data-num="8">8</button>
+                <button class="pin-btn" data-num="9">9</button>
             </div>
             <div class="pin-row">
-                <button class="pin-btn pin-clear" onclick="pinClear()">⌫</button>
-                <button class="pin-btn" onclick="pinAddNum(0)">0</button>
-                <button class="pin-btn pin-enter" onclick="pinCheck()">✓</button>
+                <button class="pin-btn pin-clear" data-num="clear">⌫</button>
+                <button class="pin-btn" data-num="0">0</button>
+                <button class="pin-btn pin-enter" data-num="enter">✓</button>
             </div>
         </div>
-        <div class="pin-forgot" onclick="pinReset()">Забули PIN? Скинути (3268)</div>
+        <div class="pin-forgot" id="pinForgot">Забули PIN? Скинути (3268)</div>
     </div>
 </div>
 
@@ -54,40 +55,43 @@
 <div id="mainApp" class="main-app hidden">
     <div class="container">
         <div class="card header-card">
-            <h1>🏦 PLC ІНВЕСТ ПРОГРАМА</h1>
+            <h1>🏦 PLS ІНВЕСТ ПРОГРАМА</h1>
             <div class="sub">Мобільний облік встановлення лічильників та пломб</div>
         </div>
 
         <!-- 1. Особовий рахунок -->
         <div class="card">
             <label class="field-label">📋 ОСОБОВИЙ РАХУНОК <span class="digits-hint">(10 цифр)</span></label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="accountNumber" class="field-input" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
+                <button class="btn-camera" data-target="accountNumber" data-digits="10">📷</button>
+                <button class="btn-scan-qr" data-target="accountNumber" data-digits="10">📱</button>
             </div>
-            <button type="button" id="scanAccountBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="accountScanner" class="scanner-container hidden"></div>
             <div id="accountResult" class="scan-result hidden"></div>
         </div>
 
-        <!-- 2. Лічильник (з видаленням перших 2 та останніх 2 цифр) -->
+        <!-- 2. Лічильник -->
         <div class="card">
             <label class="field-label">🔢 ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК <span class="digits-hint">(8 цифр)</span></label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="meterNumber" class="field-input" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
+                <button class="btn-camera" data-target="meterNumber" data-digits="8">📷</button>
+                <button class="btn-scan-qr" data-target="meterNumber" data-digits="8">📱</button>
             </div>
-            <button type="button" id="scanMeterBtn" class="btn-scan-full">📷 Сканувати QR-код (авто-очищення)</button>
             <div id="meterScanner" class="scanner-container hidden"></div>
             <div id="meterResult" class="scan-result hidden"></div>
-            <div class="info-hint">ℹ️ При скануванні автоматично видаляються перші 2 та останні 2 цифри</div>
+            <div class="info-hint">ℹ️ Скануйте штрих-код або номер на лічильнику</div>
         </div>
 
         <!-- 3. Пломба клемної кришки -->
         <div class="card">
             <label class="field-label">🔒 ПЛОМБА КЛЕМНОЇ КРИШКИ</label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="sealCoverNumber" class="field-input" placeholder="Введіть номер пломби">
+                <button class="btn-camera" data-target="sealCoverNumber" data-digits="0">📷</button>
+                <button class="btn-scan-qr" data-target="sealCoverNumber" data-digits="0">📱</button>
             </div>
-            <button type="button" id="scanSealCoverBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="sealCoverScanner" class="scanner-container hidden"></div>
             <div id="sealCoverResult" class="scan-result hidden"></div>
         </div>
@@ -95,21 +99,23 @@
         <!-- 4. Пломба оптопорту -->
         <div class="card">
             <label class="field-label">🔒 ПЛОМБА ОПТОПОРТУ</label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="sealOptoNumber" class="field-input" placeholder="Введіть номер пломби">
+                <button class="btn-camera" data-target="sealOptoNumber" data-digits="0">📷</button>
+                <button class="btn-scan-qr" data-target="sealOptoNumber" data-digits="0">📱</button>
             </div>
-            <button type="button" id="scanSealOptoBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="sealOptoScanner" class="scanner-container hidden"></div>
             <div id="sealOptoResult" class="scan-result hidden"></div>
         </div>
 
-        <!-- Поле Адреса -->
+        <!-- 5. Адреса -->
         <div class="card">
             <label class="field-label">📍 АДРЕСА ОБ'ЄКТУ</label>
-            <div class="input-with-scan">
+            <div class="input-scan-row">
                 <input type="text" id="address" class="field-input" placeholder="Введіть повну адресу">
+                <button class="btn-camera" data-target="address" data-digits="0">📷</button>
+                <button class="btn-scan-qr" data-target="address" data-digits="0">📱</button>
             </div>
-            <button type="button" id="scanAddressBtn" class="btn-scan-full">📷 Сканувати QR-код</button>
             <div id="addressScanner" class="scanner-container hidden"></div>
             <div id="addressResult" class="scan-result hidden"></div>
         </div>
@@ -151,301 +157,10 @@
                 </table>
             </div>
         </div>
-        <footer>📱 Натисніть "Сканувати QR-код" та дозвольте доступ до камери</footer>
+        <footer>📱 Натисніть 📷 для фото, 📱 для QR-коду</footer>
     </div>
 </div>
 
-<script>
-// === ГЛОБАЛЬНІ ЗМІННІ ===
-let workLog = [];
-let activeScanner = null;
-let pinCode = "3268";
-let enteredPin = "";
-
-// === PIN-код функції ===
-function updatePinDisplay() {
-    const display = document.getElementById('pinDisplay');
-    let masked = "";
-    for (let i = 0; i < enteredPin.length; i++) {
-        masked += "●";
-    }
-    for (let i = enteredPin.length; i < 4; i++) {
-        masked += "●";
-    }
-    if (display) display.innerText = masked;
-}
-
-function pinAddNum(num) {
-    if (enteredPin.length < 4) {
-        enteredPin += num.toString();
-        updatePinDisplay();
-        document.getElementById('pinError').innerText = '';
-    }
-}
-
-function pinClear() {
-    enteredPin = "";
-    updatePinDisplay();
-    document.getElementById('pinError').innerText = '';
-}
-
-function pinCheck() {
-    if (enteredPin.length !== 4) {
-        document.getElementById('pinError').innerText = '❌ Введіть 4 цифри';
-        return;
-    }
-    if (enteredPin === pinCode) {
-        document.getElementById('pinScreen').style.display = 'none';
-        document.getElementById('mainApp').classList.remove('hidden');
-        loadData();
-    } else {
-        document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
-        enteredPin = "";
-        updatePinDisplay();
-    }
-}
-
-function pinReset() {
-    pinCode = "3268";
-    enteredPin = "";
-    updatePinDisplay();
-    document.getElementById('pinError').innerText = '✅ PIN скинуто на 3268';
-    setTimeout(() => {
-        document.getElementById('pinError').innerText = '';
-    }, 2000);
-}
-
-// === Основна логіка ===
-function loadData() {
-    const stored = localStorage.getItem('pls_work_log');
-    if (stored) {
-        try {
-            workLog = JSON.parse(stored);
-        } catch(e) { workLog = []; }
-    }
-    renderLog();
-}
-
-function saveToLocal() {
-    localStorage.setItem('pls_work_log', JSON.stringify(workLog));
-    renderLog();
-}
-
-function generateId() { return Date.now() + Math.random() * 10000; }
-
-function getCurrentDate() {
-    return new Date().toLocaleString('uk-UA', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
-}
-
-function saveRecord() {
-    const account = document.getElementById('accountNumber').value.trim();
-    const meter = document.getElementById('meterNumber').value.trim();
-    const sealCover = document.getElementById('sealCoverNumber').value.trim();
-    const sealOpto = document.getElementById('sealOptoNumber').value.trim();
-    const address = document.getElementById('address').value.trim();
-    
-    if (!account || account.length !== 10 || !/^\d+$/.test(account)) {
-        alert('❌ Введіть 10 цифр особового рахунку');
-        return;
-    }
-    if (!meter || meter.length !== 8 || !/^\d+$/.test(meter)) {
-        alert('❌ Введіть 8 цифр лічильника');
-        return;
-    }
-    if (!sealCover) {
-        alert('❌ Введіть пломбу клемної кришки');
-        return;
-    }
-    if (!sealOpto) {
-        alert('❌ Введіть пломбу оптопорту');
-        return;
-    }
-    if (!address) {
-        alert('❌ Введіть адресу об\'єкту');
-        return;
-    }
-    
-    const newRecord = {
-        id: generateId(),
-        date: getCurrentDate(),
-        account: account,
-        meter: meter,
-        sealCover: sealCover,
-        sealOpto: sealOpto,
-        address: address
-    };
-    
-    workLog.unshift(newRecord);
-    saveToLocal();
-    
-    document.getElementById('accountNumber').value = '';
-    document.getElementById('meterNumber').value = '';
-    document.getElementById('sealCoverNumber').value = '';
-    document.getElementById('sealOptoNumber').value = '';
-    document.getElementById('address').value = '';
-    
-    alert('✅ Роботу збережено в журнал!');
-}
-
-function deleteRecord(id) {
-    if (confirm('Видалити цей запис?')) {
-        workLog = workLog.filter(r => r.id != id);
-        saveToLocal();
-    }
-}
-
-function clearAllLog() {
-    if (confirm('⚠️ ВИДАЛИТИ ВСІ ЗАПИСИ? Це не можна скасувати.')) {
-        workLog = [];
-        saveToLocal();
-    }
-}
-
-function exportToCSV() {
-    if (!workLog.length) { alert('Немає даних для експорту'); return; }
-    const headers = ['Дата', 'Особовий рахунок', 'Лічильник', 'Пломба (кришка)', 'Пломба (оптопорт)', 'Адреса'];
-    const rows = workLog.map(r => [`"${r.date}"`,`"${r.account}"`,`"${r.meter}"`,`"${r.sealCover}"`,`"${r.sealOpto}"`,`"${r.address}"`]);
-    const csv = headers.join(',') + '\n' + rows.map(r=>r.join(',')).join('\n');
-    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `pls_${new Date().toISOString().slice(0,19)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-}
-
-function renderLog() {
-    const tbody = document.getElementById('logBody');
-    if (!workLog.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Немає записів. Додайте нову роботу</td></tr>';
-        return;
-    }
-    tbody.innerHTML = '';
-    workLog.forEach(r => {
-        const row = tbody.insertRow();
-        row.insertCell(0).innerHTML = r.date;
-        row.insertCell(1).innerHTML = `<strong>${escapeHtml(r.account)}</strong>`;
-        row.insertCell(2).innerHTML = escapeHtml(r.meter);
-        row.insertCell(3).innerHTML = `<span class="badge">🔒 ${escapeHtml(r.sealCover)}</span>`;
-        row.insertCell(4).innerHTML = `<span class="badge">🔒 ${escapeHtml(r.sealOpto)}</span>`;
-        row.insertCell(5).innerHTML = escapeHtml(r.address);
-    });
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
-}
-
-// === QR СКАНЕР ===
-async function startScanner(scannerId, inputId, resultId, expectedDigits, fieldType = null) {
-    if (activeScanner) {
-        try { await activeScanner.stop(); } catch(e) {}
-        activeScanner = null;
-    }
-    
-    document.querySelectorAll('.scanner-container').forEach(c => c.classList.add('hidden'));
-    
-    const container = document.getElementById(scannerId);
-    container.classList.remove('hidden');
-    
-    const html5QrCode = new Html5Qrcode(scannerId);
-    activeScanner = html5QrCode;
-    
-    try {
-        await html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 300, height: 300 } },
-            (decodedText) => {
-                let result = decodedText.trim();
-                
-                // Спеціальна обробка для лічильника (видаляємо перші 2 та останні 2 цифри)
-                if (fieldType === 'meter') {
-                    const digitsOnly = result.replace(/\D/g, '');
-                    if (digitsOnly.length >= 12) {
-                        // Беремо з 3-ї по (довжина-2) цифру
-                        result = digitsOnly.substring(2, digitsOnly.length - 2);
-                    } else if (digitsOnly.length === 12) {
-                        result = digitsOnly.substring(2, 10);
-                    } else if (digitsOnly.length === 10) {
-                        result = digitsOnly.substring(2, 10);
-                    } else if (digitsOnly.length === 8) {
-                        result = digitsOnly;
-                    } else {
-                        result = digitsOnly;
-                    }
-                    if (result.length > 8) {
-                        result = result.substring(0, 8);
-                    }
-                } else if (expectedDigits > 0) {
-                    const digitsOnly = result.replace(/\D/g, '');
-                    if (digitsOnly.length >= expectedDigits) {
-                        result = digitsOnly.substring(0, expectedDigits);
-                    }
-                }
-                
-                document.getElementById(inputId).value = result;
-                const resultDiv = document.getElementById(resultId);
-                
-                if (fieldType === 'meter') {
-                    resultDiv.innerHTML = `✅ Лічильник: ${result} (видалено перші 2 та останні 2 цифри)`;
-                } else {
-                    resultDiv.innerHTML = `✅ Відскановано: ${result}`;
-                }
-                resultDiv.classList.remove('hidden');
-                setTimeout(() => resultDiv.classList.add('hidden'), 3000);
-                
-                html5QrCode.stop().catch(e => console.log);
-                activeScanner = null;
-                container.classList.add('hidden');
-            },
-            (errorMessage) => {}
-        );
-    } catch(err) {
-        console.error(err);
-        alert('❌ Не вдалося запустити камеру. Перевірте дозволи.');
-        container.classList.add('hidden');
-        activeScanner = null;
-    }
-}
-
-// === Ініціалізація ===
-document.addEventListener('DOMContentLoaded', () => {
-    // Головні кнопки
-    document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
-    document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
-    document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
-    
-    // Сканери (для лічильника передаємо fieldType = 'meter')
-    document.getElementById('scanAccountBtn').addEventListener('click', () => 
-        startScanner('accountScanner', 'accountNumber', 'accountResult', 10, null));
-    document.getElementById('scanMeterBtn').addEventListener('click', () => 
-        startScanner('meterScanner', 'meterNumber', 'meterResult', 8, 'meter'));
-    document.getElementById('scanSealCoverBtn').addEventListener('click', () => 
-        startScanner('sealCoverScanner', 'sealCoverNumber', 'sealCoverResult', 0, null));
-    document.getElementById('scanSealOptoBtn').addEventListener('click', () => 
-        startScanner('sealOptoScanner', 'sealOptoNumber', 'sealOptoResult', 0, null));
-    document.getElementById('scanAddressBtn').addEventListener('click', () => 
-        startScanner('addressScanner', 'address', 'addressResult', 0, null));
-    
-    // Валідація полів
-    document.getElementById('accountNumber').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    });
-    document.getElementById('meterNumber').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 8);
-    });
-});
-
-window.addEventListener('beforeunload', async () => {
-    if (activeScanner) {
-        try { await activeScanner.stop(); } catch(e) {}
-    }
-});
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
