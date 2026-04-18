@@ -145,13 +145,13 @@ body {
 }
 
 .header-card h1 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 8px;
 }
 
 .header-card .sub {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     opacity: 0.9;
 }
 
@@ -174,6 +174,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-bottom: 12px;
 }
 
 .field-input {
@@ -192,7 +193,7 @@ body {
     box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
 }
 
-/* Кнопки камери та QR */
+/* Кнопки */
 .btn-camera, .btn-scan-qr {
     width: 48px;
     height: 48px;
@@ -201,9 +202,10 @@ body {
     font-size: 1.3rem;
     cursor: pointer;
     transition: 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+}
+
+.btn-camera:active, .btn-scan-qr:active {
+    transform: scale(0.95);
 }
 
 .btn-camera {
@@ -211,19 +213,9 @@ body {
     color: #2563eb;
 }
 
-.btn-camera:active {
-    transform: scale(0.95);
-    background: #e0e7ff;
-}
-
 .btn-scan-qr {
     background: #f3e8ff;
     color: #9333ea;
-}
-
-.btn-scan-qr:active {
-    transform: scale(0.95);
-    background: #e9d5ff;
 }
 
 /* Кругла кнопка збереження */
@@ -263,9 +255,9 @@ body {
 .btn-outline {
     background: white;
     border: 1px solid #d4dcec;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 40px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     color: #2c3e66;
@@ -274,9 +266,9 @@ body {
 .btn-danger {
     background: #fff0f0;
     border: none;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 40px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #d14545;
     cursor: pointer;
@@ -332,7 +324,7 @@ table {
 
 th, td {
     text-align: left;
-    padding: 12px 8px;
+    padding: 10px 6px;
     border-bottom: 1px solid #edf2f7;
 }
 
@@ -356,7 +348,7 @@ th {
 .empty-row td {
     text-align: center;
     color: #9aa8bf;
-    padding: 32px;
+    padding: 24px;
 }
 
 .flex-between {
@@ -364,11 +356,11 @@ th {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
 }
 
 h3 {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #2c3e66;
     font-weight: 700;
 }
@@ -377,7 +369,7 @@ footer {
     text-align: center;
     font-size: 0.7rem;
     color: #8e9aaf;
-    margin-top: 24px;
+    margin-top: 20px;
     padding-bottom: 20px;
 }
 
@@ -405,10 +397,6 @@ footer {
     th, td {
         font-size: 0.65rem;
         padding: 8px 4px;
-    }
-    
-    .header-card h1 {
-        font-size: 1.4rem;
     }
     
     .pin-btn {
