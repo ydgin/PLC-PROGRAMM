@@ -145,41 +145,41 @@ body {
 }
 
 .header-card h1 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 8px;
 }
 
 .header-card .sub {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     opacity: 0.9;
 }
 
 .field-label {
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 1rem;
     color: #2c3e66;
     display: block;
     margin-bottom: 12px;
 }
 
 .digits-hint {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: normal;
     color: #8e9aaf;
     margin-left: 6px;
 }
 
-.input-with-scan {
+.input-scan-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 12px;
 }
 
 .field-input {
     flex: 1;
-    padding: 15px 16px;
+    padding: 14px 16px;
     border: 1px solid #e2e8f0;
     border-radius: 18px;
     font-size: 1rem;
@@ -193,26 +193,29 @@ body {
     box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
 }
 
-/* Кнопка сканера */
-.btn-scan-full {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: white;
+/* Кнопки */
+.btn-camera, .btn-scan-qr {
+    width: 48px;
+    height: 48px;
+    border-radius: 48px;
     border: none;
-    padding: 14px 20px;
-    border-radius: 44px;
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 1.3rem;
     cursor: pointer;
-    width: 100%;
     transition: 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
 }
 
-.btn-scan-full:active {
-    transform: scale(0.97);
+.btn-camera:active, .btn-scan-qr:active {
+    transform: scale(0.95);
+}
+
+.btn-camera {
+    background: #eef2ff;
+    color: #2563eb;
+}
+
+.btn-scan-qr {
+    background: #f3e8ff;
+    color: #9333ea;
 }
 
 /* Кругла кнопка збереження */
@@ -252,9 +255,9 @@ body {
 .btn-outline {
     background: white;
     border: 1px solid #d4dcec;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 40px;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     color: #2c3e66;
@@ -263,9 +266,9 @@ body {
 .btn-danger {
     background: #fff0f0;
     border: none;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 40px;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #d14545;
     cursor: pointer;
@@ -287,13 +290,23 @@ body {
 }
 
 .scan-result {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     padding: 10px 14px;
     border-radius: 20px;
     margin-top: 10px;
     background: #d4edda;
     color: #155724;
     font-weight: 500;
+}
+
+.info-hint {
+    font-size: 0.7rem;
+    color: #2563eb;
+    background: #eef2ff;
+    padding: 8px 12px;
+    border-radius: 16px;
+    margin-top: 10px;
+    text-align: center;
 }
 
 /* Таблиця */
@@ -306,12 +319,12 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
 th, td {
     text-align: left;
-    padding: 12px 8px;
+    padding: 10px 6px;
     border-bottom: 1px solid #edf2f7;
 }
 
@@ -319,14 +332,14 @@ th {
     background: #f8fafd;
     font-weight: 700;
     color: #2c3e66;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
 }
 
 .badge {
     background: #eef2ff;
-    padding: 4px 10px;
+    padding: 4px 8px;
     border-radius: 30px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
     display: inline-block;
     color: #2563eb;
@@ -335,7 +348,7 @@ th {
 .empty-row td {
     text-align: center;
     color: #9aa8bf;
-    padding: 32px;
+    padding: 24px;
 }
 
 .flex-between {
@@ -343,11 +356,11 @@ th {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
 }
 
 h3 {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #2c3e66;
     font-weight: 700;
 }
@@ -356,7 +369,7 @@ footer {
     text-align: center;
     font-size: 0.7rem;
     color: #8e9aaf;
-    margin-top: 24px;
+    margin-top: 20px;
     padding-bottom: 20px;
 }
 
@@ -375,13 +388,15 @@ footer {
         font-size: 0.9rem;
     }
     
-    th, td {
-        font-size: 0.7rem;
-        padding: 8px 4px;
+    .btn-camera, .btn-scan-qr {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
     }
     
-    .header-card h1 {
-        font-size: 1.4rem;
+    th, td {
+        font-size: 0.65rem;
+        padding: 8px 4px;
     }
     
     .pin-btn {
