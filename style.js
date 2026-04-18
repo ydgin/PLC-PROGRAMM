@@ -4,27 +4,39 @@ let activeScanner = null;
 let pinCode = "3268";
 let enteredPin = "";
 
-// === PIN-код функції ===
+// === PIN-код функції (виправлені) ===
 function updatePinDisplay() {
     const display = document.getElementById('pinDisplay');
+    if (!display) return;
     let masked = "";
-    for (let i = 0; i < enteredPin.length; i++) masked += "●";
-    for (let i = enteredPin.length; i < 4; i++) masked += "●";
-    if (display) display.innerText = masked;
+    for (let i = 0; i < enteredPin.length; i++) {
+        masked += "●";
+    }
+    for (let i = enteredPin.length; i < 4; i++) {
+        masked += "●";
+    }
+    display.innerText = masked;
 }
 
 function pinAddNum(num) {
     if (enteredPin.length < 4) {
         enteredPin += num.toString();
         updatePinDisplay();
-        document.getElementById('pinError').innerText = '';
+        const errorDiv = document.getElementById('pinError');
+        if (errorDiv) errorDiv.innerText = '';
+        
+        // Автоматична перевірка після введення 4 цифр
         if (enteredPin.length === 4) {
             if (enteredPin === pinCode) {
-                document.getElementById('pinScreen').style.display = 'none';
-                document.getElementById('mainApp').classList.remove('hidden');
+                // Правильний PIN
+                const pinScreen = document.getElementById('pinScreen');
+                const mainApp = document.getElementById('mainApp');
+                if (pinScreen) pinScreen.style.display = 'none';
+                if (mainApp) mainApp.classList.remove('hidden');
                 loadData();
             } else {
-                document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
+                const errorDiv = document.getElementById('pinError');
+                if (errorDiv) errorDiv.innerText = '❌ Невірний PIN-код';
                 enteredPin = "";
                 updatePinDisplay();
             }
@@ -35,20 +47,25 @@ function pinAddNum(num) {
 function pinClear() {
     enteredPin = "";
     updatePinDisplay();
-    document.getElementById('pinError').innerText = '';
+    const errorDiv = document.getElementById('pinError');
+    if (errorDiv) errorDiv.innerText = '';
 }
 
 function pinCheck() {
     if (enteredPin.length !== 4) {
-        document.getElementById('pinError').innerText = '❌ Введіть 4 цифри';
+        const errorDiv = document.getElementById('pinError');
+        if (errorDiv) errorDiv.innerText = '❌ Введіть 4 цифри';
         return;
     }
     if (enteredPin === pinCode) {
-        document.getElementById('pinScreen').style.display = 'none';
-        document.getElementById('mainApp').classList.remove('hidden');
+        const pinScreen = document.getElementById('pinScreen');
+        const mainApp = document.getElementById('mainApp');
+        if (pinScreen) pinScreen.style.display = 'none';
+        if (mainApp) mainApp.classList.remove('hidden');
         loadData();
     } else {
-        document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
+        const errorDiv = document.getElementById('pinError');
+        if (errorDiv) errorDiv.innerText = '❌ Невірний PIN-код';
         enteredPin = "";
         updatePinDisplay();
     }
@@ -58,10 +75,13 @@ function pinReset() {
     pinCode = "3268";
     enteredPin = "";
     updatePinDisplay();
-    document.getElementById('pinError').innerText = '✅ PIN скинуто на 3268';
-    setTimeout(() => {
-        document.getElementById('pinError').innerText = '';
-    }, 2000);
+    const errorDiv = document.getElementById('pinError');
+    if (errorDiv) {
+        errorDiv.innerText = '✅ PIN скинуто на 3268';
+        setTimeout(() => {
+            errorDiv.innerText = '';
+        }, 2000);
+    }
 }
 
 // === Основна логіка ===
@@ -70,7 +90,22 @@ function loadData() {
     if (stored) {
         try {
             workLog = JSON.parse(stored);
-        } catch(e) { workLog = []; }
+        } catch(e) { 
+            workLog = []; 
+        }
+    }
+    if (workLog.length === 0) {
+        // Демо-дані
+        workLog = [{
+            id: Date.now(),
+            date: new Date().toLocaleString('uk-UA'),
+            account: '1234567890',
+            meter: '21113352',
+            sealCover: 'PL7890',
+            sealOpto: 'OP5566',
+            address: 'вул. Тестова, 1'
+        }];
+        saveToLocal();
     }
     renderLog();
 }
@@ -80,12 +115,18 @@ function saveToLocal() {
     renderLog();
 }
 
-function generateId() { return Date.now() + Math.random() * 10000; }
+function generateId() { 
+    return Date.now() + Math.random() * 10000; 
+}
 
 function getCurrentDate() {
     return new Date().toLocaleString('uk-UA', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit'
     });
 }
 
@@ -101,7 +142,7 @@ function saveRecord() {
         return;
     }
     if (!meter || meter.length !== 8 || !/^\d+$/.test(meter)) {
-        alert('❌ Введіть 8 цифр лічильника');
+        alert('❌ Введіть 8 цифр лічильника (наприклад: 21113352)');
         return;
     }
     if (!sealCover) {
@@ -154,22 +195,33 @@ function clearAllLog() {
 }
 
 function exportToCSV() {
-    if (!workLog.length) { alert('Немає даних'); return; }
+    if (!workLog.length) { 
+        alert('Немає даних для експорту'); 
+        return; 
+    }
     const headers = ['Дата', 'Особовий рахунок', 'Лічильник', 'Пломба (кришка)', 'Пломба (оптопорт)', 'Адреса'];
-    const rows = workLog.map(r => [`"${r.date}"`,`"${r.account}"`,`"${r.meter}"`,`"${r.sealCover}"`,`"${r.sealOpto}"`,`"${r.address}"`]);
-    const csv = headers.join(',') + '\n' + rows.map(r=>r.join(',')).join('\n');
-    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+    const rows = workLog.map(r => [
+        `"${r.date}"`,
+        `"${r.account}"`, 
+        `"${r.meter}"`,
+        `"${r.sealCover}"`, 
+        `"${r.sealOpto}"`, 
+        `"${r.address}"`
+    ]);
+    const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `pls_${new Date().toISOString().slice(0,19)}.csv`;
+    link.download = `pls_${new Date().toISOString().slice(0, 19)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
 }
 
 function renderLog() {
     const tbody = document.getElementById('logBody');
+    if (!tbody) return;
     if (!workLog.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Немає записів</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Немає записів. Додайте нову роботу</td></tr>';
         return;
     }
     tbody.innerHTML = '';
@@ -186,7 +238,12 @@ function renderLog() {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
 // === Функція для фото з камери (OCR) ===
@@ -258,10 +315,12 @@ async function openCamera(inputId, expectedDigits) {
             stream.getTracks().forEach(track => track.stop());
             container.remove();
             
-            const resultDivId = inputId === 'accountNumber' ? 'accountResult' :
-                                inputId === 'meterNumber' ? 'meterResult' :
-                                inputId === 'sealCoverNumber' ? 'sealCoverResult' :
-                                inputId === 'sealOptoNumber' ? 'sealOptoResult' : 'addressResult';
+            let resultDivId = 'accountResult';
+            if (inputId === 'meterNumber') resultDivId = 'meterResult';
+            else if (inputId === 'sealCoverNumber') resultDivId = 'sealCoverResult';
+            else if (inputId === 'sealOptoNumber') resultDivId = 'sealOptoResult';
+            else if (inputId === 'address') resultDivId = 'addressResult';
+            
             const resultDiv = document.getElementById(resultDivId);
             
             try {
@@ -320,6 +379,7 @@ async function startQrScanner(scannerId, inputId, resultId, expectedDigits) {
     document.querySelectorAll('.scanner-container').forEach(c => c.classList.add('hidden'));
     
     const container = document.getElementById(scannerId);
+    if (!container) return;
     container.classList.remove('hidden');
     
     const html5QrCode = new Html5Qrcode(scannerId);
@@ -341,9 +401,11 @@ async function startQrScanner(scannerId, inputId, resultId, expectedDigits) {
                 
                 document.getElementById(inputId).value = result;
                 const resultDiv = document.getElementById(resultId);
-                resultDiv.innerHTML = `✅ Відскановано: ${result}`;
-                resultDiv.classList.remove('hidden');
-                setTimeout(() => resultDiv.classList.add('hidden'), 3000);
+                if (resultDiv) {
+                    resultDiv.innerHTML = `✅ Відскановано: ${result}`;
+                    resultDiv.classList.remove('hidden');
+                    setTimeout(() => resultDiv.classList.add('hidden'), 3000);
+                }
                 
                 html5QrCode.stop().catch(e => console.log);
                 activeScanner = null;
@@ -360,37 +422,67 @@ async function startQrScanner(scannerId, inputId, resultId, expectedDigits) {
 }
 
 // === Ініціалізація ===
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Додаток завантажено');
+    
     // PIN-код події
-    document.querySelectorAll('.pin-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const num = btn.getAttribute('data-num');
-            if (num === 'clear') pinClear();
-            else if (num === 'enter') pinCheck();
-            else pinAddNum(num);
+    const pinButtons = document.querySelectorAll('.pin-btn');
+    console.log('Знайдено кнопок PIN:', pinButtons.length);
+    
+    pinButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const num = this.getAttribute('data-num');
+            console.log('Натиснуто кнопку:', num);
+            if (num === 'clear') {
+                pinClear();
+            } else if (num === 'enter') {
+                pinCheck();
+            } else {
+                pinAddNum(num);
+            }
         });
     });
-    document.getElementById('pinForgot').addEventListener('click', pinReset);
+    
+    const pinForgot = document.getElementById('pinForgot');
+    if (pinForgot) {
+        pinForgot.addEventListener('click', pinReset);
+    }
     
     // Головні кнопки
-    document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
-    document.getElementById('exportLogBtn').addEventListener('click', exportToCSV);
-    document.getElementById('clearLogBtn').addEventListener('click', clearAllLog);
+    const saveBtn = document.getElementById('saveRecordBtn');
+    if (saveBtn) saveBtn.addEventListener('click', saveRecord);
+    
+    const exportBtn = document.getElementById('exportLogBtn');
+    if (exportBtn) exportBtn.addEventListener('click', exportToCSV);
+    
+    const clearBtn = document.getElementById('clearLogBtn');
+    if (clearBtn) clearBtn.addEventListener('click', clearAllLog);
     
     // Кнопки камери (фото)
-    document.querySelectorAll('.btn-camera').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            const digits = parseInt(btn.getAttribute('data-digits')) || 0;
+    const cameraBtns = document.querySelectorAll('.btn-camera');
+    console.log('Знайдено кнопок камери:', cameraBtns.length);
+    
+    cameraBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            const digits = parseInt(this.getAttribute('data-digits')) || 0;
+            console.log('Відкриття камери для:', target);
             openCamera(target, digits);
         });
     });
     
     // Кнопки QR сканера
-    document.querySelectorAll('.btn-scan-qr').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            const digits = parseInt(btn.getAttribute('data-digits')) || 0;
+    const qrBtns = document.querySelectorAll('.btn-scan-qr');
+    console.log('Знайдено кнопок QR:', qrBtns.length);
+    
+    qrBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            const digits = parseInt(this.getAttribute('data-digits')) || 0;
+            console.log('Запуск QR сканера для:', target);
             
             let scannerId, resultId;
             switch(target) {
@@ -402,4 +494,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     scannerId = 'meterScanner';
                     resultId = 'meterResult';
                     break;
-                case 'seal
+                case 'sealCoverNumber':
+                    scannerId = 'sealCoverScanner';
+                    resultId = 'sealCoverResult';
+                    break;
+                case 'sealOptoNumber':
+                    scannerId = 'sealOptoScanner';
+                    resultId = 'sealOptoResult';
+                    break;
+                case 'address':
+                    scannerId = 'addressScanner';
+                    resultId = 'addressResult';
+                    break;
+                default: return;
+            }
+            startQrScanner(scannerId, target, resultId, digits);
+        });
+    });
+    
+    // Валідація полів
+    const accountInput = document.getElementById('accountNumber');
+    if (accountInput) {
+        accountInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
+    
+    const meterInput = document.getElementById('meterNumber');
+    if (meterInput) {
+        meterInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 8);
+        });
+    }
+});
+
+window.addEventListener('beforeunload', async () => {
+    if (activeScanner) {
+        try { await activeScanner.stop(); } catch(e) {}
+    }
+});
