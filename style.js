@@ -1,33 +1,38 @@
 // === Змінні ===
 let workLog = [];
 let activeScanner = null;
-let pinCode = "0000";
+let pinCode = "3268";  // Новий PIN-код
 let enteredPin = "";
 
 // === PIN-код логіка ===
-function checkPin() {
-    if (enteredPin === pinCode) {
-        document.getElementById('pinScreen').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        loadData();
-    } else {
-        document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
-        enteredPin = "";
-        updatePinDisplay();
-    }
-}
-
 function updatePinDisplay() {
     const display = document.getElementById('pinDisplay');
-    display.innerText = enteredPin + "_".repeat(4 - enteredPin.length);
+    let masked = "";
+    for (let i = 0; i < enteredPin.length; i++) {
+        masked += "●";
+    }
+    for (let i = enteredPin.length; i < 4; i++) {
+        masked += "●";
+    }
+    display.innerText = masked;
 }
 
 function pinAddDigit(digit) {
     if (enteredPin.length < 4) {
         enteredPin += digit;
         updatePinDisplay();
+        document.getElementById('pinError').innerText = '';
+        
         if (enteredPin.length === 4) {
-            checkPin();
+            if (enteredPin === pinCode) {
+                document.getElementById('pinScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                loadData();
+            } else {
+                document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
+                enteredPin = "";
+                updatePinDisplay();
+            }
         }
     }
 }
@@ -38,11 +43,27 @@ function pinClear() {
     document.getElementById('pinError').innerText = '';
 }
 
+function checkPinEnter() {
+    if (enteredPin.length === 4) {
+        if (enteredPin === pinCode) {
+            document.getElementById('pinScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            loadData();
+        } else {
+            document.getElementById('pinError').innerText = '❌ Невірний PIN-код';
+            enteredPin = "";
+            updatePinDisplay();
+        }
+    } else {
+        document.getElementById('pinError').innerText = '❌ Введіть 4 цифри';
+    }
+}
+
 function resetPin() {
-    pinCode = "0000";
+    pinCode = "3268";
     enteredPin = "";
     updatePinDisplay();
-    document.getElementById('pinError').innerText = '✅ PIN скинуто на 0000';
+    document.getElementById('pinError').innerText = '✅ PIN скинуто на 3268';
     setTimeout(() => {
         document.getElementById('pinError').innerText = '';
     }, 2000);
@@ -114,7 +135,6 @@ function saveRecord() {
     workLog.unshift(newRecord);
     saveToLocal();
     
-    // Очищення форми
     document.getElementById('accountNumber').value = '';
     document.getElementById('meterNumber').value = '';
     document.getElementById('sealCoverNumber').value = '';
@@ -227,9 +247,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.pin-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const num = btn.getAttribute('data-num');
-            if (num === 'clear') pinClear();
-            else if (num === 'enter') checkPin();
-            else pinAddDigit(num);
+            if (num === 'clear') {
+                pinClear();
+            } else if (num === 'enter') {
+                checkPinEnter();
+            } else {
+                pinAddDigit(num);
+            }
         });
     });
     document.getElementById('pinForgot').addEventListener('click', resetPin);
