@@ -2,17 +2,9 @@
   "name": "PLS Інвест Програма",
   "short_name": "PLS Invest",
   "description": "Облік встановлення лічильників та пломб",
-  "start_url": "/meter-counter/",
+  "start_url": "/PLC-PROGRAMM/",
   "display": "standalone",
-  "theme_color": "#1e3c72",
-  "background_color": "#f5f5f5",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%231e3c72'/%3E%3Ctext x='256' y='380' font-size='380' text-anchor='middle' fill='white' font-weight='bold'%3E🏦%3C/text%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "theme_color": "#FFE566",
+  "background_color": "#FFE566",
+  "orientation": "portrait"
 }
