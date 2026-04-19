@@ -44,89 +44,17 @@ body {
     border: 1px solid #30363D;
 }
 
-.pin-lock {
-    font-size: 48px;
-    margin-bottom: 16px;
-}
-
-.pin-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #58A6FF;
-    margin-bottom: 8px;
-}
-
-.pin-display {
-    font-size: 36px;
-    letter-spacing: 16px;
-    font-family: monospace;
-    background: #0D1117;
-    padding: 18px;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    text-align: center;
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #58A6FF;
-    border: 1px solid #30363D;
-}
-
-.pin-error {
-    color: #F85149;
-    font-size: 12px;
-    margin-bottom: 16px;
-    min-height: 30px;
-}
-
-.pin-keyboard {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.pin-row {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.pin-btn {
-    width: 70px;
-    height: 70px;
-    border-radius: 70px;
-    border: none;
-    font-size: 28px;
-    font-weight: 600;
-    background: #21262D;
-    color: #E6EDF3;
-    cursor: pointer;
-    transition: 0.1s;
-}
-
-.pin-btn:active {
-    transform: scale(0.95);
-    background: #30363D;
-}
-
-.pin-clear {
-    background: #3B1E1E;
-    color: #F85149;
-}
-
-.pin-enter {
-    background: #1F6FEB;
-    color: white;
-}
-
-.pin-forgot {
-    margin-top: 20px;
-    font-size: 12px;
-    color: #58A6FF;
-    text-decoration: underline;
-    cursor: pointer;
-}
+.pin-lock { font-size: 48px; margin-bottom: 16px; }
+.pin-title { font-size: 24px; font-weight: 700; color: #58A6FF; margin-bottom: 8px; }
+.pin-display { font-size: 36px; letter-spacing: 16px; font-family: monospace; background: #0D1117; padding: 18px; border-radius: 20px; margin-bottom: 20px; text-align: center; min-height: 60px; display: flex; align-items: center; justify-content: center; color: #58A6FF; border: 1px solid #30363D; }
+.pin-error { color: #F85149; font-size: 12px; margin-bottom: 16px; min-height: 30px; }
+.pin-keyboard { display: flex; flex-direction: column; gap: 12px; }
+.pin-row { display: flex; justify-content: center; gap: 20px; }
+.pin-btn { width: 70px; height: 70px; border-radius: 70px; border: none; font-size: 28px; font-weight: 600; background: #21262D; color: #E6EDF3; cursor: pointer; transition: 0.1s; }
+.pin-btn:active { transform: scale(0.95); background: #30363D; }
+.pin-clear { background: #3B1E1E; color: #F85149; }
+.pin-enter { background: #1F6FEB; color: white; }
+.pin-forgot { margin-top: 20px; font-size: 12px; color: #58A6FF; text-decoration: underline; cursor: pointer; }
 
 /* Картки */
 .card {
@@ -145,17 +73,8 @@ body {
     border-radius: 28px;
     border: none;
 }
-
-.header-card h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.header-card .sub {
-    font-size: 0.85rem;
-    opacity: 0.9;
-}
+.header-card h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+.header-card .sub { font-size: 0.85rem; opacity: 0.9; }
 
 .field-label {
     font-weight: 700;
@@ -182,25 +101,21 @@ body {
     color: #E6EDF3;
     font-family: monospace;
 }
-
 .field-input:focus {
     outline: none;
     border-color: #58A6FF;
     box-shadow: 0 0 0 3px rgba(88,166,255,0.15);
 }
+.field-input::placeholder { color: #6E7681; }
 
-.field-input::placeholder {
-    color: #6E7681;
-}
-
-.btn-camera-icon {
+.btn-camera-icon, .btn-photo-icon {
     width: 48px;
     height: 48px;
     border-radius: 48px;
     border: none;
     font-size: 1.4rem;
     background: #21262D;
-    color: #58A6FF;
+    color: #A5D6FF;
     cursor: pointer;
     transition: 0.2s;
     flex-shrink: 0;
@@ -208,26 +123,17 @@ body {
     align-items: center;
     justify-content: center;
 }
+.btn-camera-icon:active, .btn-photo-icon:active { transform: scale(0.95); }
+.btn-camera-icon.active, .btn-photo-icon.active { background: #1F6FEB; color: white; }
+.btn-photo-icon { color: #79C0FF; }
 
-.btn-camera-icon:active {
-    transform: scale(0.95);
-}
-
-.btn-camera-icon.active {
-    background: #1F6FEB;
-    color: white;
-}
-
-/* Сканер контейнер */
-.scanner-container {
+.scanner-container, .photo-input-container {
     width: 100%;
     margin-top: 12px;
     background: #1a1a1a;
     border-radius: 24px;
     overflow: hidden;
-    transition: all 0.2s ease;
 }
-
 .scanner-header {
     display: flex;
     justify-content: space-between;
@@ -237,7 +143,6 @@ body {
     color: #E6EDF3;
     font-size: 0.8rem;
 }
-
 .btn-close-scanner {
     background: none;
     border: none;
@@ -246,7 +151,19 @@ body {
     cursor: pointer;
     padding: 0 6px;
 }
-
+.photo-file-input {
+    width: 100%;
+    padding: 12px;
+    background: #0D1117;
+    color: #E6EDF3;
+    border: 1px solid #30363D;
+    border-radius: 16px;
+}
+.ocr-status {
+    font-size: 0.7rem;
+    padding: 8px;
+    color: #58A6FF;
+}
 .info-hint {
     font-size: 0.7rem;
     color: #58A6FF;
@@ -257,14 +174,12 @@ body {
     border: 1px solid #30363D;
 }
 
-/* Кругла кнопка збереження */
 .save-button-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 20px;
 }
-
 .btn-round-save {
     width: 80px;
     height: 80px;
@@ -280,17 +195,8 @@ body {
     font-size: 2rem;
     color: white;
 }
-
-.btn-round-save:active {
-    transform: scale(0.95);
-}
-
-.save-label {
-    margin-top: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #2EA043;
-}
+.btn-round-save:active { transform: scale(0.95); }
+.save-label { margin-top: 8px; font-size: 0.8rem; font-weight: 600; color: #2EA043; }
 
 .btn-group {
     display: flex;
@@ -298,7 +204,6 @@ body {
     flex-wrap: wrap;
     margin-bottom: 16px;
 }
-
 .btn-outline {
     background: #21262D;
     border: 1px solid #30363D;
@@ -309,11 +214,6 @@ body {
     cursor: pointer;
     color: #E6EDF3;
 }
-
-.btn-outline:active {
-    background: #30363D;
-}
-
 .btn-danger {
     background: #3B1E1E;
     border: none;
@@ -325,28 +225,17 @@ body {
     cursor: pointer;
 }
 
-.btn-danger:active {
-    background: #5C2E2E;
-}
-
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.75rem;
 }
-
 th, td {
     text-align: left;
     padding: 10px 6px;
     border-bottom: 1px solid #30363D;
 }
-
-th {
-    background: #0D1117;
-    font-weight: 700;
-    color: #58A6FF;
-}
-
+th { background: #0D1117; font-weight: 700; color: #58A6FF; }
 .badge {
     background: #21262D;
     padding: 4px 8px;
@@ -356,38 +245,12 @@ th {
     display: inline-block;
     color: #58A6FF;
 }
-
-.empty-row td {
-    text-align: center;
-    color: #6E7681;
-    padding: 24px;
-}
-
-.delete-icon {
-    cursor: pointer;
-    color: #F85149;
-    font-size: 1rem;
-    font-weight: bold;
-}
-
-.delete-icon:hover {
-    opacity: 0.8;
-}
+.empty-row td { text-align: center; color: #6E7681; padding: 24px; }
+.delete-icon { cursor: pointer; color: #F85149; font-size: 1rem; font-weight: bold; }
 
 @media (max-width: 550px) {
-    body {
-        padding: 12px;
-    }
-    .card {
-        padding: 16px;
-    }
-    .pin-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
-    }
-    .pin-card {
-        width: 280px;
-        padding: 30px 20px;
-    }
+    body { padding: 12px; }
+    .card { padding: 16px; }
+    .pin-btn { width: 60px; height: 60px; font-size: 24px; }
+    .pin-card { width: 280px; padding: 30px 20px; }
 }
