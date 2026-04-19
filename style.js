@@ -240,3 +240,48 @@ if (activeScanner) activeScanner.stop().catch(()=>{});
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js');
 }
+/* === OCR (РАСПОЗНАВАНИЕ С ФОТО) === */
+async function scanFromCamera(inputId, digits = 0) {
+
+```
+const input = document.createElement("input");
+input.type = "file";
+input.accept = "image/*";
+input.capture = "environment";
+
+input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    alert("⏳ Розпізнавання...");
+
+    const { data: { text } } = await Tesseract.recognize(file, 'eng');
+
+    let result = text.trim();
+
+    if (digits > 0) {
+        result = result.replace(/\D/g, '').slice(0, digits);
+    }
+
+    document.getElementById(inputId).value = result;
+
+    alert("✅ Знайдено: " + result);
+};
+
+input.click();
+```
+
+}
+
+/* КНОПКИ КАМЕРЫ */
+document.querySelectorAll(".btn-camera").forEach(btn => {
+btn.onclick = () => {
+const target = btn.dataset.target;
+const digits = parseInt(btn.dataset.digits) || 0;
+
+```
+    scanFromCamera(target, digits);
+};
+```
+
+});
