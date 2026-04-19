@@ -6,9 +6,9 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: #0D1117;
+    background: #e8ecf1;
     padding: 20px 16px 40px;
-    color: #E6EDF3;
+    color: #1a1a2e;
 }
 
 .container {
@@ -27,7 +27,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #0A0E14;
+    background: linear-gradient(145deg, #1a3c6e, #0f2b4f);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -35,43 +35,40 @@ body {
 }
 
 .pin-card {
-    background: #161B22;
+    background: white;
     border-radius: 48px;
     padding: 40px 30px;
     text-align: center;
     width: 320px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    border: 1px solid #30363D;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
 
 .pin-lock { font-size: 48px; margin-bottom: 16px; }
-.pin-title { font-size: 24px; font-weight: 700; color: #58A6FF; margin-bottom: 8px; }
-.pin-display { font-size: 36px; letter-spacing: 16px; font-family: monospace; background: #0D1117; padding: 18px; border-radius: 20px; margin-bottom: 20px; text-align: center; min-height: 60px; display: flex; align-items: center; justify-content: center; color: #58A6FF; border: 1px solid #30363D; }
-.pin-error { color: #F85149; font-size: 12px; margin-bottom: 16px; min-height: 30px; }
+.pin-title { font-size: 24px; font-weight: 700; color: #1e3c72; margin-bottom: 8px; }
+.pin-display { font-size: 36px; letter-spacing: 16px; font-family: monospace; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 20px; text-align: center; min-height: 60px; display: flex; align-items: center; justify-content: center; color: #1e3c72; }
+.pin-error { color: #ef4444; font-size: 12px; margin-bottom: 16px; min-height: 30px; }
 .pin-keyboard { display: flex; flex-direction: column; gap: 12px; }
 .pin-row { display: flex; justify-content: center; gap: 20px; }
-.pin-btn { width: 70px; height: 70px; border-radius: 70px; border: none; font-size: 28px; font-weight: 600; background: #21262D; color: #E6EDF3; cursor: pointer; transition: 0.1s; }
-.pin-btn:active { transform: scale(0.95); background: #30363D; }
-.pin-clear { background: #3B1E1E; color: #F85149; }
-.pin-enter { background: #1F6FEB; color: white; }
-.pin-forgot { margin-top: 20px; font-size: 12px; color: #58A6FF; text-decoration: underline; cursor: pointer; }
+.pin-btn { width: 70px; height: 70px; border-radius: 70px; border: none; font-size: 28px; font-weight: 600; background: #f1f5f9; color: #1e3c72; cursor: pointer; transition: 0.1s; }
+.pin-btn:active { transform: scale(0.95); background: #e2e8f0; }
+.pin-clear { background: #fee2e2; color: #ef4444; }
+.pin-enter { background: #22c55e; color: white; }
+.pin-forgot { margin-top: 20px; font-size: 12px; color: #3b82f6; text-decoration: underline; cursor: pointer; }
 
 /* Картки */
 .card {
-    background: #161B22;
+    background: white;
     border-radius: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 20px 18px;
     margin-bottom: 16px;
-    border: 1px solid #30363D;
 }
 
 .header-card {
-    background: linear-gradient(145deg, #0D4190, #0A2D66);
+    background: linear-gradient(145deg, #1a3c6e, #0f2b4f);
     color: white;
     text-align: center;
     border-radius: 28px;
-    border: none;
 }
 .header-card h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
 .header-card .sub { font-size: 0.85rem; opacity: 0.9; }
@@ -79,7 +76,7 @@ body {
 .field-label {
     font-weight: 700;
     font-size: 1rem;
-    color: #E6EDF3;
+    color: #1e3c72;
     display: block;
     margin-bottom: 8px;
 }
@@ -94,19 +91,19 @@ body {
 .field-input {
     flex: 1;
     padding: 14px 16px;
-    border: 1px solid #30363D;
+    border: 1px solid #d1d5db;
     border-radius: 18px;
     font-size: 1rem;
-    background: #0D1117;
-    color: #E6EDF3;
+    background: white;
+    color: #1a1a2e;
     font-family: monospace;
 }
 .field-input:focus {
     outline: none;
-    border-color: #58A6FF;
-    box-shadow: 0 0 0 3px rgba(88,166,255,0.15);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
 }
-.field-input::placeholder { color: #6E7681; }
+.field-input::placeholder { color: #9ca3af; }
 
 .btn-camera-icon, .btn-photo-icon {
     width: 48px;
@@ -114,8 +111,8 @@ body {
     border-radius: 48px;
     border: none;
     font-size: 1.4rem;
-    background: #21262D;
-    color: #A5D6FF;
+    background: #eef2ff;
+    color: #3b82f6;
     cursor: pointer;
     transition: 0.2s;
     flex-shrink: 0;
@@ -124,10 +121,9 @@ body {
     justify-content: center;
 }
 .btn-camera-icon:active, .btn-photo-icon:active { transform: scale(0.95); }
-.btn-camera-icon.active, .btn-photo-icon.active { background: #1F6FEB; color: white; }
-.btn-photo-icon { color: #79C0FF; }
+.btn-photo-icon { background: #f3e8ff; color: #9333ea; }
 
-.scanner-container, .photo-input-container {
+.scanner-container {
     width: 100%;
     margin-top: 12px;
     background: #1a1a1a;
@@ -138,40 +134,26 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #21262D;
+    background: #2d2d2d;
     padding: 8px 12px;
-    color: #E6EDF3;
+    color: white;
     font-size: 0.8rem;
 }
 .btn-close-scanner {
     background: none;
     border: none;
-    color: #E6EDF3;
+    color: white;
     font-size: 1.2rem;
     cursor: pointer;
     padding: 0 6px;
 }
-.photo-file-input {
-    width: 100%;
-    padding: 12px;
-    background: #0D1117;
-    color: #E6EDF3;
-    border: 1px solid #30363D;
-    border-radius: 16px;
-}
-.ocr-status {
-    font-size: 0.7rem;
-    padding: 8px;
-    color: #58A6FF;
-}
 .info-hint {
     font-size: 0.7rem;
-    color: #58A6FF;
-    background: #0D1117;
+    color: #3b82f6;
+    background: #eef2ff;
     padding: 8px 12px;
     border-radius: 16px;
     margin-top: 10px;
-    border: 1px solid #30363D;
 }
 
 .save-button-container {
@@ -184,19 +166,19 @@ body {
     width: 80px;
     height: 80px;
     border-radius: 80px;
-    background: linear-gradient(135deg, #238636, #2EA043);
+    background: linear-gradient(135deg, #22c55e, #16a34a);
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 20px rgba(35,134,54,0.4);
+    box-shadow: 0 6px 20px rgba(34,197,94,0.4);
     transition: 0.2s;
     font-size: 2rem;
     color: white;
 }
 .btn-round-save:active { transform: scale(0.95); }
-.save-label { margin-top: 8px; font-size: 0.8rem; font-weight: 600; color: #2EA043; }
+.save-label { margin-top: 8px; font-size: 0.8rem; font-weight: 600; color: #166534; }
 
 .btn-group {
     display: flex;
@@ -205,23 +187,23 @@ body {
     margin-bottom: 16px;
 }
 .btn-outline {
-    background: #21262D;
-    border: 1px solid #30363D;
+    background: white;
+    border: 1px solid #d1d5db;
     padding: 8px 14px;
     border-radius: 40px;
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    color: #E6EDF3;
+    color: #1e3c72;
 }
 .btn-danger {
-    background: #3B1E1E;
+    background: #fee2e2;
     border: none;
     padding: 8px 14px;
     border-radius: 40px;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #F85149;
+    color: #dc2626;
     cursor: pointer;
 }
 
@@ -233,20 +215,20 @@ table {
 th, td {
     text-align: left;
     padding: 10px 6px;
-    border-bottom: 1px solid #30363D;
+    border-bottom: 1px solid #e5e7eb;
 }
-th { background: #0D1117; font-weight: 700; color: #58A6FF; }
+th { background: #f8fafc; font-weight: 700; color: #1e3c72; }
 .badge {
-    background: #21262D;
+    background: #eef2ff;
     padding: 4px 8px;
     border-radius: 30px;
     font-size: 0.65rem;
     font-weight: 600;
     display: inline-block;
-    color: #58A6FF;
+    color: #3b82f6;
 }
-.empty-row td { text-align: center; color: #6E7681; padding: 24px; }
-.delete-icon { cursor: pointer; color: #F85149; font-size: 1rem; font-weight: bold; }
+.empty-row td { text-align: center; color: #9ca3af; padding: 24px; }
+.delete-icon { cursor: pointer; color: #dc2626; font-size: 1rem; font-weight: bold; }
 
 @media (max-width: 550px) {
     body { padding: 12px; }
