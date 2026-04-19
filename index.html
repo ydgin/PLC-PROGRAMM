@@ -55,28 +55,20 @@
             <label class="field-label">Особовий рахунок (10 цифр)</label>
             <div class="input-scan-row">
                 <input id="accountNumber" class="field-input" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
-                <button class="btn-camera-icon" data-target="accountNumber" data-mode="digits10" data-action="qr">📷</button>
+                <button class="btn-camera-icon" data-target="accountNumber" data-mode="digits10">📷</button>
                 <button class="btn-photo-icon" data-target="accountNumber" data-mode="digits10">🖼️</button>
             </div>
             <div id="accountScanner" class="scanner-container hidden"></div>
-            <div id="accountPhotoInput" class="photo-input-container hidden">
-                <input type="file" accept="image/*" capture="environment" class="photo-file-input">
-                <div class="ocr-status"></div>
-            </div>
         </div>
 
         <div class="card">
             <label class="field-label">Лічильник (8 цифр)</label>
             <div class="input-scan-row">
                 <input id="meterNumber" class="field-input" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
-                <button class="btn-camera-icon" data-target="meterNumber" data-mode="smart" data-action="qr">📷</button>
+                <button class="btn-camera-icon" data-target="meterNumber" data-mode="smart">📷</button>
                 <button class="btn-photo-icon" data-target="meterNumber" data-mode="smart">🖼️</button>
             </div>
             <div id="meterScanner" class="scanner-container hidden"></div>
-            <div id="meterPhotoInput" class="photo-input-container hidden">
-                <input type="file" accept="image/*" capture="environment" class="photo-file-input">
-                <div class="ocr-status"></div>
-            </div>
             <div class="info-hint">ℹ️ При скануванні ігноруються перші 4 та останні 4 цифри</div>
         </div>
 
@@ -84,42 +76,30 @@
             <label class="field-label">Пломба кришки</label>
             <div class="input-scan-row">
                 <input id="sealCoverNumber" class="field-input" placeholder="Номер пломби">
-                <button class="btn-camera-icon" data-target="sealCoverNumber" data-mode="text" data-action="qr">📷</button>
+                <button class="btn-camera-icon" data-target="sealCoverNumber" data-mode="text">📷</button>
                 <button class="btn-photo-icon" data-target="sealCoverNumber" data-mode="text">🖼️</button>
             </div>
             <div id="sealCoverScanner" class="scanner-container hidden"></div>
-            <div id="sealCoverPhotoInput" class="photo-input-container hidden">
-                <input type="file" accept="image/*" capture="environment" class="photo-file-input">
-                <div class="ocr-status"></div>
-            </div>
         </div>
 
         <div class="card">
             <label class="field-label">Пломба оптопорту</label>
             <div class="input-scan-row">
                 <input id="sealOptoNumber" class="field-input" placeholder="Номер пломби">
-                <button class="btn-camera-icon" data-target="sealOptoNumber" data-mode="text" data-action="qr">📷</button>
+                <button class="btn-camera-icon" data-target="sealOptoNumber" data-mode="text">📷</button>
                 <button class="btn-photo-icon" data-target="sealOptoNumber" data-mode="text">🖼️</button>
             </div>
             <div id="sealOptoScanner" class="scanner-container hidden"></div>
-            <div id="sealOptoPhotoInput" class="photo-input-container hidden">
-                <input type="file" accept="image/*" capture="environment" class="photo-file-input">
-                <div class="ocr-status"></div>
-            </div>
         </div>
 
         <div class="card">
             <label class="field-label">Адреса</label>
             <div class="input-scan-row">
                 <input id="address" class="field-input" placeholder="Введіть адресу">
-                <button class="btn-camera-icon" data-target="address" data-mode="text" data-action="qr">📷</button>
+                <button class="btn-camera-icon" data-target="address" data-mode="text">📷</button>
                 <button class="btn-photo-icon" data-target="address" data-mode="text">🖼️</button>
             </div>
             <div id="addressScanner" class="scanner-container hidden"></div>
-            <div id="addressPhotoInput" class="photo-input-container hidden">
-                <input type="file" accept="image/*" capture="environment" class="photo-file-input">
-                <div class="ocr-status"></div>
-            </div>
         </div>
 
         <div class="save-button-container">
