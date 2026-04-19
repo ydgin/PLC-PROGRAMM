@@ -1,13 +1,8 @@
 // ========== ГЛОБАЛЬНІ ЗМІННІ ==========
 let workLog = [];
-let activeScanners = {}; // { containerId: Html5Qrcode }
-let pinCode = "3268";
+let activeScanners = {};
+let pinCode = null;
 let enteredPin = "";
-
-// Завантаження PIN з localStorage
-if (localStorage.getItem('pls_pin')) {
-    pinCode = localStorage.getItem('pls_pin');
-}
 
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
@@ -23,6 +18,23 @@ const saveBtn = document.getElementById('saveRecordBtn');
 const exportBtn = document.getElementById('exportLogBtn');
 const clearLogBtn = document.getElementById('clearLogBtn');
 const logBody = document.getElementById('logBody');
+
+// ========== ІНІЦІАЛІЗАЦІЯ PIN (БЕЗ ХАРДКОДУ) ==========
+function initPin() {
+    let storedPin = localStorage.getItem('pls_pin');
+    if (!storedPin) {
+        // При першому запуску - генеруємо випадковий PIN з 4 цифр
+        const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
+        localStorage.setItem('pls_pin', randomPin);
+        pinCode = randomPin;
+        // Показуємо користувачу його PIN
+        setTimeout(() => {
+            alert(`🔐 Ваш PIN-код: ${randomPin}\nЗбережіть його!`);
+        }, 100);
+    } else {
+        pinCode = storedPin;
+    }
+}
 
 // ========== PIN ФУНКЦІЇ ==========
 function updatePinDisplay() {
@@ -76,15 +88,16 @@ function pinCheck() {
 }
 
 function pinReset() {
-    pinCode = "3268";
-    localStorage.setItem('pls_pin', pinCode);
+    const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+    localStorage.setItem('pls_pin', newPin);
+    pinCode = newPin;
     enteredPin = "";
     updatePinDisplay();
     if (pinError) {
-        pinError.innerText = '✅ PIN скинуто до 3268';
+        pinError.innerText = `✅ PIN скинуто! Новий PIN: ${newPin}`;
         setTimeout(() => {
             if (pinError) pinError.innerText = '';
-        }, 2000);
+        }, 3000);
     }
 }
 
@@ -142,7 +155,6 @@ function renderLog() {
     });
     logBody.innerHTML = html;
     
-    // Додаємо обробники для видалення
     document.querySelectorAll('.delete-icon').forEach(el => {
         el.addEventListener('click', (e) => {
             const index = parseInt(el.getAttribute('data-index'));
@@ -156,7 +168,7 @@ function renderLog() {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function (m) {
+    return str.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';
         if (m === '<') return '&lt;';
         if (m === '>') return '&gt;';
@@ -164,10 +176,134 @@ function escapeHtml(str) {
     });
 }
 
+// ========== РОЗУМНЕ РОЗПІЗНАВАННЯ ЛІЧИЛЬНИКА ==========
+function smartMeterExtract(rawText) {
+    // Видаляємо всі нецифрові символи
+    const digitsOnly = rawText.replace(/\D/g, '');
+    
+    // Якщо є хоча б 8 цифр - беремо останні 8?
+    // За вимогою: ігноруємо перші 4 та останні 4 -> беремо середні 8 цифр
+    if (digitsOnly.length >= 16) {
+        // Якщо 16+ цифр - беремо з 5 по 12 позицію (ігноруємо перші 4 і останні 4)
+        return digitsOnly.substring(4, 12);
+    } else if (digitsOnly.length >= 12) {
+        // Якщо 12-15 цифр - беремо з 5 по останні-4
+        return digitsOnly.substring(4, digitsOnly.length - 4);
+    } else if (digitsOnly.length === 8) {
+        return digitsOnly;
+    } else {
+        // Якщо менше 8 цифр - повертаємо як є
+        return digitsOnly;
+    }
+}
+
+// ========== УПРАВЛІННЯ СКАНЕРОМ ==========
+async function stopScanner(containerId) {
+    if (activeScanners[containerId]) {
+        try {
+            await activeScanners[containerId].stop();
+        } catch (e) {}
+        delete activeScanners[containerId];
+    }
+}
+
+async function startQrScanner(containerId, inputId, mode) {
+    if (activeScanners[containerId]) {
+        await stopScanner(containerId);
+        const container = document.getElementById(containerId);
+        if (container) container.classList.add('hidden');
+        return;
+    }
+    
+    for (let scId in activeScanners) {
+        await stopScanner(scId);
+        const otherContainer = document.getElementById(scId);
+        if (otherContainer) otherContainer.classList.add('hidden');
+    }
+    
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.classList.remove('hidden');
+    container.innerHTML = `
+        <div class="scanner-header">
+            <span>📷 Наведіть камеру на QR-код</span>
+            <button class="btn-close-scanner">✕</button>
+        </div>
+        <div id="${containerId}_reader" style="width:100%"></div>
+    `;
+    
+    container.querySelector('.btn-close-scanner').addEventListener('click', async () => {
+        await stopScanner(containerId);
+        container.classList.add('hidden');
+    });
+    
+    const readerElementId = `${containerId}_reader`;
+    const html5QrCode = new Html5Qrcode(readerElementId);
+    activeScanners[containerId] = html5QrCode;
+    
+    try {
+        await html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 280, height: 280 } },
+            (decodedText) => {
+                let result = decodedText.trim();
+                
+                if (mode === 'smart') {
+                    // Розумне розпізнавання для лічильника
+                    result = smartMeterExtract(result);
+                } else if (mode === 'digits10') {
+                    const digitsOnly = result.replace(/\D/g, '');
+                    result = digitsOnly.length >= 10 ? digitsOnly.substring(0, 10) : digitsOnly;
+                } else if (mode === 'digits0') {
+                    // Без фільтрації
+                }
+                
+                const inputElement = document.getElementById(inputId);
+                if (inputElement) {
+                    inputElement.value = result;
+                    const event = new Event('input', { bubbles: true });
+                    inputElement.dispatchEvent(event);
+                }
+                
+                stopScanner(containerId).then(() => {
+                    container.classList.add('hidden');
+                });
+                
+                showToast(`✅ Відскановано: ${result.substring(0, 30)}${result.length > 30 ? '...' : ''}`);
+            },
+            (errorMessage) => {}
+        );
+    } catch (err) {
+        console.error('Помилка камери:', err);
+        alert('❌ Не вдалося запустити камеру. Перевірте дозволи.');
+        container.classList.add('hidden');
+        delete activeScanners[containerId];
+    }
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.backgroundColor = '#238636';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '40px';
+    toast.style.fontSize = '14px';
+    toast.style.zIndex = '2000';
+    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
 // ========== ЗБЕРЕЖЕННЯ ЗАПИСУ ==========
 function saveRecord() {
     const account = accountInput.value.trim();
-    const meter = meterInput.value.trim();
+    let meter = meterInput.value.trim();
     const seal1 = sealCoverInput.value.trim();
     const seal2 = sealOptoInput.value.trim();
     const addr = addressInput.value.trim();
@@ -203,8 +339,7 @@ function saveRecord() {
     });
     
     saveData();
-
-    // Очищення полів після збереження
+    
     accountInput.value = "";
     meterInput.value = "";
     sealCoverInput.value = "";
@@ -247,144 +382,31 @@ function clearLog() {
     }
 }
 
-// ========== УПРАВЛІННЯ СКАНЕРОМ ==========
-async function stopScanner(containerId) {
-    if (activeScanners[containerId]) {
-        try {
-            await activeScanners[containerId].stop();
-        } catch (e) {
-            console.log('Помилка зупинки сканера:', e);
-        }
-        delete activeScanners[containerId];
-    }
-}
-
-async function startQrScanner(containerId, inputId, expectedDigits) {
-    // Закриваємо сканер в цьому контейнері, якщо він вже відкритий
-    if (activeScanners[containerId]) {
-        await stopScanner(containerId);
-        const container = document.getElementById(containerId);
-        if (container) container.classList.add('hidden');
-        return;
-    }
-    
-    // Закриваємо всі інші сканери
-    for (let scId in activeScanners) {
-        await stopScanner(scId);
-        const otherContainer = document.getElementById(scId);
-        if (otherContainer) otherContainer.classList.add('hidden');
-    }
-    
-    const container = document.getElementById(containerId);
-    if (!container) {
-        console.error('Контейнер не знайдено:', containerId);
-        return;
-    }
-    
-    container.classList.remove('hidden');
-    container.innerHTML = `
-        <div class="scanner-header">
-            <span>📷 Наведіть камеру на QR-код</span>
-            <button class="btn-close-scanner">✕</button>
-        </div>
-        <div id="${containerId}_reader" style="width:100%"></div>
-    `;
-    
-    // Додаємо кнопку закриття
-    container.querySelector('.btn-close-scanner').addEventListener('click', async () => {
-        await stopScanner(containerId);
-        container.classList.add('hidden');
-    });
-    
-    const readerElementId = `${containerId}_reader`;
-    const html5QrCode = new Html5Qrcode(readerElementId);
-    activeScanners[containerId] = html5QrCode;
-    
-    try {
-        await html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 280, height: 280 } },
-            (decodedText) => {
-                let result = decodedText.trim();
-                
-                // Фільтрація цифр, якщо потрібно
-                if (expectedDigits > 0) {
-                    const digitsOnly = result.replace(/\D/g, '');
-                    if (digitsOnly.length >= expectedDigits) {
-                        result = digitsOnly.substring(0, expectedDigits);
-                    } else {
-                        result = digitsOnly;
-                    }
-                }
-                
-                const inputElement = document.getElementById(inputId);
-                if (inputElement) {
-                    inputElement.value = result;
-                    // Тригер події для валідації
-                    const event = new Event('input', { bubbles: true });
-                    inputElement.dispatchEvent(event);
-                }
-                
-                // Автоматично закриваємо сканер після успішного сканування
-                stopScanner(containerId).then(() => {
-                    container.classList.add('hidden');
-                });
-                
-                // Коротке сповіщення
-                const toast = document.createElement('div');
-                toast.textContent = `✅ Відскановано: ${result.substring(0, 20)}${result.length > 20 ? '...' : ''}`;
-                toast.style.position = 'fixed';
-                toast.style.bottom = '20px';
-                toast.style.left = '50%';
-                toast.style.transform = 'translateX(-50%)';
-                toast.style.backgroundColor = '#22c55e';
-                toast.style.color = 'white';
-                toast.style.padding = '10px 20px';
-                toast.style.borderRadius = '40px';
-                toast.style.fontSize = '14px';
-                toast.style.zIndex = '2000';
-                toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2000);
-            },
-            (errorMessage) => {
-                // Ігноруємо помилки сканування
-            }
-        );
-    } catch (err) {
-        console.error('Помилка запуску камери:', err);
-        alert('❌ Не вдалося запустити камеру. Перевірте дозволи.');
-        container.classList.add('hidden');
-        delete activeScanners[containerId];
-    }
-}
-
 // ========== ВАЛІДАЦІЯ ПОЛІВ ==========
 function setupInputValidation() {
     if (accountInput) {
-        accountInput.addEventListener('input', function () {
+        accountInput.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').slice(0, 10);
         });
     }
     
     if (meterInput) {
-        meterInput.addEventListener('input', function () {
+        meterInput.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').slice(0, 8);
         });
     }
 }
 
 // ========== ІНІЦІАЛІЗАЦІЯ ==========
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
+    initPin();
     updatePinDisplay();
     setupInputValidation();
     
-    // PIN кнопки
     document.querySelectorAll(".pin-btn").forEach(btn => {
-        btn.addEventListener('click', function (e) {
+        btn.addEventListener('click', function(e) {
             e.stopPropagation();
             const num = this.getAttribute('data-num');
-            
             if (num === "clear") {
                 pinClear();
             } else if (num === "enter") {
@@ -398,38 +420,37 @@ document.addEventListener("DOMContentLoaded", function () {
     const pinForgot = document.getElementById("pinForgot");
     if (pinForgot) pinForgot.onclick = pinReset;
     
-    // Головні кнопки
     if (saveBtn) saveBtn.onclick = saveRecord;
     if (exportBtn) exportBtn.onclick = exportCSV;
     if (clearLogBtn) clearLogBtn.onclick = clearLog;
     
-    // QR кнопки (при натисканні відкриваємо/закриваємо сканер)
-    document.querySelectorAll(".btn-scan-qr").forEach(btn => {
-        btn.addEventListener('click', function (e) {
+    document.querySelectorAll(".btn-camera-icon").forEach(btn => {
+        btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
             const target = this.getAttribute('data-target');
-            const digits = parseInt(this.getAttribute('data-digits')) || 0;
+            const mode = this.getAttribute('data-digits');
             
             let scannerId;
+            let scanMode;
+            
             switch (target) {
-                case 'accountNumber': scannerId = 'accountScanner'; break;
-                case 'meterNumber': scannerId = 'meterScanner'; break;
-                case 'sealCoverNumber': scannerId = 'sealCoverScanner'; break;
-                case 'sealOptoNumber': scannerId = 'sealOptoScanner'; break;
-                case 'address': scannerId = 'addressScanner'; break;
+                case 'accountNumber': scannerId = 'accountScanner'; scanMode = 'digits10'; break;
+                case 'meterNumber': scannerId = 'meterScanner'; scanMode = 'smart'; break;
+                case 'sealCoverNumber': scannerId = 'sealCoverScanner'; scanMode = 'digits0'; break;
+                case 'sealOptoNumber': scannerId = 'sealOptoScanner'; scanMode = 'digits0'; break;
+                case 'address': scannerId = 'addressScanner'; scanMode = 'digits0'; break;
                 default: return;
             }
             
-            startQrScanner(scannerId, target, digits);
+            startQrScanner(scannerId, target, scanMode);
         });
     });
 });
 
-// Зупинка всіх сканерів при виході
-window.addEventListener('beforeunload', function () {
+window.addEventListener('beforeunload', function() {
     for (let scId in activeScanners) {
-        activeScanners[scId].stop().catch(function () { });
+        activeScanners[scId].stop().catch(function() {});
     }
 });
