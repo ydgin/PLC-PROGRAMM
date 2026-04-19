@@ -55,19 +55,20 @@
             <label class="field-label">Особовий рахунок (10 цифр)</label>
             <div class="input-scan-row">
                 <input id="accountNumber" class="field-input" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
-                <button class="btn-scan-qr" data-target="accountNumber" data-digits="10">📱</button>
+                <button class="btn-camera-icon" data-target="accountNumber" data-digits="10">📱</button>
             </div>
             <div id="accountScanner" class="scanner-container hidden"></div>
         </div>
 
-        <!-- Лічильник -->
+        <!-- Лічильник (з розумним розпізнаванням) -->
         <div class="card">
             <label class="field-label">Лічильник (8 цифр)</label>
             <div class="input-scan-row">
                 <input id="meterNumber" class="field-input" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
-                <button class="btn-scan-qr" data-target="meterNumber" data-digits="8">📱</button>
+                <button class="btn-camera-icon" data-target="meterNumber" data-digits="smart">📱</button>
             </div>
             <div id="meterScanner" class="scanner-container hidden"></div>
+            <div class="info-hint">ℹ️ При скануванні автоматично ігноруються перші 4 та останні 4 цифри</div>
         </div>
 
         <!-- Пломба кришки -->
@@ -75,7 +76,7 @@
             <label class="field-label">Пломба кришки</label>
             <div class="input-scan-row">
                 <input id="sealCoverNumber" class="field-input" placeholder="Номер пломби">
-                <button class="btn-scan-qr" data-target="sealCoverNumber" data-digits="0">📱</button>
+                <button class="btn-camera-icon" data-target="sealCoverNumber" data-digits="0">📱</button>
             </div>
             <div id="sealCoverScanner" class="scanner-container hidden"></div>
         </div>
@@ -85,7 +86,7 @@
             <label class="field-label">Пломба оптопорту</label>
             <div class="input-scan-row">
                 <input id="sealOptoNumber" class="field-input" placeholder="Номер пломби">
-                <button class="btn-scan-qr" data-target="sealOptoNumber" data-digits="0">📱</button>
+                <button class="btn-camera-icon" data-target="sealOptoNumber" data-digits="0">📱</button>
             </div>
             <div id="sealOptoScanner" class="scanner-container hidden"></div>
         </div>
@@ -95,7 +96,7 @@
             <label class="field-label">Адреса</label>
             <div class="input-scan-row">
                 <input id="address" class="field-input" placeholder="Введіть адресу">
-                <button class="btn-scan-qr" data-target="address" data-digits="0">📱</button>
+                <button class="btn-camera-icon" data-target="address" data-digits="0">📱</button>
             </div>
             <div id="addressScanner" class="scanner-container hidden"></div>
         </div>
