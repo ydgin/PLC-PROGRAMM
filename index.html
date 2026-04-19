@@ -1,146 +1,137 @@
 <!DOCTYPE html>
-
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLS INVEST</title>
-
-```
-<link rel="stylesheet" href="style.css">
-
-<!-- QR Scanner -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-```
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>PLS INVEST - Облік лічильників та пломб</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
-
 <body>
 
-<!-- PIN -->
-
+<!-- PIN ЕКРАН -->
 <div id="pinScreen" class="pin-screen">
     <div class="pin-card">
         <div class="pin-lock">🔒</div>
         <div class="pin-title">Введіть PIN-код</div>
-
-```
-    <div id="pinDisplay" class="pin-display"></div>
-    <div id="pinError" class="pin-error"></div>
-
-    <div class="pin-keyboard">
-        <div class="pin-row">
-            <button class="pin-btn" data-num="1">1</button>
-            <button class="pin-btn" data-num="2">2</button>
-            <button class="pin-btn" data-num="3">3</button>
+        <div id="pinDisplay" class="pin-display"></div>
+        <div id="pinError" class="pin-error"></div>
+        <div class="pin-keyboard">
+            <div class="pin-row">
+                <button class="pin-btn" data-num="1">1</button>
+                <button class="pin-btn" data-num="2">2</button>
+                <button class="pin-btn" data-num="3">3</button>
+            </div>
+            <div class="pin-row">
+                <button class="pin-btn" data-num="4">4</button>
+                <button class="pin-btn" data-num="5">5</button>
+                <button class="pin-btn" data-num="6">6</button>
+            </div>
+            <div class="pin-row">
+                <button class="pin-btn" data-num="7">7</button>
+                <button class="pin-btn" data-num="8">8</button>
+                <button class="pin-btn" data-num="9">9</button>
+            </div>
+            <div class="pin-row">
+                <button class="pin-btn pin-clear" data-num="clear">⌫</button>
+                <button class="pin-btn" data-num="0">0</button>
+                <button class="pin-btn pin-enter" data-num="enter">✓</button>
+            </div>
         </div>
-        <div class="pin-row">
-            <button class="pin-btn" data-num="4">4</button>
-            <button class="pin-btn" data-num="5">5</button>
-            <button class="pin-btn" data-num="6">6</button>
-        </div>
-        <div class="pin-row">
-            <button class="pin-btn" data-num="7">7</button>
-            <button class="pin-btn" data-num="8">8</button>
-            <button class="pin-btn" data-num="9">9</button>
-        </div>
-        <div class="pin-row">
-            <button class="pin-btn pin-clear" data-num="clear">⌫</button>
-            <button class="pin-btn" data-num="0">0</button>
-            <button class="pin-btn pin-enter" data-num="enter">✓</button>
-        </div>
+        <div id="pinForgot" class="pin-forgot">Скинути PIN</div>
     </div>
-
-    <div id="pinForgot" class="pin-forgot">Скинути PIN </div>
-</div>
-```
-
 </div>
 
-<!-- APP -->
-
+<!-- ГОЛОВНИЙ ДОДАТОК -->
 <div id="mainApp" class="hidden">
     <div class="container">
-
-```
-    <div class="card header-card">
-        <h1>🏦 PLS INVEST</h1>
-        <div class="sub">Облік лічильників та пломб</div>
-    </div>
-
-    <!-- Особовий -->
-    <div class="card">
-        <label>Особовий рахунок (10 цифр)</label>
-        <div class="input-scan-row">
-            <input id="accountNumber" class="field-input">
-            <button class="btn-scan-qr" data-target="accountNumber" data-digits="10">📱</button>
-        </div>
-        <div id="accountNumberScanner" class="scanner-container hidden"></div>
-    </div>
-
-    <!-- Лічильник -->
-    <div class="card">
-        <label>Лічильник (8 цифр)</label>
-        <div class="input-scan-row">
-            <input id="meterNumber" class="field-input">
-            <button class="btn-scan-qr" data-target="meterNumber" data-digits="8">📱</button>
-        </div>
-        <div id="meterNumberScanner" class="scanner-container hidden"></div>
-    </div>
-
-    <!-- Пломби -->
-    <div class="card">
-        <label>Пломба кришки</label>
-        <div class="input-scan-row">
-            <input id="sealCoverNumber" class="field-input">
-            <button class="btn-scan-qr" data-target="sealCoverNumber">📱</button>
-        </div>
-        <div id="sealCoverNumberScanner" class="scanner-container hidden"></div>
-    </div>
-
-    <div class="card">
-        <label>Пломба оптопорту</label>
-        <div class="input-scan-row">
-            <input id="sealOptoNumber" class="field-input">
-            <button class="btn-scan-qr" data-target="sealOptoNumber">📱</button>
-        </div>
-        <div id="sealOptoNumberScanner" class="scanner-container hidden"></div>
-    </div>
-
-    <!-- Адреса -->
-    <div class="card">
-        <label>Адреса</label>
-        <div class="input-scan-row">
-            <input id="address" class="field-input">
-            <button class="btn-scan-qr" data-target="address">📱</button>
-        </div>
-        <div id="addressScanner" class="scanner-container hidden"></div>
-    </div>
-
-    <!-- SAVE -->
-    <div class="save-button-container">
-        <button id="saveRecordBtn" class="btn-round-save">✔</button>
-        <div class="save-label">Зберегти</div>
-    </div>
-
-    <!-- LOG -->
-    <div class="card">
-        <div class="btn-group">
-            <button id="exportLogBtn" class="btn-outline">Експорт</button>
-            <button id="clearLogBtn" class="btn-danger">Очистити</button>
+        <div class="card header-card">
+            <h1>🏦 PLS INVEST</h1>
+            <div class="sub">Облік лічильників та пломб</div>
         </div>
 
-        <table>
-            <tbody id="logBody"></tbody>
-        </table>
-    </div>
+        <!-- Особовий -->
+        <div class="card">
+            <label class="field-label">Особовий рахунок (10 цифр)</label>
+            <div class="input-scan-row">
+                <input id="accountNumber" class="field-input" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
+                <button class="btn-scan-qr" data-target="accountNumber" data-digits="10">📱</button>
+            </div>
+            <div id="accountScanner" class="scanner-container hidden"></div>
+        </div>
 
+        <!-- Лічильник -->
+        <div class="card">
+            <label class="field-label">Лічильник (8 цифр)</label>
+            <div class="input-scan-row">
+                <input id="meterNumber" class="field-input" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
+                <button class="btn-scan-qr" data-target="meterNumber" data-digits="8">📱</button>
+            </div>
+            <div id="meterScanner" class="scanner-container hidden"></div>
+        </div>
+
+        <!-- Пломба кришки -->
+        <div class="card">
+            <label class="field-label">Пломба кришки</label>
+            <div class="input-scan-row">
+                <input id="sealCoverNumber" class="field-input" placeholder="Номер пломби">
+                <button class="btn-scan-qr" data-target="sealCoverNumber" data-digits="0">📱</button>
+            </div>
+            <div id="sealCoverScanner" class="scanner-container hidden"></div>
+        </div>
+
+        <!-- Пломба оптопорту -->
+        <div class="card">
+            <label class="field-label">Пломба оптопорту</label>
+            <div class="input-scan-row">
+                <input id="sealOptoNumber" class="field-input" placeholder="Номер пломби">
+                <button class="btn-scan-qr" data-target="sealOptoNumber" data-digits="0">📱</button>
+            </div>
+            <div id="sealOptoScanner" class="scanner-container hidden"></div>
+        </div>
+
+        <!-- Адреса -->
+        <div class="card">
+            <label class="field-label">Адреса</label>
+            <div class="input-scan-row">
+                <input id="address" class="field-input" placeholder="Введіть адресу">
+                <button class="btn-scan-qr" data-target="address" data-digits="0">📱</button>
+            </div>
+            <div id="addressScanner" class="scanner-container hidden"></div>
+        </div>
+
+        <!-- SAVE -->
+        <div class="save-button-container">
+            <button id="saveRecordBtn" class="btn-round-save">✔</button>
+            <div class="save-label">Зберегти</div>
+        </div>
+
+        <!-- LOG та кнопки -->
+        <div class="card">
+            <div class="btn-group">
+                <button id="exportLogBtn" class="btn-outline">📄 Експорт CSV</button>
+                <button id="clearLogBtn" class="btn-danger">🗑 Очистити журнал</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Особовий</th>
+                            <th>Лічильник</th>
+                            <th>Пломба кришки</th>
+                            <th>Пломба оптопорту</th>
+                            <th>Адреса</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="logBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
-```
 
-</div>
-
-<script src="script.js"></script>
-
+<script src="app.js"></script>
 </body>
 </html>
