@@ -110,14 +110,14 @@ function renderLog() {
     let html = '';
     workLog.forEach((r, idx) => {
         html += `<tr>
-            <td>${escapeHtml(r.date)}</td>
-            <td><strong>${escapeHtml(r.account)}</strong></td>
-            <td>${escapeHtml(r.meter)}</td>
-            <td><span class="badge">🔒 ${escapeHtml(r.seal1)}</span></td>
-            <td><span class="badge">🔒 ${escapeHtml(r.seal2)}</span></td>
-            <td>${escapeHtml(r.address)}</td>
-            <td><span class="delete-icon" data-index="${idx}">🗑️</span></td>
-        </tr>`;
+                    <td>${escapeHtml(r.date)}</td>
+                    <td><strong>${escapeHtml(r.account)}</strong></td>
+                    <td>${escapeHtml(r.meter)}</td>
+                    <td><span class="badge">🔒 ${escapeHtml(r.seal1)}</span></td>
+                    <td><span class="badge">🔒 ${escapeHtml(r.seal2)}</span></td>
+                    <td>${escapeHtml(r.address)}</td>
+                    <td><span class="delete-icon" data-index="${idx}">🗑️</span></td>
+                </tr>`;
     });
     logBody.innerHTML = html;
     document.querySelectorAll('.delete-icon').forEach(el => {
@@ -184,29 +184,106 @@ async function startQrScanner(containerId, inputId, mode) {
     } catch(err) { alert('❌ Не вдалося запустити камеру'); container.classList.add('hidden'); delete activeScanners[containerId]; }
 }
 
-// ========== OCR З ФОТО (РОБОЧА ВЕРСІЯ) ==========
+// ========== ПОКРАЩЕНИЙ OCR З ФОТО ==========
+async function preprocessImage(file) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Збільшуємо контраст та змінюємо розмір для кращого розпізнавання
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 1200;
+            if (width > maxSize) {
+                height = (height * maxSize) / width;
+                width = maxSize;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Малюємо зображення
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Підвищуємо контраст
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const brightness = 0.34 * data[i] + 0.5 * data[i+1] + 0.16 * data[i+2];
+                const contrast = 1.5;
+                const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+                let newBrightness = factor * (brightness - 128) + 128;
+                newBrightness = Math.min(255, Math.max(0, newBrightness));
+                data[i] = data[i+1] = data[i+2] = newBrightness;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            
+            canvas.toBlob((blob) => {
+                URL.revokeObjectURL(url);
+                resolve(blob);
+            }, 'image/jpeg', 0.9);
+        };
+        img.src = url;
+    });
+}
+
 async function processPhoto(file, inputId, mode) {
     const statusDiv = document.createElement('div');
-    statusDiv.textContent = '⏳ Розпізнавання тексту...';
+    statusDiv.textContent = '⏳ Обробка зображення...';
     statusDiv.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:8px 16px;border-radius:40px;font-size:12px;z-index:2000';
     document.body.appendChild(statusDiv);
     
     try {
-        const { data: { text } } = await Tesseract.recognize(file, 'ukr+eng', {
-            logger: m => console.log(m)
+        // Попередня обробка зображення
+        statusDiv.textContent = '⏳ Покращення зображення...';
+        const processedBlob = await preprocessImage(file);
+        
+        statusDiv.textContent = '⏳ Розпізнавання тексту (Tesseract)...';
+        
+        // Розпізнаємо текст з покращеним зображенням
+        const { data: { text } } = await Tesseract.recognize(processedBlob, 'ukr+eng', {
+            logger: m => console.log(m),
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯабвгґдеєжзиіїйклмнопрстуфхцчшщьюя'
         });
+        
         let result = text.trim();
-        if (mode === 'digits10') result = digits10Extract(result);
-        else if (mode === 'smart') result = smartMeterExtract(result);
+        
+        // Очищаємо результат від зайвих пробілів та переносів рядків
+        result = result.replace(/\s+/g, ' ').trim();
+        
+        // Знаходимо всі цифри для числових режимів
+        if (mode === 'digits10') {
+            const digitsOnly = result.replace(/\D/g, '');
+            result = digits10Extract(digitsOnly);
+        } else if (mode === 'smart') {
+            const digitsOnly = result.replace(/\D/g, '');
+            result = smartMeterExtract(digitsOnly);
+        }
+        
+        // Якщо результат порожній, пробуємо ще раз з оригінальним зображенням
+        if (!result || result.length === 0) {
+            statusDiv.textContent = '⏳ Спроба повторного розпізнавання...';
+            const { data: { text: text2 } } = await Tesseract.recognize(file, 'ukr+eng', {
+                tessedit_pageseg_mode: '6',
+                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            });
+            result = text2.trim();
+            if (mode === 'digits10') result = digits10Extract(result.replace(/\D/g, ''));
+            else if (mode === 'smart') result = smartMeterExtract(result.replace(/\D/g, ''));
+        }
         
         document.getElementById(inputId).value = result;
-        statusDiv.textContent = `✅ Розпізнано: ${result.substring(0, 30)}`;
-        setTimeout(() => statusDiv.remove(), 2000);
+        statusDiv.textContent = `✅ Розпізнано: ${result.substring(0, 40)}${result.length > 40 ? '...' : ''}`;
+        setTimeout(() => statusDiv.remove(), 3000);
         showToast(`📷 Розпізнано: ${result.substring(0, 30)}`);
+        
     } catch(err) {
-        statusDiv.textContent = '❌ Помилка розпізнавання';
-        setTimeout(() => statusDiv.remove(), 2000);
-        console.error(err);
+        console.error('OCR помилка:', err);
+        statusDiv.textContent = '❌ Помилка розпізнавання. Спробуйте краще фото';
+        setTimeout(() => statusDiv.remove(), 3000);
+        alert('❌ Не вдалося розпізнати текст. Спробуйте зробити чіткіше фото.');
     }
 }
 
@@ -215,7 +292,7 @@ function showToast(msg) {
     t.textContent = msg;
     t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 20px;border-radius:40px;font-size:14px;z-index:2000';
     document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2000);
+    setTimeout(() => t.remove(), 3000);
 }
 
 function saveRecord() {
@@ -260,7 +337,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePinDisplay();
     setupValidation();
     
-    // PIN кнопки
     document.querySelectorAll(".pin-btn").forEach(btn => {
         btn.addEventListener('click', (e) => {
             const num = btn.getAttribute('data-num');
@@ -271,7 +347,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("pinForgot").onclick = pinReset;
     
-    // Головні кнопки
     saveBtn.onclick = saveRecord;
     exportBtn.onclick = exportCSV;
     clearLogBtn.onclick = clearLog;
@@ -295,14 +370,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
     
-    // Фото/OCR (РОБОЧА ВЕРСІЯ)
+    // Фото/OCR з покращеною обробкою
     document.querySelectorAll(".btn-photo-icon").forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const target = btn.getAttribute('data-target');
             const mode = btn.getAttribute('data-mode');
             
-            // Створюємо тимчасовий input для вибору файлу
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
             fileInput.accept = 'image/*';
