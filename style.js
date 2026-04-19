@@ -237,3 +237,6 @@ meterNumber.oninput = () => {
 window.addEventListener('beforeunload', () => {
 if (activeScanner) activeScanner.stop().catch(()=>{});
 });
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+}
