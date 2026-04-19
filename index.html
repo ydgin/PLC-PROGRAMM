@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>PLS INVEST - Облік лічильників та пломб</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Tesseract.js для OCR з фото -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -52,7 +51,6 @@
             <div class="sub">Облік лічильників та пломб</div>
         </div>
 
-        <!-- Особовий -->
         <div class="card">
             <label class="field-label">Особовий рахунок (10 цифр)</label>
             <div class="input-scan-row">
@@ -67,7 +65,6 @@
             </div>
         </div>
 
-        <!-- Лічильник (з розумним розпізнаванням - ігнорує перші 4 та останні 4 цифри) -->
         <div class="card">
             <label class="field-label">Лічильник (8 цифр)</label>
             <div class="input-scan-row">
@@ -80,10 +77,9 @@
                 <input type="file" accept="image/*" capture="environment" class="photo-file-input">
                 <div class="ocr-status"></div>
             </div>
-            <div class="info-hint">ℹ️ При скануванні автоматично ігноруються перші 4 та останні 4 цифри</div>
+            <div class="info-hint">ℹ️ При скануванні ігноруються перші 4 та останні 4 цифри</div>
         </div>
 
-        <!-- Пломба кришки -->
         <div class="card">
             <label class="field-label">Пломба кришки</label>
             <div class="input-scan-row">
@@ -98,7 +94,6 @@
             </div>
         </div>
 
-        <!-- Пломба оптопорту -->
         <div class="card">
             <label class="field-label">Пломба оптопорту</label>
             <div class="input-scan-row">
@@ -113,7 +108,6 @@
             </div>
         </div>
 
-        <!-- Адреса -->
         <div class="card">
             <label class="field-label">Адреса</label>
             <div class="input-scan-row">
@@ -128,13 +122,11 @@
             </div>
         </div>
 
-        <!-- SAVE -->
         <div class="save-button-container">
             <button id="saveRecordBtn" class="btn-round-save">✔</button>
             <div class="save-label">Зберегти</div>
         </div>
 
-        <!-- LOG та кнопки -->
         <div class="card">
             <div class="btn-group">
                 <button id="exportLogBtn" class="btn-outline">📄 Експорт CSV</button>
@@ -143,15 +135,7 @@
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th>Особовий</th>
-                            <th>Лічильник</th>
-                            <th>Пломба кришки</th>
-                            <th>Пломба оптопорту</th>
-                            <th>Адреса</th>
-                            <th></th>
-                        </tr>
+                        <tr><th>Дата</th><th>Особовий</th><th>Лічильник</th><th>Пломба кришки</th><th>Пломба оптопорту</th><th>Адреса</th><th></th></tr>
                     </thead>
                     <tbody id="logBody"></tbody>
                 </table>
