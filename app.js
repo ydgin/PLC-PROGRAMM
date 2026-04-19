@@ -1,4 +1,4 @@
-// ========== ФІКСОВАНИЙ PIN-КОД ==========
+// ========== ФІКСОВАНИЙ PIN-КОД 3268 ==========
 const FIXED_PIN = "3268";
 let enteredPin = "";
 let workLog = [];
@@ -72,7 +72,7 @@ function pinCheck() {
 function pinReset() {
     enteredPin = "";
     updatePinDisplay();
-    pinError.innerText = '✅ PIN залишився 3268';
+    pinError.innerText = '✅ PIN: 3268';
     setTimeout(() => { if (pinError) pinError.innerText = ''; }, 2000);
 }
 
@@ -184,66 +184,58 @@ async function startQrScanner(containerId, inputId, mode) {
     } catch(err) { alert('❌ Не вдалося запустити камеру'); container.classList.add('hidden'); delete activeScanners[containerId]; }
 }
 
-// ========== OCR З ФОТО ==========
-function setupPhotoInput(btn, inputId, mode) {
-    const targetId = btn.getAttribute('data-target');
-    const photoContainerId = `${targetId}PhotoInput`;
-    const photoContainer = document.getElementById(photoContainerId);
-    const fileInput = photoContainer?.querySelector('.photo-file-input');
-    const statusDiv = photoContainer?.querySelector('.ocr-status');
+// ========== OCR З ФОТО (РОБОЧА ВЕРСІЯ) ==========
+async function processPhoto(file, inputId, mode) {
+    const statusDiv = document.createElement('div');
+    statusDiv.textContent = '⏳ Розпізнавання тексту...';
+    statusDiv.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:8px 16px;border-radius:40px;font-size:12px;z-index:2000';
+    document.body.appendChild(statusDiv);
     
-    btn.addEventListener('click', () => {
-        if (photoContainer.classList.contains('hidden')) {
-            document.querySelectorAll('.photo-input-container').forEach(c => c.classList.add('hidden'));
-            photoContainer.classList.remove('hidden');
-        } else {
-            photoContainer.classList.add('hidden');
-        }
-    });
-    if (fileInput) {
-        fileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            statusDiv.textContent = '⏳ Розпізнавання тексту...';
-            try {
-                const { data: { text } } = await Tesseract.recognize(file, 'ukr+eng', { logger: m => console.log(m) });
-                let result = text.trim();
-                if (mode === 'digits10') result = digits10Extract(result);
-                else if (mode === 'smart') result = smartMeterExtract(result);
-                document.getElementById(inputId).value = result;
-                statusDiv.textContent = `✅ Розпізнано: ${result.substring(0, 30)}`;
-                setTimeout(() => { photoContainer.classList.add('hidden'); statusDiv.textContent = ''; fileInput.value = ''; }, 2000);
-            } catch(err) { statusDiv.textContent = '❌ Помилка розпізнавання'; }
+    try {
+        const { data: { text } } = await Tesseract.recognize(file, 'ukr+eng', {
+            logger: m => console.log(m)
         });
+        let result = text.trim();
+        if (mode === 'digits10') result = digits10Extract(result);
+        else if (mode === 'smart') result = smartMeterExtract(result);
+        
+        document.getElementById(inputId).value = result;
+        statusDiv.textContent = `✅ Розпізнано: ${result.substring(0, 30)}`;
+        setTimeout(() => statusDiv.remove(), 2000);
+        showToast(`📷 Розпізнано: ${result.substring(0, 30)}`);
+    } catch(err) {
+        statusDiv.textContent = '❌ Помилка розпізнавання';
+        setTimeout(() => statusDiv.remove(), 2000);
+        console.error(err);
     }
 }
 
 function showToast(msg) {
     const t = document.createElement('div');
     t.textContent = msg;
-    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#238636;color:white;padding:10px 20px;border-radius:40px;font-size:14px;z-index:2000';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 20px;border-radius:40px;font-size:14px;z-index:2000';
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 2000);
 }
 
 function saveRecord() {
     const account = accountInput.value.trim();
-    let meter = meterInput.value.trim();
+    const meter = meterInput.value.trim();
     const seal1 = sealCoverInput.value.trim();
     const seal2 = sealOptoInput.value.trim();
     const addr = addressInput.value.trim();
-    if (account.length !== 10) { alert('❌ 10 цифр особового рахунку'); return; }
-    if (meter.length !== 8) { alert('❌ 8 цифр лічильника'); return; }
+    if (account.length !== 10) { alert('❌ Особовий рахунок має містити 10 цифр'); return; }
+    if (meter.length !== 8) { alert('❌ Лічильник має містити 8 цифр'); return; }
     if (!seal1 || !seal2 || !addr) { alert('❌ Заповніть всі поля'); return; }
     workLog.unshift({ date: new Date().toLocaleString('uk-UA'), account, meter, seal1, seal2, address: addr });
     saveData();
     accountInput.value = ""; meterInput.value = ""; sealCoverInput.value = ""; sealOptoInput.value = ""; addressInput.value = "";
-    alert('✅ Збережено!');
+    alert('✅ Роботу збережено!');
 }
 
 function exportCSV() {
     if (!workLog.length) { alert('Немає даних'); return; }
-    const headers = ['Дата','Особовий','Лічильник','Пломба кришки','Пломба оптопорту','Адреса'];
+    const headers = ['Дата','Особовий рахунок','Лічильник','Пломба кришки','Пломба оптопорту','Адреса'];
     const rows = workLog.map(r => [`"${r.date}"`,`"${r.account}"`,`"${r.meter}"`,`"${r.seal1}"`,`"${r.seal2}"`,`"${r.address}"`]);
     const csv = headers.join(',') + '\n' + rows.map(r=>r.join(',')).join('\n');
     const blob = new Blob(["\uFEFF"+csv], {type:'text/csv'});
@@ -255,7 +247,7 @@ function exportCSV() {
 }
 
 function clearLog() {
-    if (confirm('Видалити всі записи?')) { workLog = []; saveData(); alert('Очищено'); }
+    if (confirm('⚠️ Видалити всі записи?')) { workLog = []; saveData(); alert('✅ Журнал очищено'); }
 }
 
 function setupValidation() {
@@ -263,9 +255,12 @@ function setupValidation() {
     meterInput?.addEventListener('input', function() { this.value = this.value.replace(/\D/g,'').slice(0,8); });
 }
 
+// ========== ІНІЦІАЛІЗАЦІЯ ==========
 document.addEventListener("DOMContentLoaded", () => {
     updatePinDisplay();
     setupValidation();
+    
+    // PIN кнопки
     document.querySelectorAll(".pin-btn").forEach(btn => {
         btn.addEventListener('click', (e) => {
             const num = btn.getAttribute('data-num');
@@ -275,9 +270,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
     document.getElementById("pinForgot").onclick = pinReset;
+    
+    // Головні кнопки
     saveBtn.onclick = saveRecord;
     exportBtn.onclick = exportCSV;
     clearLogBtn.onclick = clearLog;
+    
+    // QR сканер
     document.querySelectorAll(".btn-camera-icon").forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -295,9 +294,30 @@ document.addEventListener("DOMContentLoaded", () => {
             startQrScanner(scannerId, target, mode);
         });
     });
+    
+    // Фото/OCR (РОБОЧА ВЕРСІЯ)
     document.querySelectorAll(".btn-photo-icon").forEach(btn => {
-        const target = btn.getAttribute('data-target');
-        const mode = btn.getAttribute('data-mode');
-        setupPhotoInput(btn, target, mode);
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = btn.getAttribute('data-target');
+            const mode = btn.getAttribute('data-mode');
+            
+            // Створюємо тимчасовий input для вибору файлу
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.capture = 'environment';
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+            
+            fileInput.onchange = async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    await processPhoto(file, target, mode);
+                }
+                fileInput.remove();
+            };
+            fileInput.click();
+        });
     });
 });
