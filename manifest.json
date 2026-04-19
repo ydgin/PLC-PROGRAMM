@@ -1,10 +1,15 @@
 {
-  "name": "PLS Інвест Програма",
-  "short_name": "PLS Invest",
-  "description": "Облік встановлення лічильників та пломб",
-  "start_url": "/PLC-PROGRAMM/",
-  "display": "standalone",
-  "theme_color": "#FFE566",
-  "background_color": "#FFE566",
-  "orientation": "portrait"
+"name": "PLS Invest",
+"short_name": "PLS",
+"start_url": ".",
+"display": "standalone",
+"background_color": "#FFE566",
+"theme_color": "#FFE566",
+"icons": [
+{
+"src": "icon.png",
+"sizes": "192x192",
+"type": "image/png"
+}
+]
 }
