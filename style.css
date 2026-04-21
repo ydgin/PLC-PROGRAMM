@@ -105,7 +105,7 @@ body {
 }
 .field-input::placeholder { color: #9ca3af; }
 
-.btn-camera-icon, .btn-photo-icon, .btn-search-seal {
+.btn-camera-icon, .btn-photo-icon {
     width: 48px;
     height: 48px;
     border-radius: 48px;
@@ -120,9 +120,8 @@ body {
     align-items: center;
     justify-content: center;
 }
-.btn-camera-icon:active, .btn-photo-icon:active, .btn-search-seal:active { transform: scale(0.95); }
+.btn-camera-icon:active, .btn-photo-icon:active { transform: scale(0.95); }
 .btn-photo-icon { background: #f3e8ff; color: #9333ea; }
-.btn-search-seal { background: #fef3c7; color: #d97706; }
 
 .scanner-container {
     width: 100%;
@@ -196,6 +195,7 @@ body {
     color: white;
 }
 .btn-success { background: #22c55e; }
+.btn-outline { background: white; border: 1px solid #d1d5db; color: #1e3c72; }
 .seal-add-form {
     margin-bottom: 16px;
     padding: 12px;
@@ -286,16 +286,6 @@ body {
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 16px;
-}
-.btn-outline {
-    background: white;
-    border: 1px solid #d1d5db;
-    padding: 8px 14px;
-    border-radius: 40px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    color: #1e3c72;
 }
 .btn-danger {
     background: #fee2e2;
