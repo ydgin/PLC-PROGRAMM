@@ -174,9 +174,10 @@ function addNewSeal() {
     sealAddForm.classList.add('hidden');
     if (sealSearchFilter) sealSearchFilter.value = '';
     renderSealsList('');
+    showToast(`✅ Додано пломбу: ${newSeal}`);
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ (ВИПРАВЛЕНО) ==========
 function showSearchResults(inputId, query) {
     const resultsContainer = document.getElementById(`${inputId}SearchResults`);
     if (!resultsContainer) return;
@@ -200,31 +201,42 @@ function showSearchResults(inputId, query) {
     });
     resultsContainer.innerHTML = html;
     
-    resultsContainer.querySelectorAll('.search-result-item').forEach(el => {
-        el.addEventListener('click', () => {
-            const seal = el.getAttribute('data-seal');
+    // ОБРОБНИК ДЛЯ РЕЗУЛЬТАТІВ ПОШУКУ
+    const resultItems = resultsContainer.querySelectorAll('.search-result-item');
+    for (let i = 0; i < resultItems.length; i++) {
+        resultItems[i].addEventListener('click', function(e) {
+            e.stopPropagation();
+            const seal = this.getAttribute('data-seal');
             const targetInput = document.getElementById(inputId);
+            
             if (targetInput) {
+                // Вставляємо пломбу в поле
                 targetInput.value = seal;
+                // Закриваємо результати пошуку
                 resultsContainer.classList.add('hidden');
+                // Візуальний зворотній зв'язок
                 targetInput.style.borderColor = '#22c55e';
+                targetInput.style.backgroundColor = '#f0fdf4';
                 setTimeout(() => {
                     targetInput.style.borderColor = '#d1d5db';
+                    targetInput.style.backgroundColor = 'white';
                 }, 500);
                 showToast(`✅ Вибрано пломбу: ${seal}`);
             }
         });
-    });
+    }
 }
 
 function hideSearchResults(inputId) {
     const resultsContainer = document.getElementById(`${inputId}SearchResults`);
     if (resultsContainer) {
-        resultsContainer.classList.add('hidden');
+        setTimeout(() => {
+            resultsContainer.classList.add('hidden');
+        }, 200);
     }
 }
 
-// ========== РОБОТА З ДАНИМИ (порожній журнал без прикладів) ==========
+// ========== РОБОТА З ДАНИМИ (порожній журнал) ==========
 function loadData() {
     const stored = localStorage.getItem('pls_log');
     if (stored) {
@@ -427,9 +439,13 @@ function saveRecord() {
     const seal1 = sealCoverInput.value.trim();
     const seal2 = sealOptoInput.value.trim();
     const addr = addressInput.value.trim();
+    
     if (account.length !== 10) { alert('❌ Особовий рахунок має містити 10 цифр'); return; }
     if (meter.length !== 8) { alert('❌ Лічильник має містити 8 цифр'); return; }
-    if (!seal1 || !seal2 || !addr) { alert('❌ Заповніть всі поля'); return; }
+    if (!seal1) { alert('❌ Введіть пломбу кришки'); return; }
+    if (!seal2) { alert('❌ Введіть пломбу оптопорту'); return; }
+    if (!addr) { alert('❌ Введіть адресу'); return; }
+    
     workLog.unshift({ 
         date: new Date().toLocaleString('uk-UA'), 
         account: account, 
@@ -439,11 +455,13 @@ function saveRecord() {
         address: addr 
     });
     saveData();
+    
     accountInput.value = ""; 
     meterInput.value = ""; 
     sealCoverInput.value = ""; 
     sealOptoInput.value = ""; 
     addressInput.value = "";
+    
     alert('✅ Роботу збережено!');
 }
 
@@ -485,7 +503,7 @@ function setupValidation() {
             showSearchResults('sealCover', this.value); 
         });
         sealCoverInput.addEventListener('blur', function() { 
-            setTimeout(() => hideSearchResults('sealCover'), 300); 
+            hideSearchResults('sealCover'); 
         });
     }
     
@@ -494,7 +512,7 @@ function setupValidation() {
             showSearchResults('sealOpto', this.value); 
         });
         sealOptoInput.addEventListener('blur', function() { 
-            setTimeout(() => hideSearchResults('sealOpto'), 300); 
+            hideSearchResults('sealOpto'); 
         });
     }
 }
