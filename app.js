@@ -174,7 +174,7 @@ function addNewSeal() {
     showToast(`✅ Додано пломбу: ${newSeal}`);
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ (АВТОМАТИЧНЕ ДОДАВАННЯ ПРИ НАТИСКАННІ) ==========
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ (ВИПРАВЛЕНО - ПРАЦЮЄ!) ==========
 function showSearchResults(inputId, query) {
     const resultsContainer = document.getElementById(`${inputId}SearchResults`);
     if (!resultsContainer) return;
@@ -198,32 +198,30 @@ function showSearchResults(inputId, query) {
     });
     resultsContainer.innerHTML = html;
     
-    // Додаємо обробник для кожного результату пошуку
-    const resultItems = resultsContainer.querySelectorAll('.search-result-item');
-    resultItems.forEach(item => {
-        item.addEventListener('click', function(e) {
+    // ОБРОБНИК ДЛЯ КОЖНОГО РЕЗУЛЬТАТУ - ВИКОРИСТОВУЄМО НАТИВНИЙ ЦИКЛ
+    const resultElements = resultsContainer.querySelectorAll('.search-result-item');
+    for (let i = 0; i < resultElements.length; i++) {
+        const el = resultElements[i];
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
-            const seal = this.getAttribute('data-seal');
-            const targetInput = document.getElementById(inputId);
+            const sealValue = this.getAttribute('data-seal');
+            const targetField = document.getElementById(inputId);
             
-            if (targetInput) {
-                // Вставляємо пломбу в поле
-                targetInput.value = seal;
-                // Закриваємо результати пошуку
+            if (targetField) {
+                targetField.value = sealValue;
                 resultsContainer.classList.add('hidden');
-                // Очищаємо вміст контейнера
                 resultsContainer.innerHTML = '';
-                // Візуальний зворотній зв'язок
-                targetInput.style.borderColor = '#22c55e';
-                targetInput.style.backgroundColor = '#f0fdf4';
+                targetField.style.border = '2px solid #22c55e';
+                targetField.style.backgroundColor = '#f0fdf4';
+                showToast(`✅ Вибрано пломбу: ${sealValue}`);
                 setTimeout(() => {
-                    targetInput.style.borderColor = '#d1d5db';
-                    targetInput.style.backgroundColor = 'white';
-                }, 500);
-                showToast(`✅ Вибрано пломбу: ${seal}`);
+                    targetField.style.border = '1px solid #d1d5db';
+                    targetField.style.backgroundColor = 'white';
+                }, 800);
             }
         });
-    });
+    }
 }
 
 function hideSearchResults(inputId) {
