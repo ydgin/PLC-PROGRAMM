@@ -2,6 +2,7 @@
 const FIXED_PIN = "3268";
 let enteredPin = "";
 let workLog = [];
+let sealsDB = []; // База пломб
 let activeScanners = {};
 
 // DOM елементи
@@ -18,6 +19,13 @@ const saveBtn = document.getElementById('saveRecordBtn');
 const exportBtn = document.getElementById('exportLogBtn');
 const clearLogBtn = document.getElementById('clearLogBtn');
 const logBody = document.getElementById('logBody');
+const sealList = document.getElementById('sealList');
+const sealSearchFilter = document.getElementById('sealSearchFilter');
+const addSealBtn = document.getElementById('addSealBtn');
+const sealAddForm = document.getElementById('sealAddForm');
+const newSealNumber = document.getElementById('newSealNumber');
+const confirmAddSealBtn = document.getElementById('confirmAddSealBtn');
+const cancelAddSealBtn = document.getElementById('cancelAddSealBtn');
 
 // ========== PIN ФУНКЦІЇ ==========
 function updatePinDisplay() {
@@ -38,6 +46,7 @@ function pinAddNum(num) {
                 pinScreen.style.display = 'none';
                 mainApp.classList.remove('hidden');
                 loadData();
+                loadSealsDB();
             } else {
                 pinError.innerText = '❌ Невірний PIN';
                 enteredPin = "";
@@ -47,33 +56,129 @@ function pinAddNum(num) {
     }
 }
 
-function pinClear() {
-    enteredPin = "";
-    updatePinDisplay();
-    if (pinError) pinError.innerText = '';
-}
-
+function pinClear() { enteredPin = ""; updatePinDisplay(); if (pinError) pinError.innerText = ''; }
 function pinCheck() {
-    if (enteredPin.length !== 4) {
-        pinError.innerText = '❌ Введіть 4 цифри';
-        return;
-    }
+    if (enteredPin.length !== 4) { pinError.innerText = '❌ Введіть 4 цифри'; return; }
     if (enteredPin === FIXED_PIN) {
         pinScreen.style.display = 'none';
         mainApp.classList.remove('hidden');
         loadData();
+        loadSealsDB();
     } else {
         pinError.innerText = '❌ Невірний PIN';
         enteredPin = "";
         updatePinDisplay();
     }
 }
+function pinReset() { enteredPin = ""; updatePinDisplay(); pinError.innerText = '✅ PIN: 3268'; setTimeout(() => { if (pinError) pinError.innerText = ''; }, 2000); }
 
-function pinReset() {
-    enteredPin = "";
-    updatePinDisplay();
-    pinError.innerText = '✅ PIN: 3268';
-    setTimeout(() => { if (pinError) pinError.innerText = ''; }, 2000);
+// ========== РОБОТА З БАЗОЮ ПЛОМБ ==========
+function loadSealsDB() {
+    const stored = localStorage.getItem('pls_seals');
+    if (stored) {
+        try { sealsDB = JSON.parse(stored); } catch(e) { sealsDB = []; }
+    }
+    if (!sealsDB.length) {
+        sealsDB = ['PL7890', 'OP5566', 'SEAL123', 'TEST456'];
+        saveSealsDB();
+    }
+    renderSealsList();
+}
+
+function saveSealsDB() {
+    localStorage.setItem('pls_seals', JSON.stringify(sealsDB));
+    renderSealsList();
+}
+
+function renderSealsList(filterText = '') {
+    if (!sealList) return;
+    let filtered = [...sealsDB];
+    if (filterText) {
+        filtered = sealsDB.filter(seal => seal.toLowerCase().includes(filterText.toLowerCase()));
+    }
+    if (filtered.length === 0) {
+        sealList.innerHTML = '<div class="empty-seals">Немає пломб за таким запитом</div>';
+        return;
+    }
+    let html = '';
+    filtered.forEach((seal, idx) => {
+        html += `<div class="seal-item">
+                    <span class="seal-number" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</span>
+                    <button class="delete-seal" data-seal="${escapeHtml(seal)}">🗑️</button>
+                </div>`;
+    });
+    sealList.innerHTML = html;
+    
+    document.querySelectorAll('.seal-number').forEach(el => {
+        el.addEventListener('click', () => {
+            const seal = el.getAttribute('data-seal');
+            // Заповнюємо активне поле пломби
+            const activeInput = document.activeElement;
+            if (activeInput && activeInput.classList && activeInput.classList.contains('seal-input')) {
+                activeInput.value = seal;
+                hideSearchResults(activeInput.id);
+            }
+        });
+    });
+    
+    document.querySelectorAll('.delete-seal').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const seal = el.getAttribute('data-seal');
+            if (confirm(`Видалити пломбу "${seal}"?`)) {
+                sealsDB = sealsDB.filter(s => s !== seal);
+                saveSealsDB();
+                renderSealsList(sealSearchFilter?.value || '');
+            }
+        });
+    });
+}
+
+function addNewSeal() {
+    const newSeal = newSealNumber.value.trim();
+    if (!newSeal) { alert('Введіть номер пломби'); return; }
+    if (sealsDB.includes(newSeal)) { alert('Така пломба вже існує'); return; }
+    sealsDB.push(newSeal);
+    saveSealsDB();
+    newSealNumber.value = '';
+    sealAddForm.classList.add('hidden');
+    if (sealSearchFilter) sealSearchFilter.value = '';
+    renderSealsList();
+}
+
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
+function showSearchResults(inputId, query) {
+    const resultsContainer = document.getElementById(`${inputId}SearchResults`);
+    if (!resultsContainer) return;
+    if (!query || query.length < 1) {
+        resultsContainer.classList.add('hidden');
+        resultsContainer.innerHTML = '';
+        return;
+    }
+    const filtered = sealsDB.filter(seal => seal.toLowerCase().includes(query.toLowerCase()));
+    if (filtered.length === 0) {
+        resultsContainer.classList.add('hidden');
+        return;
+    }
+    resultsContainer.classList.remove('hidden');
+    let html = '';
+    filtered.forEach(seal => {
+        html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`;
+    });
+    resultsContainer.innerHTML = html;
+    
+    resultsContainer.querySelectorAll('.search-result-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const seal = el.getAttribute('data-seal');
+            document.getElementById(inputId).value = seal;
+            resultsContainer.classList.add('hidden');
+        });
+    });
+}
+
+function hideSearchResults(inputId) {
+    const resultsContainer = document.getElementById(`${inputId}SearchResults`);
+    if (resultsContainer) resultsContainer.classList.add('hidden');
 }
 
 // ========== РОБОТА З ДАНИМИ ==========
@@ -83,14 +188,7 @@ function loadData() {
         try { workLog = JSON.parse(stored); } catch(e) { workLog = []; }
     }
     if (!workLog.length) {
-        workLog = [{
-            date: new Date().toLocaleString('uk-UA'),
-            account: '1234567890',
-            meter: '21113352',
-            seal1: 'PL7890',
-            seal2: 'OP5566',
-            address: 'вул. Тестова, 1'
-        }];
+        workLog = []; // Порожній журнал без прикладів
         saveData();
     }
     renderLog();
@@ -184,7 +282,7 @@ async function startQrScanner(containerId, inputId, mode) {
     } catch(err) { alert('❌ Не вдалося запустити камеру'); container.classList.add('hidden'); delete activeScanners[containerId]; }
 }
 
-// ========== ПОКРАЩЕНИЙ OCR ДЛЯ ТЕКСТУ ТА ЦИФР ==========
+// ========== OCR З ФОТО ==========
 async function enhanceImageForOCR(file) {
     return new Promise((resolve) => {
         const img = new Image();
@@ -192,37 +290,22 @@ async function enhanceImageForOCR(file) {
         img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
             let width = img.width;
             let height = img.height;
-            const maxSize = 1600;
-            if (width > maxSize) {
-                height = (height * maxSize) / width;
-                width = maxSize;
-            }
-            canvas.width = width;
-            canvas.height = height;
-            
+            const maxSize = 1200;
+            if (width > maxSize) { height = (height * maxSize) / width; width = maxSize; }
+            canvas.width = width; canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
-            
-            // Підвищення контрасту та яскравості
             const imageData = ctx.getImageData(0, 0, width, height);
             const data = imageData.data;
             for (let i = 0; i < data.length; i += 4) {
-                // Перетворення в чорно-біле з порогом
                 const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
                 const threshold = 140;
                 const value = gray > threshold ? 255 : 0;
-                data[i] = value;
-                data[i+1] = value;
-                data[i+2] = value;
+                data[i] = value; data[i+1] = value; data[i+2] = value;
             }
             ctx.putImageData(imageData, 0, 0);
-            
-            canvas.toBlob((blob) => {
-                URL.revokeObjectURL(url);
-                resolve(blob);
-            }, 'image/jpeg', 0.95);
+            canvas.toBlob((blob) => { URL.revokeObjectURL(url); resolve(blob); }, 'image/jpeg', 0.95);
         };
         img.src = url;
     });
@@ -233,172 +316,7 @@ async function processPhoto(file, inputId, mode) {
     statusDiv.textContent = '⏳ Обробка зображення...';
     statusDiv.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:8px 16px;border-radius:40px;font-size:12px;z-index:2000';
     document.body.appendChild(statusDiv);
-    
     try {
-        // Покращення зображення
         statusDiv.textContent = '⏳ Покращення зображення...';
         const enhancedBlob = await enhanceImageForOCR(file);
-        
-        statusDiv.textContent = '⏳ Розпізнавання тексту та цифр...';
-        
-        // Розпізнаємо текст з підтримкою української та англійської
-        const { data: { text } } = await Tesseract.recognize(
-            enhancedBlob, 
-            'ukr+eng', 
-            {
-                logger: m => console.log(m),
-                tessedit_pageseg_mode: '6', // Окремий текстовий блок
-                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯабвгґдеєжзиіїйклмнопрстуфхцчшщьюя -.,'
-            }
-        );
-        
-        let result = text.trim();
-        
-        // Очищаємо результат
-        result = result.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-        
-        // Обробка залежно від режиму
-        if (mode === 'digits') {
-            const digitsOnly = result.replace(/\D/g, '');
-            result = digitsExtract(digitsOnly);
-        } else if (mode === 'smart') {
-            const digitsOnly = result.replace(/\D/g, '');
-            result = smartMeterExtract(digitsOnly);
-        }
-        // Для mode === 'text' залишаємо оригінальний текст
-        
-        // Якщо результат порожній або занадто короткий - пробуємо ще раз
-        if ((mode === 'digits' || mode === 'smart') && (!result || result.length < 4)) {
-            statusDiv.textContent = '⏳ Спроба повторного розпізнавання...';
-            const { data: { text: text2 } } = await Tesseract.recognize(file, 'eng', {
-                tessedit_pageseg_mode: '8',
-                tessedit_char_whitelist: '0123456789'
-            });
-            const digitsOnly = text2.replace(/\D/g, '');
-            if (mode === 'digits') result = digitsExtract(digitsOnly);
-            else result = smartMeterExtract(digitsOnly);
-        }
-        
-        document.getElementById(inputId).value = result;
-        
-        const shortResult = result.length > 40 ? result.substring(0, 40) + '...' : result;
-        statusDiv.textContent = `✅ Розпізнано: ${shortResult}`;
-        setTimeout(() => statusDiv.remove(), 3000);
-        showToast(`📷 Розпізнано: ${shortResult}`);
-        
-    } catch(err) {
-        console.error('OCR помилка:', err);
-        statusDiv.textContent = '❌ Помилка розпізнавання. Спробуйте краще фото';
-        setTimeout(() => statusDiv.remove(), 3000);
-        alert('❌ Не вдалося розпізнати текст. Спробуйте зробити чіткіше фото.');
-    }
-}
-
-function showToast(msg) {
-    const t = document.createElement('div');
-    t.textContent = msg;
-    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 20px;border-radius:40px;font-size:14px;z-index:2000';
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
-
-function saveRecord() {
-    const account = accountInput.value.trim();
-    const meter = meterInput.value.trim();
-    const seal1 = sealCoverInput.value.trim();
-    const seal2 = sealOptoInput.value.trim();
-    const addr = addressInput.value.trim();
-    if (account.length !== 10) { alert('❌ Особовий рахунок має містити 10 цифр'); return; }
-    if (meter.length !== 8) { alert('❌ Лічильник має містити 8 цифр'); return; }
-    if (!seal1 || !seal2 || !addr) { alert('❌ Заповніть всі поля'); return; }
-    workLog.unshift({ date: new Date().toLocaleString('uk-UA'), account, meter, seal1, seal2, address: addr });
-    saveData();
-    accountInput.value = ""; meterInput.value = ""; sealCoverInput.value = ""; sealOptoInput.value = ""; addressInput.value = "";
-    alert('✅ Роботу збережено!');
-}
-
-function exportCSV() {
-    if (!workLog.length) { alert('Немає даних'); return; }
-    const headers = ['Дата','Особовий рахунок','Лічильник','Пломба кришки','Пломба оптопорту','Адреса'];
-    const rows = workLog.map(r => [`"${r.date}"`,`"${r.account}"`,`"${r.meter}"`,`"${r.seal1}"`,`"${r.seal2}"`,`"${r.address}"`]);
-    const csv = headers.join(',') + '\n' + rows.map(r=>r.join(',')).join('\n');
-    const blob = new Blob(["\uFEFF"+csv], {type:'text/csv'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `pls_log_${new Date().toISOString().slice(0,19)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-}
-
-function clearLog() {
-    if (confirm('⚠️ Видалити всі записи?')) { workLog = []; saveData(); alert('✅ Журнал очищено'); }
-}
-
-function setupValidation() {
-    accountInput?.addEventListener('input', function() { this.value = this.value.replace(/\D/g,'').slice(0,10); });
-    meterInput?.addEventListener('input', function() { this.value = this.value.replace(/\D/g,'').slice(0,8); });
-}
-
-// ========== ІНІЦІАЛІЗАЦІЯ ==========
-document.addEventListener("DOMContentLoaded", () => {
-    updatePinDisplay();
-    setupValidation();
-    
-    document.querySelectorAll(".pin-btn").forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const num = btn.getAttribute('data-num');
-            if (num === "clear") pinClear();
-            else if (num === "enter") pinCheck();
-            else pinAddNum(num);
-        });
-    });
-    document.getElementById("pinForgot").onclick = pinReset;
-    
-    saveBtn.onclick = saveRecord;
-    exportBtn.onclick = exportCSV;
-    clearLogBtn.onclick = clearLog;
-    
-    // QR сканер
-    document.querySelectorAll(".btn-camera-icon").forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = btn.getAttribute('data-target');
-            const mode = btn.getAttribute('data-mode');
-            let scannerId;
-            switch(target) {
-                case 'accountNumber': scannerId='accountScanner'; break;
-                case 'meterNumber': scannerId='meterScanner'; break;
-                case 'sealCoverNumber': scannerId='sealCoverScanner'; break;
-                case 'sealOptoNumber': scannerId='sealOptoScanner'; break;
-                case 'address': scannerId='addressScanner'; break;
-                default: return;
-            }
-            startQrScanner(scannerId, target, mode);
-        });
-    });
-    
-    // Фото/OCR - розпізнає і текст, і цифри
-    document.querySelectorAll(".btn-photo-icon").forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = btn.getAttribute('data-target');
-            const mode = btn.getAttribute('data-mode');
-            
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            fileInput.capture = 'environment';
-            fileInput.style.display = 'none';
-            document.body.appendChild(fileInput);
-            
-            fileInput.onchange = async (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    await processPhoto(file, target, mode);
-                }
-                fileInput.remove();
-            };
-            fileInput.click();
-        });
-    });
-});
+        statusDiv.text
