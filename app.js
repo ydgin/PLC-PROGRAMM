@@ -144,9 +144,6 @@ function renderSealsList(filterText = '') {
             if (activeInput && (activeInput.id === 'sealCoverNumber' || activeInput.id === 'sealOptoNumber')) {
                 activeInput.value = seal;
                 showToast(`✅ Вибрано пломбу: ${seal}`);
-            } else {
-                if (sealCoverInput) sealCoverInput.value = seal;
-                showToast(`✅ Вибрано пломбу: ${seal}`);
             }
         });
     });
@@ -177,7 +174,7 @@ function addNewSeal() {
     showToast(`✅ Додано пломбу: ${newSeal}`);
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ (ВИПРАВЛЕНО) ==========
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ (АВТОМАТИЧНЕ ДОДАВАННЯ ПРИ НАТИСКАННІ) ==========
 function showSearchResults(inputId, query) {
     const resultsContainer = document.getElementById(`${inputId}SearchResults`);
     if (!resultsContainer) return;
@@ -201,10 +198,10 @@ function showSearchResults(inputId, query) {
     });
     resultsContainer.innerHTML = html;
     
-    // ОБРОБНИК ДЛЯ РЕЗУЛЬТАТІВ ПОШУКУ
+    // Додаємо обробник для кожного результату пошуку
     const resultItems = resultsContainer.querySelectorAll('.search-result-item');
-    for (let i = 0; i < resultItems.length; i++) {
-        resultItems[i].addEventListener('click', function(e) {
+    resultItems.forEach(item => {
+        item.addEventListener('click', function(e) {
             e.stopPropagation();
             const seal = this.getAttribute('data-seal');
             const targetInput = document.getElementById(inputId);
@@ -214,6 +211,8 @@ function showSearchResults(inputId, query) {
                 targetInput.value = seal;
                 // Закриваємо результати пошуку
                 resultsContainer.classList.add('hidden');
+                // Очищаємо вміст контейнера
+                resultsContainer.innerHTML = '';
                 // Візуальний зворотній зв'язок
                 targetInput.style.borderColor = '#22c55e';
                 targetInput.style.backgroundColor = '#f0fdf4';
@@ -224,7 +223,7 @@ function showSearchResults(inputId, query) {
                 showToast(`✅ Вибрано пломбу: ${seal}`);
             }
         });
-    }
+    });
 }
 
 function hideSearchResults(inputId) {
@@ -232,7 +231,8 @@ function hideSearchResults(inputId) {
     if (resultsContainer) {
         setTimeout(() => {
             resultsContainer.classList.add('hidden');
-        }, 200);
+            resultsContainer.innerHTML = '';
+        }, 300);
     }
 }
 
