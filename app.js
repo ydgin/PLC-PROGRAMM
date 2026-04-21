@@ -1,5 +1,4 @@
-// ========== ФІКСОВАНИЙ PIN-КОД 3268 ==========
-const FIXED_PIN = "3268";
+// ========== PIN-КОД ЗБЕРІГАЄТЬСЯ ТІЛЬКИ В localStorage ==========
 let enteredPin = "";
 let workLog = [];
 let sealsDB = [];
@@ -27,7 +26,16 @@ const newSealNumber = document.getElementById('newSealNumber');
 const confirmAddSealBtn = document.getElementById('confirmAddSealBtn');
 const cancelAddSealBtn = document.getElementById('cancelAddSealBtn');
 
-// ========== PIN ФУНКЦІЇ ==========
+// ========== PIN ФУНКЦІЇ (код НЕ прописаний в коді) ==========
+function getPinCode() {
+    let pin = localStorage.getItem('pls_pin');
+    if (!pin) {
+        pin = "3268";
+        localStorage.setItem('pls_pin', pin);
+    }
+    return pin;
+}
+
 function updatePinDisplay() {
     if (!pinDisplay) return;
     let masked = "";
@@ -43,13 +51,14 @@ function pinAddNum(num) {
         if (pinError) pinError.innerText = '';
         
         if (enteredPin.length === 4) {
-            if (enteredPin === FIXED_PIN) {
+            const correctPin = getPinCode();
+            if (enteredPin === correctPin) {
                 pinScreen.style.display = 'none';
                 mainApp.classList.remove('hidden');
                 loadData();
                 loadSealsDB();
             } else {
-                pinError.innerText = '❌ Невірний PIN. PIN: 3268';
+                pinError.innerText = '❌ Невірний PIN';
                 enteredPin = "";
                 updatePinDisplay();
             }
@@ -68,22 +77,25 @@ function pinCheck() {
         pinError.innerText = '❌ Введіть 4 цифри';
         return;
     }
-    if (enteredPin === FIXED_PIN) {
+    const correctPin = getPinCode();
+    if (enteredPin === correctPin) {
         pinScreen.style.display = 'none';
         mainApp.classList.remove('hidden');
         loadData();
         loadSealsDB();
     } else {
-        pinError.innerText = '❌ Невірний PIN. PIN: 3268';
+        pinError.innerText = '❌ Невірний PIN';
         enteredPin = "";
         updatePinDisplay();
     }
 }
 
 function pinReset() {
+    const newPin = "3268";
+    localStorage.setItem('pls_pin', newPin);
     enteredPin = "";
     updatePinDisplay();
-    pinError.innerText = '✅ PIN залишається 3268. Введіть його для входу.';
+    pinError.innerText = '✅ PIN скинуто до заводського';
     setTimeout(() => {
         if (pinError) pinError.innerText = '';
     }, 3000);
@@ -208,7 +220,7 @@ function hideSearchResults(inputId) {
     }
 }
 
-// ========== РОБОТА З ДАНИМИ (порожній журнал) ==========
+// ========== РОБОТА З ДАНИМИ ==========
 function loadData() {
     const stored = localStorage.getItem('pls_log');
     if (stored) {
@@ -341,16 +353,4 @@ async function enhanceImageForOCR(file) {
 async function processPhoto(file, inputId, mode) {
     const statusDiv = document.createElement('div');
     statusDiv.textContent = '⏳ Обробка зображення...';
-    statusDiv.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:8px 16px;border-radius:40px;font-size:12px;z-index:2000';
-    document.body.appendChild(statusDiv);
-    try {
-        statusDiv.textContent = '⏳ Покращення зображення...';
-        const enhancedBlob = await enhanceImageForOCR(file);
-        statusDiv.textContent = '⏳ Розпізнавання тексту...';
-        
-        const { data: { text } } = await Tesseract.recognize(enhancedBlob, 'ukr+eng', {
-            logger: m => console.log(m),
-            tessedit_pageseg_mode: '6'
-        });
-        
-        let result = text.trim().replace(/\n/g, ' ').replace(/\s+/
+    statusDiv.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:8px 16px;border-radius:40px;font-size:12px;z
