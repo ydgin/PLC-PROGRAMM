@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PLC INVEST - Облік лічильників та пломб</title>
+    <title>PLS INVEST - Облік лічильників та пломб</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -47,7 +47,7 @@
 <div id="mainApp" class="hidden">
     <div class="container">
         <div class="card header-card">
-            <h1>🏦 PLC INVEST</h1>
+            <h1>🏦 PLS INVEST</h1>
             <div class="sub">Облік лічильників та пломб</div>
         </div>
 
@@ -75,21 +75,25 @@
         <div class="card">
             <label class="field-label">Пломба кришки</label>
             <div class="input-scan-row">
-                <input id="sealCoverNumber" class="field-input" placeholder="Номер пломби">
+                <input id="sealCoverNumber" class="field-input seal-input" placeholder="Номер пломби" autocomplete="off">
+                <button class="btn-search-seal" data-target="sealCoverNumber">🔍</button>
                 <button class="btn-camera-icon" data-target="sealCoverNumber" data-mode="text">📷</button>
                 <button class="btn-photo-icon" data-target="sealCoverNumber" data-mode="text">🖼️</button>
             </div>
             <div id="sealCoverScanner" class="scanner-container hidden"></div>
+            <div id="sealCoverSearchResults" class="search-results hidden"></div>
         </div>
 
         <div class="card">
             <label class="field-label">Пломба оптопорту</label>
             <div class="input-scan-row">
-                <input id="sealOptoNumber" class="field-input" placeholder="Номер пломби">
+                <input id="sealOptoNumber" class="field-input seal-input" placeholder="Номер пломби" autocomplete="off">
+                <button class="btn-search-seal" data-target="sealOptoNumber">🔍</button>
                 <button class="btn-camera-icon" data-target="sealOptoNumber" data-mode="text">📷</button>
                 <button class="btn-photo-icon" data-target="sealOptoNumber" data-mode="text">🖼️</button>
             </div>
             <div id="sealOptoScanner" class="scanner-container hidden"></div>
+            <div id="sealOptoSearchResults" class="search-results hidden"></div>
         </div>
 
         <div class="card">
@@ -107,6 +111,28 @@
             <div class="save-label">Зберегти</div>
         </div>
 
+        <!-- БАЗА ПЛОМБ -->
+        <div class="card">
+            <div class="flex-between">
+                <label class="field-label">📦 База пломб</label>
+                <button id="addSealBtn" class="btn-small">+ Додати пломбу</button>
+            </div>
+            <div class="seal-add-form hidden" id="sealAddForm">
+                <div class="seal-add-row">
+                    <input type="text" id="newSealNumber" class="field-input" placeholder="Номер пломби">
+                    <button id="confirmAddSealBtn" class="btn-small btn-success">✔ Додати</button>
+                    <button id="cancelAddSealBtn" class="btn-small btn-outline">✖</button>
+                </div>
+            </div>
+            <div class="seal-list-container">
+                <input type="text" id="sealSearchFilter" class="seal-search-filter" placeholder="🔍 Пошук по базі пломб...">
+                <div id="sealList" class="seal-list">
+                    <div class="empty-seals">Немає пломб у базі. Додайте першу пломбу ➕</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЖУРНАЛ РОБІТ -->
         <div class="card">
             <div class="btn-group">
                 <button id="exportLogBtn" class="btn-outline">📄 Експорт CSV</button>
