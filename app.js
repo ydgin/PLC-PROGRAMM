@@ -175,7 +175,7 @@ function addNewSeal() {
     showToast(`✅ Додано пломбу: ${newSeal}`);
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ (ПРАЦЮЄ!) ==========
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
 function showSearchResults(inputId, query) {
     const resultsContainer = document.getElementById(`${inputId}SearchResults`);
     if (!resultsContainer) return;
@@ -199,12 +199,9 @@ function showSearchResults(inputId, query) {
     });
     resultsContainer.innerHTML = html;
     
-    // Пряме призначення обробників подій
     const resultItems = resultsContainer.querySelectorAll('.search-result-item');
     resultItems.forEach(function(item) {
-        // Видаляємо старі обробники, якщо є
         item.removeEventListener('click', item._handler);
-        // Створюємо новий обробник
         const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -212,12 +209,9 @@ function showSearchResults(inputId, query) {
             const targetField = document.getElementById(inputId);
             
             if (targetField) {
-                // БЕЗПОСЕРЕДНЬО ВСТАВЛЯЄМО ЗНАЧЕННЯ В ПОЛЕ
                 targetField.value = sealValue;
-                // Закриваємо результати
                 resultsContainer.classList.add('hidden');
                 resultsContainer.innerHTML = '';
-                // Візуальний зворотній зв'язок
                 targetField.style.backgroundColor = '#d1fae5';
                 targetField.style.border = '2px solid #10b981';
                 showToast(`✅ Пломбу додано: ${sealValue}`);
@@ -225,7 +219,6 @@ function showSearchResults(inputId, query) {
                     targetField.style.backgroundColor = 'white';
                     targetField.style.border = '1px solid #d1d5db';
                 }, 500);
-                // Тригеримо подію input для валідації
                 const inputEvent = new Event('input', { bubbles: true });
                 targetField.dispatchEvent(inputEvent);
             }
@@ -358,7 +351,7 @@ async function startQrScanner(containerId, inputId, mode) {
     }
 }
 
-// ========== OCR З ФОТО ==========
+// ========== ПОКРАЩЕНИЙ OCR ДЛЯ РОЗПІЗНАВАННЯ ЦИФР ТА ЛІТЕР ==========
 async function enhanceImageForOCR(file) {
     return new Promise((resolve) => {
         const img = new Image();
@@ -396,6 +389,7 @@ async function enhanceImageForOCR(file) {
     });
 }
 
+// ОСНОВНА ФУНКЦІЯ ДЛЯ РОЗПІЗНАВАННЯ З ФОТО
 async function processPhoto(file, inputId, mode) {
     const statusDiv = document.createElement('div');
     statusDiv.textContent = '⏳ Обробка зображення...';
@@ -406,13 +400,17 @@ async function processPhoto(file, inputId, mode) {
         const enhancedBlob = await enhanceImageForOCR(file);
         statusDiv.textContent = '⏳ Розпізнавання тексту...';
         
-        const { data: { text } } = await Tesseract.recognize(enhancedBlob, 'ukr+eng', {
+        // Використовуємо тільки цифри та великі літери для кращого розпізнавання пломб
+        const { data: { text } } = await Tesseract.recognize(enhancedBlob, 'eng', {
             logger: (m) => console.log(m),
-            tessedit_pageseg_mode: '6',
-            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ'
+            tessedit_pageseg_mode: '8', // Режим для одного текстового блоку
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         });
         
         let result = text.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+        
+        // Видаляємо сторонні символи, залишаємо тільки цифри та літери
+        result = result.replace(/[^A-Za-z0-9]/g, '');
         
         if (mode === 'digits') {
             const digitsOnly = result.replace(/\D/g, '');
@@ -422,19 +420,36 @@ async function processPhoto(file, inputId, mode) {
             result = smartMeterExtract(digitsOnly);
         }
         
+        // Якщо результат порожній - пробуємо ще раз з іншими налаштуваннями
+        if (!result || result.length === 0) {
+            statusDiv.textContent = '⏳ Спроба повторного розпізнавання...';
+            const { data: { text: text2 } } = await Tesseract.recognize(file, 'eng', {
+                tessedit_pageseg_mode: '6',
+                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            });
+            result = text2.trim().replace(/[^A-Za-z0-9]/g, '');
+            if (mode === 'digits') result = digitsExtract(result.replace(/\D/g, ''));
+            else if (mode === 'smart') result = smartMeterExtract(result.replace(/\D/g, ''));
+        }
+        
         document.getElementById(inputId).value = result;
-        const shortResult = result.length > 40 ? result.substring(0, 40) + '...' : result;
-        statusDiv.textContent = `✅ Розпізнано: ${shortResult}`;
+        const shortResult = result.length > 30 ? result.substring(0, 30) + '...' : result;
+        statusDiv.textContent = `✅ Розпізнано: ${shortResult || 'не вдалося'}`;
         setTimeout(() => statusDiv.remove(), 3000);
-        showToast(`📷 Розпізнано: ${shortResult}`);
+        if (result && result.length > 0) {
+            showToast(`📷 Розпізнано: ${shortResult}`);
+        } else {
+            showToast(`⚠️ Не вдалося розпізнати текст на фото`);
+        }
     } catch(err) {
         console.error('OCR помилка:', err);
         statusDiv.textContent = '❌ Помилка розпізнавання';
         setTimeout(() => statusDiv.remove(), 3000);
-        alert('❌ Не вдалося розпізнати текст. Спробуйте краще фото.');
+        alert('❌ Не вдалося розпізнати текст. Спробуйте зробити чіткіше фото.');
     }
 }
 
+// Функція для розпізнавання пломби при додаванні
 async function processPhotoForSeal(file, targetInput) {
     const statusDiv = document.createElement('div');
     statusDiv.textContent = '⏳ Обробка зображення для пломби...';
@@ -445,13 +460,14 @@ async function processPhotoForSeal(file, targetInput) {
         const enhancedBlob = await enhanceImageForOCR(file);
         statusDiv.textContent = '⏳ Розпізнавання тексту...';
         
-        const { data: { text } } = await Tesseract.recognize(enhancedBlob, 'ukr+eng', {
+        const { data: { text } } = await Tesseract.recognize(enhancedBlob, 'eng', {
             logger: (m) => console.log(m),
-            tessedit_pageseg_mode: '6',
-            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+            tessedit_pageseg_mode: '8',
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         });
         
-        let result = text.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+        let result = text.trim().replace(/\n/g, '').replace(/\s+/g, '').trim();
+        result = result.replace(/[^A-Za-z0-9]/g, '');
         result = result.substring(0, 30);
         
         if (targetInput) {
@@ -459,9 +475,14 @@ async function processPhotoForSeal(file, targetInput) {
         }
         
         const shortResult = result.length > 30 ? result.substring(0, 30) + '...' : result;
-        statusDiv.textContent = `✅ Розпізнано: ${shortResult}`;
+        if (result && result.length > 0) {
+            statusDiv.textContent = `✅ Розпізнано: ${shortResult}`;
+            showToast(`📷 Розпізнано пломбу: ${shortResult}`);
+        } else {
+            statusDiv.textContent = '⚠️ Не вдалося розпізнати пломбу';
+            showToast(`⚠️ Не вдалося розпізнати пломбу на фото`);
+        }
         setTimeout(() => statusDiv.remove(), 3000);
-        showToast(`📷 Розпізнано пломбу: ${shortResult}`);
     } catch(err) {
         console.error('OCR помилка:', err);
         statusDiv.textContent = '❌ Помилка розпізнавання';
