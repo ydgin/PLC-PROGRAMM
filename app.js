@@ -4,7 +4,7 @@ let workLog = [];
 let sealsDB = [];
 let activeScanners = {};
 
-// DOM
+// DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
 const pinError = document.getElementById('pinError');
 const pinScreen = document.getElementById('pinScreen');
@@ -27,7 +27,7 @@ const confirmAddSealBtn = document.getElementById('confirmAddSealBtn');
 const cancelAddSealBtn = document.getElementById('cancelAddSealBtn');
 const addSealPhotoBtn = document.getElementById('addSealPhotoBtn');
 
-// ========== PIN ==========
+// ========== PIN ФУНКЦІЇ ==========
 function getPinCode() {
     let pin = localStorage.getItem('pls_pin');
     if (!pin) {
@@ -39,14 +39,18 @@ function getPinCode() {
 
 function updatePinDisplay() {
     if (!pinDisplay) return;
-    pinDisplay.innerText = "●●●●";
+    let masked = "";
+    for (let i = 0; i < enteredPin.length; i++) masked += "●";
+    for (let i = enteredPin.length; i < 4; i++) masked += "●";
+    pinDisplay.innerText = masked;
 }
 
 function pinAddNum(num) {
     if (enteredPin.length < 4) {
-        enteredPin += num;
+        enteredPin += num.toString();
         updatePinDisplay();
-
+        if (pinError) pinError.innerText = '';
+        
         if (enteredPin.length === 4) {
             if (enteredPin === getPinCode()) {
                 pinScreen.style.display = 'none';
@@ -54,107 +58,196 @@ function pinAddNum(num) {
                 loadData();
                 loadSealsDB();
             } else {
-                pinError.innerText = '❌ Невірний PIN';
+                pinError.innerText = '❌ Невірний PIN (3268)';
                 enteredPin = "";
+                updatePinDisplay();
             }
         }
     }
 }
 
-function pinClear() { enteredPin = ""; updatePinDisplay(); }
+function pinClear() {
+    enteredPin = "";
+    updatePinDisplay();
+    if (pinError) pinError.innerText = '';
+}
 
 function pinCheck() {
+    if (enteredPin.length !== 4) {
+        pinError.innerText = '❌ Введіть 4 цифри';
+        return;
+    }
     if (enteredPin === getPinCode()) {
         pinScreen.style.display = 'none';
         mainApp.classList.remove('hidden');
         loadData();
         loadSealsDB();
     } else {
-        pinError.innerText = '❌ Невірний PIN';
+        pinError.innerText = '❌ Невірний PIN (3268)';
+        enteredPin = "";
+        updatePinDisplay();
     }
 }
 
 function pinReset() {
     localStorage.setItem('pls_pin', "3268");
+    enteredPin = "";
+    updatePinDisplay();
     pinError.innerText = '✅ PIN: 3268';
+    setTimeout(() => {
+        if (pinError) pinError.innerText = '';
+    }, 3000);
 }
 
-// ========== OCR ==========
-async function enhanceImageForOCR(file) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
+// ========== РОБОТА З БАЗОЮ ПЛОМБ ==========
+function loadSealsDB() {
+    const stored = localStorage.getItem('pls_seals');
+    if (stored) {
+        try { sealsDB = JSON.parse(stored); } catch(e) { sealsDB = []; }
+    }
+    if (!sealsDB.length) {
+        sealsDB = ['PL7890', 'OP5566', 'SEAL123', 'TEST456'];
+        saveSealsDB();
+    }
+    renderSealsList();
+}
 
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+function saveSealsDB() {
+    localStorage.setItem('pls_seals', JSON.stringify(sealsDB));
+    renderSealsList();
+}
 
-            let w = img.width;
-            let h = img.height;
-
-            if (w > 1200) {
-                h *= 1200 / w;
-                w = 1200;
+function renderSealsList(filterText = '') {
+    if (!sealList) return;
+    let filtered = [...sealsDB];
+    if (filterText) {
+        filtered = sealsDB.filter(seal => seal.toLowerCase().includes(filterText.toLowerCase()));
+    }
+    if (filtered.length === 0) {
+        sealList.innerHTML = '<div class="empty-seals">Немає пломб у базі. Додайте першу пломбу ➕</div>';
+        return;
+    }
+    let html = '';
+    filtered.forEach((seal) => {
+        html += `<div class="seal-item">
+                    <span class="seal-number" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</span>
+                    <button class="delete-seal" data-seal="${escapeHtml(seal)}">🗑️</button>
+                </div>`;
+    });
+    sealList.innerHTML = html;
+    
+    document.querySelectorAll('.seal-number').forEach(el => {
+        el.addEventListener('click', (e) => {
+            const seal = e.currentTarget.getAttribute('data-seal');
+            // Шукаємо активне поле (яке в фокусі)
+            let activeField = document.activeElement;
+            if (activeField && (activeField.id === 'sealCoverNumber' || activeField.id === 'sealOptoNumber')) {
+                activeField.value = seal;
+                showToast(`✅ Пломбу додано: ${seal}`);
+            } else {
+                // Якщо немає активного поля - додаємо в поле кришки за замовчуванням
+                if (sealCoverInput) {
+                    sealCoverInput.value = seal;
+                    showToast(`✅ Пломбу додано в поле "Пломба кришки": ${seal}`);
+                }
             }
-
-            canvas.width = w;
-            canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-
-            const data = ctx.getImageData(0, 0, w, h);
-            for (let i = 0; i < data.data.length; i += 4) {
-                let avg = (data.data[i] + data.data[i+1] + data.data[i+2]) / 3;
-                let val = avg > 140 ? 255 : 0;
-                data.data[i] = data.data[i+1] = data.data[i+2] = val;
+        });
+    });
+    
+    document.querySelectorAll('.delete-seal').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const seal = el.getAttribute('data-seal');
+            if (confirm(`Видалити пломбу "${seal}"?`)) {
+                sealsDB = sealsDB.filter(s => s !== seal);
+                saveSealsDB();
+                renderSealsList(sealSearchFilter?.value || '');
             }
-            ctx.putImageData(data, 0, 0);
-
-            canvas.toBlob(resolve, 'image/png');
-        };
-        img.src = url;
+        });
     });
 }
 
-async function processPhoto(file, inputId, mode) {
-    const enhanced = await enhanceImageForOCR(file);
-
-    const result = await Tesseract.recognize(enhanced, 'eng', {
-        tessedit_pageseg_mode: '6',
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    });
-
-    let text = result.data.text
-        .replace(/\s/g, '')
-        .replace(/[^A-Z0-9]/gi, '');
-
-    if (mode === 'digits') text = text.substring(0, 10);
-    if (mode === 'smart') text = text.substring(4, 12);
-
-    document.getElementById(inputId).value = text;
-    showToast(`📷 ${text}`);
+function addNewSeal() {
+    const newSeal = newSealNumber.value.trim();
+    if (!newSeal) { alert('Введіть номер пломби'); return; }
+    if (sealsDB.includes(newSeal)) { alert('Така пломба вже існує'); return; }
+    sealsDB.push(newSeal);
+    saveSealsDB();
+    newSealNumber.value = '';
+    sealAddForm.classList.add('hidden');
+    if (sealSearchFilter) sealSearchFilter.value = '';
+    renderSealsList('');
+    showToast(`✅ Додано пломбу: ${newSeal}`);
 }
 
-async function processPhotoForSeal(file, targetInput) {
-    const enhanced = await enhanceImageForOCR(file);
-
-    const result = await Tesseract.recognize(enhanced, 'eng', {
-        tessedit_pageseg_mode: '7',
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
+function showSearchResults(inputId, query) {
+    const resultsContainer = document.getElementById(`${inputId}SearchResults`);
+    if (!resultsContainer) return;
+    
+    if (!query || query.length < 1) {
+        resultsContainer.classList.add('hidden');
+        resultsContainer.innerHTML = '';
+        return;
+    }
+    
+    const filtered = sealsDB.filter(seal => seal.toLowerCase().includes(query.toLowerCase()));
+    if (filtered.length === 0) {
+        resultsContainer.classList.add('hidden');
+        return;
+    }
+    
+    resultsContainer.classList.remove('hidden');
+    let html = '';
+    filtered.forEach(seal => {
+        html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`;
     });
-
-    let text = result.data.text
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, '')
-        .substring(0, 20);
-
-    targetInput.value = text;
-    showToast(`🔒 ${text}`);
+    resultsContainer.innerHTML = html;
+    
+    const resultItems = resultsContainer.querySelectorAll('.search-result-item');
+    resultItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sealValue = this.getAttribute('data-seal');
+            const targetField = document.getElementById(inputId);
+            
+            if (targetField) {
+                targetField.value = sealValue;
+                resultsContainer.classList.add('hidden');
+                resultsContainer.innerHTML = '';
+                targetField.style.backgroundColor = '#d1fae5';
+                targetField.style.border = '2px solid #10b981';
+                showToast(`✅ Пломбу додано: ${sealValue}`);
+                setTimeout(() => {
+                    targetField.style.backgroundColor = 'white';
+                    targetField.style.border = '1px solid #d1d5db';
+                }, 500);
+            }
+        });
+    });
 }
 
-// ========== ДАННЫЕ ==========
+function hideSearchResults(inputId) {
+    const resultsContainer = document.getElementById(`${inputId}SearchResults`);
+    if (resultsContainer) {
+        setTimeout(() => {
+            resultsContainer.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+        }, 300);
+    }
+}
+
+// ========== РОБОТА З ДАНИМИ ==========
 function loadData() {
     const stored = localStorage.getItem('pls_log');
-    workLog = stored ? JSON.parse(stored) : [];
+    if (stored) {
+        try { workLog = JSON.parse(stored); } catch(e) { workLog = []; }
+    }
+    if (!workLog.length) {
+        workLog = [];
+        saveData();
+    }
     renderLog();
 }
 
@@ -164,55 +257,321 @@ function saveData() {
 }
 
 function renderLog() {
+    if (!logBody) return;
     if (!workLog.length) {
-        logBody.innerHTML = '<tr><td colspan="7">Немає записів</td></tr>';
+        logBody.innerHTML = '<tr class="empty-row"><td colspan="7">Немає записів. Додайте нову роботу</td></tr>';
         return;
     }
-
-    logBody.innerHTML = workLog.map((r,i)=>`
-        <tr>
-            <td>${r.date}</td>
-            <td>${r.account}</td>
-            <td>${r.meter}</td>
-            <td>${r.seal1}</td>
-            <td>${r.seal2}</td>
-            <td>${r.address}</td>
-            <td onclick="deleteRow(${i})">🗑️</td>
-        </tr>
-    `).join('');
+    let html = '';
+    workLog.forEach((r, idx) => {
+        html += `<tr>
+                    <td>${escapeHtml(r.date)}</td>
+                    <td><strong>${escapeHtml(r.account)}</strong></td>
+                    <td>${escapeHtml(r.meter)}</td>
+                    <td><span class="badge">🔒 ${escapeHtml(r.seal1)}</span></td>
+                    <td><span class="badge">🔒 ${escapeHtml(r.seal2)}</span></td>
+                    <td>${escapeHtml(r.address)}</td>
+                    <td><span class="delete-icon" data-index="${idx}">🗑️</span></td>
+                </tr>`;
+    });
+    logBody.innerHTML = html;
+    document.querySelectorAll('.delete-icon').forEach(el => {
+        el.addEventListener('click', () => {
+            const index = parseInt(el.getAttribute('data-index'));
+            if (confirm('Видалити запис?')) { workLog.splice(index, 1); saveData(); }
+        });
+    });
 }
 
-function deleteRow(i){
-    workLog.splice(i,1);
-    saveData();
+function escapeHtml(str) { 
+    if (!str) return ''; 
+    return str.replace(/[&<>]/g, function(m) { 
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    }); 
 }
 
-// ========== СОХРАНЕНИЕ ==========
+function smartMeterExtract(rawText) {
+    const digitsOnly = rawText.replace(/\D/g, '');
+    if (digitsOnly.length >= 16) return digitsOnly.substring(4, 12);
+    if (digitsOnly.length >= 12) return digitsOnly.substring(4, digitsOnly.length - 4);
+    if (digitsOnly.length === 8) return digitsOnly;
+    return digitsOnly;
+}
+
+function digitsExtract(rawText) {
+    const digitsOnly = rawText.replace(/\D/g, '');
+    return digitsOnly.length >= 10 ? digitsOnly.substring(0, 10) : digitsOnly;
+}
+
+// ========== QR СКАНЕР ==========
+async function stopScanner(containerId) {
+    if (activeScanners[containerId]) {
+        try { await activeScanners[containerId].stop(); } catch(e) {}
+        delete activeScanners[containerId];
+    }
+}
+
+async function startQrScanner(containerId, inputId, mode) {
+    if (activeScanners[containerId]) {
+        await stopScanner(containerId);
+        document.getElementById(containerId).classList.add('hidden');
+        return;
+    }
+    for (let scId in activeScanners) {
+        await stopScanner(scId);
+        const oc = document.getElementById(scId);
+        if (oc) oc.classList.add('hidden');
+    }
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.classList.remove('hidden');
+    container.innerHTML = `<div class="scanner-header"><span>📷 Наведіть камеру на QR-код</span><button class="btn-close-scanner">✕</button></div><div id="${containerId}_reader" style="width:100%"></div>`;
+    container.querySelector('.btn-close-scanner').addEventListener('click', async () => {
+        await stopScanner(containerId);
+        container.classList.add('hidden');
+    });
+    const html5QrCode = new Html5Qrcode(`${containerId}_reader`);
+    activeScanners[containerId] = html5QrCode;
+    try {
+        await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 280, height: 280 } }, (decodedText) => {
+            let result = decodedText.trim();
+            if (mode === 'digits') result = digitsExtract(result);
+            else if (mode === 'smart') result = smartMeterExtract(result);
+            document.getElementById(inputId).value = result;
+            stopScanner(containerId).then(() => container.classList.add('hidden'));
+            showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
+        });
+    } catch(err) { 
+        alert('❌ Не вдалося запустити камеру'); 
+        container.classList.add('hidden'); 
+        delete activeScanners[containerId]; 
+    }
+}
+
+// ========== OCR З ФОТО ==========
+async function enhanceImageForOCR(file) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 1200;
+            if (width > maxSize) {
+                height = (height * maxSize) / width;
+                width = maxSize;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => { 
+                URL.revokeObjectURL(url); 
+                resolve(blob); 
+            }, 'image/jpeg', 0.95);
+        };
+        img.src = url;
+    });
+}
+
+async function processPhoto(file, inputId, mode) {
+    const statusDiv = document.createElement('div');
+    statusDiv.textContent = '⏳ Розпізнавання...';
+    statusDiv.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:8px 16px;border-radius:40px;font-size:12px;z-index:2000';
+    document.body.appendChild(statusDiv);
+    try {
+        const result = await Tesseract.recognize(file, 'ukr+eng', {
+            tessedit_pageseg_mode: '6'
+        });
+        
+        let text = result.data.text.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+        let finalResult = text;
+        
+        if (mode === 'digits') {
+            const digitsOnly = text.replace(/\D/g, '');
+            finalResult = digitsExtract(digitsOnly);
+        } else if (mode === 'smart') {
+            const digitsOnly = text.replace(/\D/g, '');
+            finalResult = smartMeterExtract(digitsOnly);
+        }
+        
+        document.getElementById(inputId).value = finalResult;
+        statusDiv.textContent = `✅ Розпізнано: ${finalResult.substring(0, 30)}`;
+        setTimeout(() => statusDiv.remove(), 2000);
+        showToast(`📷 Розпізнано: ${finalResult.substring(0, 30)}`);
+    } catch(err) {
+        console.error(err);
+        statusDiv.textContent = '❌ Помилка розпізнавання';
+        setTimeout(() => statusDiv.remove(), 2000);
+    }
+}
+
+async function processPhotoForSeal(file, targetInput) {
+    const statusDiv = document.createElement('div');
+    statusDiv.textContent = '⏳ Розпізнавання пломби...';
+    statusDiv.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:8px 16px;border-radius:40px;font-size:12px;z-index:2000';
+    document.body.appendChild(statusDiv);
+    try {
+        const result = await Tesseract.recognize(file, 'eng', {
+            tessedit_pageseg_mode: '6',
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        });
+        
+        let text = result.data.text.trim().replace(/\n/g, '').replace(/\s+/g, '').trim();
+        text = text.replace(/[^A-Za-z0-9]/g, '').substring(0, 30);
+        
+        if (targetInput) {
+            targetInput.value = text;
+        }
+        
+        statusDiv.textContent = text ? `✅ Розпізнано: ${text}` : '⚠️ Не розпізнано';
+        setTimeout(() => statusDiv.remove(), 2000);
+        if (text) showToast(`📷 Пломба: ${text}`);
+    } catch(err) {
+        console.error(err);
+        statusDiv.textContent = '❌ Помилка';
+        setTimeout(() => statusDiv.remove(), 2000);
+    }
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:8px 16px;border-radius:40px;font-size:13px;z-index:2000';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
+
 function saveRecord() {
     const account = accountInput.value.trim();
     const meter = meterInput.value.trim();
-
-    if (!/^\d{10}$/.test(account)) return alert('10 цифр');
-    if (!/^\d{8}$/.test(meter)) return alert('8 цифр');
-
-    workLog.unshift({
-        date: new Date().toLocaleString(),
-        account,
-        meter,
-        seal1: sealCoverInput.value,
-        seal2: sealOptoInput.value,
-        address: addressInput.value
+    const seal1 = sealCoverInput.value.trim();
+    const seal2 = sealOptoInput.value.trim();
+    const addr = addressInput.value.trim();
+    
+    if (account.length !== 10) { alert('❌ 10 цифр'); return; }
+    if (meter.length !== 8) { alert('❌ 8 цифр'); return; }
+    if (!seal1) { alert('❌ Пломба кришки'); return; }
+    if (!seal2) { alert('❌ Пломба оптопорту'); return; }
+    if (!addr) { alert('❌ Адреса'); return; }
+    
+    workLog.unshift({ 
+        date: new Date().toLocaleString('uk-UA'), 
+        account, meter, seal1, seal2, address: addr 
     });
-
     saveData();
-    alert('✅ Збережено');
+    
+    accountInput.value = meterInput.value = sealCoverInput.value = sealOptoInput.value = addressInput.value = "";
+    alert('✅ Збережено!');
 }
 
-// ========== TOAST ==========
-function showToast(msg){
-    const t=document.createElement('div');
-    t.textContent=msg;
-    t.style='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:8px;border-radius:20px;';
-    document.body.appendChild(t);
-    setTimeout(()=>t.remove(),2000);
+function exportCSV() {
+    if (!workLog.length) { alert('Немає даних'); return; }
+    const headers = ['Дата','Особовий','Лічильник','Пломба кришки','Пломба оптопорту','Адреса'];
+    const rows = workLog.map(r => [`"${r.date}"`,`"${r.account}"`,`"${r.meter}"`,`"${r.seal1}"`,`"${r.seal2}"`,`"${r.address}"`]);
+    const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `pls_log_${new Date().toISOString().slice(0,19)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
 }
+
+function clearLog() {
+    if (confirm('⚠️ Видалити всі записи?')) { workLog = []; saveData(); alert('✅ Очищено'); }
+}
+
+function setupValidation() {
+    accountInput?.addEventListener('input', function() { this.value = this.value.replace(/\D/g,'').slice(0,10); });
+    meterInput?.addEventListener('input', function() { this.value = this.value.replace(/\D/g,'').slice(0,8); });
+    
+    sealCoverInput?.addEventListener('input', function() { showSearchResults('sealCover', this.value); });
+    sealCoverInput?.addEventListener('blur', function() { setTimeout(() => hideSearchResults('sealCover'), 300); });
+    
+    sealOptoInput?.addEventListener('input', function() { showSearchResults('sealOpto', this.value); });
+    sealOptoInput?.addEventListener('blur', function() { setTimeout(() => hideSearchResults('sealOpto'), 300); });
+}
+
+// ========== ІНІЦІАЛІЗАЦІЯ ==========
+document.addEventListener("DOMContentLoaded", function() {
+    updatePinDisplay();
+    setupValidation();
+    
+    document.querySelectorAll(".pin-btn").forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const num = btn.getAttribute('data-num');
+            if (num === "clear") pinClear();
+            else if (num === "enter") pinCheck();
+            else pinAddNum(num);
+        });
+    });
+    
+    document.getElementById("pinForgot").onclick = pinReset;
+    saveBtn.onclick = saveRecord;
+    exportBtn.onclick = exportCSV;
+    clearLogBtn.onclick = clearLog;
+    
+    if (addSealBtn) {
+        addSealBtn.onclick = () => sealAddForm.classList.toggle('hidden');
+        confirmAddSealBtn.onclick = addNewSeal;
+        cancelAddSealBtn.onclick = () => sealAddForm.classList.add('hidden');
+    }
+    if (sealSearchFilter) {
+        sealSearchFilter.addEventListener('input', (e) => renderSealsList(e.target.value));
+    }
+    
+    if (addSealPhotoBtn) {
+        addSealPhotoBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment';
+            input.onchange = async (e) => {
+                if (e.target.files[0]) await processPhotoForSeal(e.target.files[0], newSealNumber);
+                input.remove();
+            };
+            input.click();
+        });
+    }
+    
+    document.querySelectorAll(".btn-camera-icon").forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = btn.getAttribute('data-target');
+            const mode = btn.getAttribute('data-mode');
+            let scannerId;
+            switch(target) {
+                case 'accountNumber': scannerId='accountScanner'; break;
+                case 'meterNumber': scannerId='meterScanner'; break;
+                case 'sealCoverNumber': scannerId='sealCoverScanner'; break;
+                case 'sealOptoNumber': scannerId='sealOptoScanner'; break;
+                case 'address': scannerId='addressScanner'; break;
+                default: return;
+            }
+            startQrScanner(scannerId, target, mode);
+        });
+    });
+    
+    document.querySelectorAll(".btn-photo-icon:not(#addSealPhotoBtn)").forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = btn.getAttribute('data-target');
+            const mode = btn.getAttribute('data-mode');
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment';
+            input.onchange = async (e) => {
+                if (e.target.files[0]) await processPhoto(e.target.files[0], target, mode);
+                input.remove();
+            };
+            input.click();
+        });
+    });
+});
