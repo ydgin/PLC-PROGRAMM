@@ -175,7 +175,7 @@ function addNewSeal() {
     showToast(`✅ Додано пломбу: ${newSeal}`);
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ (ПРАЦЮЄ!) ==========
 function showSearchResults(inputId, query) {
     const resultsContainer = document.getElementById(`${inputId}SearchResults`);
     if (!resultsContainer) return;
@@ -199,29 +199,40 @@ function showSearchResults(inputId, query) {
     });
     resultsContainer.innerHTML = html;
     
-    const resultElements = resultsContainer.querySelectorAll('.search-result-item');
-    for (let i = 0; i < resultElements.length; i++) {
-        const el = resultElements[i];
-        el.addEventListener('click', function(e) {
+    // Пряме призначення обробників подій
+    const resultItems = resultsContainer.querySelectorAll('.search-result-item');
+    resultItems.forEach(function(item) {
+        // Видаляємо старі обробники, якщо є
+        item.removeEventListener('click', item._handler);
+        // Створюємо новий обробник
+        const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
             const sealValue = this.getAttribute('data-seal');
             const targetField = document.getElementById(inputId);
             
             if (targetField) {
+                // БЕЗПОСЕРЕДНЬО ВСТАВЛЯЄМО ЗНАЧЕННЯ В ПОЛЕ
                 targetField.value = sealValue;
+                // Закриваємо результати
                 resultsContainer.classList.add('hidden');
                 resultsContainer.innerHTML = '';
-                targetField.style.border = '2px solid #22c55e';
-                targetField.style.backgroundColor = '#f0fdf4';
-                showToast(`✅ Вибрано пломбу: ${sealValue}`);
+                // Візуальний зворотній зв'язок
+                targetField.style.backgroundColor = '#d1fae5';
+                targetField.style.border = '2px solid #10b981';
+                showToast(`✅ Пломбу додано: ${sealValue}`);
                 setTimeout(() => {
-                    targetField.style.border = '1px solid #d1d5db';
                     targetField.style.backgroundColor = 'white';
-                }, 800);
+                    targetField.style.border = '1px solid #d1d5db';
+                }, 500);
+                // Тригеримо подію input для валідації
+                const inputEvent = new Event('input', { bubbles: true });
+                targetField.dispatchEvent(inputEvent);
             }
-        });
-    }
+        };
+        item._handler = handler;
+        item.addEventListener('click', handler);
+    });
 }
 
 function hideSearchResults(inputId) {
@@ -347,7 +358,7 @@ async function startQrScanner(containerId, inputId, mode) {
     }
 }
 
-// ========== ПОКРАЩЕНИЙ OCR З ФОТО ==========
+// ========== OCR З ФОТО ==========
 async function enhanceImageForOCR(file) {
     return new Promise((resolve) => {
         const img = new Image();
