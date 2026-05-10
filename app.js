@@ -30,11 +30,7 @@ const confirmSealBtn = document.getElementById('confirmSealBtn');
 const cancelSealBtn = document.getElementById('cancelSealBtn');
 
 // ========== PIN ФУНКЦІЇ ==========
-function getPin() {
-    let pin = localStorage.getItem('pls_pin');
-    if (!pin) { pin = "3268"; localStorage.setItem('pls_pin', pin); }
-    return pin;
-}
+const CORRECT_PIN = "3268";
 
 function updatePinDisplay() {
     if (!pinDisplay) return;
@@ -48,15 +44,15 @@ function pinAddNum(num) {
     if (enteredPin.length < 4) {
         enteredPin += num;
         updatePinDisplay();
-        pinError.innerText = '';
+        if (pinError) pinError.innerText = '';
         if (enteredPin.length === 4) {
-            if (enteredPin === getPin()) {
+            if (enteredPin === CORRECT_PIN) {
                 pinScreen.style.display = 'none';
                 mainApp.classList.remove('hidden');
                 loadData();
                 loadSeals();
             } else {
-                pinError.innerText = '❌ Невірний PIN (3268)';
+                pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
                 updatePinDisplay();
             }
@@ -64,21 +60,35 @@ function pinAddNum(num) {
     }
 }
 
-function pinClear() { enteredPin = ""; updatePinDisplay(); pinError.innerText = ''; }
+function pinClear() { 
+    enteredPin = ""; 
+    updatePinDisplay(); 
+    if (pinError) pinError.innerText = ''; 
+}
+
 function pinCheck() {
-    if (enteredPin.length !== 4) { pinError.innerText = '❌ Введіть 4 цифри'; return; }
-    if (enteredPin === getPin()) {
+    if (enteredPin.length !== 4) { 
+        if (pinError) pinError.innerText = '❌ Введіть 4 цифри'; 
+        return; 
+    }
+    if (enteredPin === CORRECT_PIN) {
         pinScreen.style.display = 'none';
         mainApp.classList.remove('hidden');
         loadData();
         loadSeals();
     } else {
-        pinError.innerText = '❌ Невірний PIN (3268)';
+        if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
         updatePinDisplay();
     }
 }
-function pinReset() { localStorage.setItem('pls_pin', "3268"); enteredPin = ""; updatePinDisplay(); pinError.innerText = '✅ PIN: 3268'; setTimeout(() => pinError.innerText = '', 2000); }
+
+function pinReset() { 
+    enteredPin = ""; 
+    updatePinDisplay(); 
+    if (pinError) pinError.innerText = '✅ PIN залишається 3268. Введіть його для входу.'; 
+    setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
+}
 
 // ========== БАЗА ПЛОМБ ==========
 function loadSeals() {
@@ -335,10 +345,55 @@ document.addEventListener("DOMContentLoaded", function() {
     updatePinDisplay();
     setupValidation();
     
+    // PIN кнопки
     document.querySelectorAll(".pin-btn").forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const num = btn.getAttribute('data-num');
-            if (num === "clear") pinClear();
-            else if (num === "enter") pinCheck();
-            else pinAddNum
+            if (num === "clear") {
+                pinClear();
+            } else if (num === "enter") {
+                pinCheck();
+            } else {
+                pinAddNum(num);
+            }
+        });
+    });
+    
+    const pinForgot = document.getElementById("pinForgot");
+    if (pinForgot) pinForgot.onclick = pinReset;
+    
+    // Головні кнопки
+    if (saveBtn) saveBtn.onclick = saveRecord;
+    if (exportBtn) exportBtn.onclick = exportCSV;
+    if (clearLogBtn) clearLogBtn.onclick = clearLog;
+    
+    // База пломб
+    if (addSealBtn) {
+        addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');
+        if (confirmSealBtn) confirmSealBtn.onclick = addNewSeal;
+        if (cancelSealBtn) cancelSealBtn.onclick = () => sealAddPanel.classList.add('hidden');
+    }
+    if (sealSearch) {
+        sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
+    }
+    
+    // QR сканер
+    document.querySelectorAll(".btn-scan").forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = btn.getAttribute('data-target');
+            const mode = btn.getAttribute('data-mode');
+            let scannerId;
+            switch(target) {
+                case 'accountNumber': scannerId='accountScanner'; break;
+                case 'meterNumber': scannerId='meterScanner'; break;
+                case 'sealCoverNumber': scannerId='sealCoverScanner'; break;
+                case 'sealOptoNumber': scannerId='sealOptoScanner'; break;
+                case 'address': scannerId='addressScanner'; break;
+                default: return;
+            }
+            startQrScanner(scannerId, target, mode);
+        });
+    });
+});
