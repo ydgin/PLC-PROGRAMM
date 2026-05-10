@@ -117,6 +117,37 @@ body {
 }
 .btn-scan:active { transform: scale(0.95); }
 
+/* Кнопка збереження поля (галочка) */
+.btn-save-field {
+    width: 48px;
+    height: 48px;
+    border-radius: 48px;
+    border: none;
+    font-size: 1.2rem;
+    background: #d1fae5;
+    color: #10b981;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.btn-save-field:active { transform: scale(0.95); }
+
+/* Загальна кнопка збереження */
+.save-container {
+    margin-bottom: 14px;
+}
+.btn-save-all {
+    width: 100%;
+    padding: 16px;
+    border-radius: 60px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+}
+.btn-save-all:active { transform: scale(0.98); }
+
 .scanner-container {
     margin-top: 12px;
     background: #1a1a1a;
@@ -164,22 +195,6 @@ body {
     font-size: 0.85rem;
 }
 .search-result-item:hover { background: #eef2ff; }
-
-.save-container {
-    margin-bottom: 14px;
-}
-.btn-save {
-    width: 100%;
-    padding: 16px;
-    border-radius: 60px;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    border: none;
-    font-size: 1rem;
-    font-weight: bold;
-    color: white;
-    cursor: pointer;
-}
-.btn-save:active { transform: scale(0.98); }
 
 .flex-between {
     display: flex;
@@ -331,6 +346,6 @@ th { color: #1e3c72; font-weight: 600; }
     .card { padding: 14px; }
     .pin-btn { width: 50px; height: 50px; font-size: 22px; }
     .pin-card { width: 260px; padding: 20px; }
-    .btn-scan { width: 44px; height: 44px; font-size: 1rem; }
+    .btn-scan, .btn-save-field { width: 42px; height: 42px; font-size: 1rem; }
     .field-input { padding: 10px 12px; font-size: 0.85rem; }
 }
