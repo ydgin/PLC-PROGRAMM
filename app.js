@@ -98,7 +98,6 @@ function loadSeals() {
     } else {
         sealsDB = [];
     }
-    // НЕ додаємо тестові пломби автоматично!
     saveSeals();
     renderSealsList();
 }
@@ -128,11 +127,13 @@ function renderSealsList(filter = '') {
     document.querySelectorAll('.seal-number').forEach(el => {
         el.addEventListener('click', () => {
             const seal = el.getAttribute('data-seal');
-            const active = document.activeElement;
-            if (active && (active.id === 'sealCoverNumber' || active.id === 'sealOptoNumber')) {
-                active.value = seal;
+            // Знаходимо активне поле (яке в фокусі)
+            const activeField = document.activeElement;
+            if (activeField && (activeField.id === 'sealCoverNumber' || activeField.id === 'sealOptoNumber')) {
+                activeField.value = seal;
                 showToast(`✅ Пломбу додано: ${seal}`);
             } else if (sealCoverInput) {
+                // Якщо немає активного поля, додаємо в поле кришки
                 sealCoverInput.value = seal;
                 showToast(`✅ Пломбу додано в поле "Пломба кришки": ${seal}`);
             }
@@ -231,27 +232,50 @@ async function addSealByScanner() {
     }
 }
 
-// ========== ПОШУК ПІД ПОЛЯМИ ==========
+// ========== ПОШУК ПІД ПОЛЯМИ (ПРАЦЮЄ!) ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
-    if (!query || query.length < 1) { container.classList.add('hidden'); container.innerHTML = ''; return; }
+    if (!query || query.length < 1) { 
+        container.classList.add('hidden'); 
+        container.innerHTML = ''; 
+        return; 
+    }
     const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { container.classList.add('hidden'); return; }
+    if (!filtered.length) { 
+        container.classList.add('hidden'); 
+        return; 
+    }
     container.classList.remove('hidden');
     let html = '';
-    filtered.forEach(seal => { html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; });
+    filtered.forEach(seal => { 
+        html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
+    });
     container.innerHTML = html;
-    container.querySelectorAll('.search-result-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const seal = item.getAttribute('data-seal');
-            const input = document.getElementById(fieldId);
-            if (input) {
-                input.value = seal;
+    
+    // Додаємо обробник для кожного результату
+    const resultItems = container.querySelectorAll('.search-result-item');
+    resultItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const sealValue = item.getAttribute('data-seal');
+            const inputField = document.getElementById(fieldId);
+            
+            if (inputField) {
+                // Вставляємо пломбу в поле
+                inputField.value = sealValue;
+                // Закриваємо результати
                 container.classList.add('hidden');
-                input.style.backgroundColor = '#d1fae5';
-                setTimeout(() => input.style.backgroundColor = 'white', 500);
-                showToast(`✅ Пломбу додано: ${seal}`);
+                container.innerHTML = '';
+                // Візуальний зворотній зв'язок
+                inputField.style.backgroundColor = '#d1fae5';
+                inputField.style.border = '2px solid #10b981';
+                showToast(`✅ Пломбу додано: ${sealValue}`);
+                setTimeout(() => {
+                    inputField.style.backgroundColor = 'white';
+                    inputField.style.border = '1px solid #e2e8f0';
+                }, 500);
             }
         });
     });
@@ -259,7 +283,12 @@ function showSearchResults(fieldId, query) {
 
 function hideSearchResults(fieldId) {
     const container = document.getElementById(`${fieldId}Results`);
-    if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 200);
+    if (container) {
+        setTimeout(() => { 
+            container.classList.add('hidden'); 
+            container.innerHTML = ''; 
+        }, 300);
+    }
 }
 
 // ========== ДАНІ ЖУРНАЛУ ==========
