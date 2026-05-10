@@ -230,7 +230,7 @@ async function addSealByScanner() {
     }
 }
 
-// ========== ПОШУК ПІД ПОЛЯМИ (ПРАЦЮЄ - ПРИ НАТИСКАННІ ДОДАЄ В ПОЛЕ) ==========
+// ========== ПОШУК ПІД ПОЛЯМИ (ПРАЦЮЄ - ЗАПОВНЮЄ ПОЛЕ ПРИ НАТИСКАННІ) ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
@@ -254,7 +254,7 @@ function showSearchResults(fieldId, query) {
     });
     container.innerHTML = html;
     
-    // Додаємо обробник для КОЖНОГО результату - при натисканні додаємо в поле
+    // Додаємо обробник для КОЖНОГО результату
     const resultItems = container.querySelectorAll('.search-result-item');
     resultItems.forEach(item => {
         // Видаляємо старий обробник, якщо є
@@ -268,7 +268,7 @@ function showSearchResults(fieldId, query) {
             const targetField = document.getElementById(fieldId);
             
             if (targetField) {
-                // ВСТАВЛЯЄМО ПЛОМБУ В ПОЛЕ
+                // ЗАПОВНЮЄМО ПОЛЕ ПЛОМБОЮ
                 targetField.value = sealValue;
                 // Закриваємо результати пошуку
                 container.classList.add('hidden');
