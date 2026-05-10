@@ -53,9 +53,9 @@
 
         <!-- Особовий рахунок -->
         <div class="card">
-            <label class="field-label">📋 Особовий рахунок (10 цифр)</label>
+            <label class="field-label">Особовий рахунок (10 цифр)</label>
             <div class="input-scan-row">
-                <input id="accountNumber" class="field-input" type="tel" placeholder="1234567890" maxlength="10" inputmode="numeric">
+                <input id="accountNumber" class="field-input" type="tel" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
                 <button class="btn-scan" data-target="accountNumber" data-mode="digits">📷</button>
                 <button class="btn-save-field" data-field="accountNumber" data-label="Особовий рахунок">💾</button>
             </div>
@@ -64,9 +64,9 @@
 
         <!-- Лічильник -->
         <div class="card">
-            <label class="field-label">🔢 Лічильник (8 цифр)</label>
+            <label class="field-label">Лічильник (8 цифр)</label>
             <div class="input-scan-row">
-                <input id="meterNumber" class="field-input" type="tel" placeholder="12345678" maxlength="8" inputmode="numeric">
+                <input id="meterNumber" class="field-input" type="tel" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
                 <button class="btn-scan" data-target="meterNumber" data-mode="smart">📷</button>
                 <button class="btn-save-field" data-field="meterNumber" data-label="Лічильник">💾</button>
             </div>
@@ -76,7 +76,7 @@
 
         <!-- Пломба кришки -->
         <div class="card">
-            <label class="field-label">🔒 Пломба кришки</label>
+            <label class="field-label">Пломба кришки</label>
             <div class="input-scan-row">
                 <input id="sealCoverNumber" class="field-input seal-input" type="text" placeholder="Номер пломби" autocomplete="off">
                 <button class="btn-scan" data-target="sealCoverNumber" data-mode="text">📷</button>
@@ -88,7 +88,7 @@
 
         <!-- Пломба оптопорту -->
         <div class="card">
-            <label class="field-label">🔒 Пломба оптопорту</label>
+            <label class="field-label">Пломба оптопорту</label>
             <div class="input-scan-row">
                 <input id="sealOptoNumber" class="field-input seal-input" type="text" placeholder="Номер пломби" autocomplete="off">
                 <button class="btn-scan" data-target="sealOptoNumber" data-mode="text">📷</button>
@@ -100,7 +100,7 @@
 
         <!-- Адреса -->
         <div class="card">
-            <label class="field-label">📍 Адреса</label>
+            <label class="field-label">Адреса</label>
             <div class="input-scan-row">
                 <input id="address" class="field-input" type="text" placeholder="Введіть адресу">
                 <button class="btn-scan" data-target="address" data-mode="text">📷</button>
@@ -117,13 +117,13 @@
         <!-- БАЗА ПЛОМБ -->
         <div class="card">
             <div class="flex-between">
-                <label class="field-label">📦 БАЗА ПЛОМБ</label>
-                <button id="addSealBtn" class="btn-small">➕ Додати пломбу</button>
+                <label class="field-label">📦 База пломб</label>
+                <button id="addSealBtn" class="btn-small">+ Додати пломбу</button>
             </div>
             <div id="sealAddPanel" class="seal-add-panel hidden">
                 <div class="seal-add-row">
                     <input type="text" id="newSealInput" class="field-input" placeholder="Номер пломби">
-                    <button id="confirmSealBtn" class="btn-small-ok">✔</button>
+                    <button id="confirmSealBtn" class="btn-small-ok">✔ Додати</button>
                     <button id="cancelSealBtn" class="btn-small-cancel">✖</button>
                 </div>
             </div>
