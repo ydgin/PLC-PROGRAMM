@@ -127,13 +127,11 @@ function renderSealsList(filter = '') {
     document.querySelectorAll('.seal-number').forEach(el => {
         el.addEventListener('click', () => {
             const seal = el.getAttribute('data-seal');
-            // Знаходимо активне поле (яке в фокусі)
             const activeField = document.activeElement;
             if (activeField && (activeField.id === 'sealCoverNumber' || activeField.id === 'sealOptoNumber')) {
                 activeField.value = seal;
                 showToast(`✅ Пломбу додано: ${seal}`);
             } else if (sealCoverInput) {
-                // Якщо немає активного поля, додаємо в поле кришки
                 sealCoverInput.value = seal;
                 showToast(`✅ Пломбу додано в поле "Пломба кришки": ${seal}`);
             }
@@ -232,20 +230,23 @@ async function addSealByScanner() {
     }
 }
 
-// ========== ПОШУК ПІД ПОЛЯМИ (ПРАЦЮЄ!) ==========
+// ========== ПОШУК ПІД ПОЛЯМИ (ПРАЦЮЄ - ПРИ НАТИСКАННІ ДОДАЄ В ПОЛЕ) ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
+    
     if (!query || query.length < 1) { 
         container.classList.add('hidden'); 
         container.innerHTML = ''; 
         return; 
     }
+    
     const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
     if (!filtered.length) { 
         container.classList.add('hidden'); 
         return; 
     }
+    
     container.classList.remove('hidden');
     let html = '';
     filtered.forEach(seal => { 
@@ -253,31 +254,38 @@ function showSearchResults(fieldId, query) {
     });
     container.innerHTML = html;
     
-    // Додаємо обробник для кожного результату
+    // Додаємо обробник для КОЖНОГО результату - при натисканні додаємо в поле
     const resultItems = container.querySelectorAll('.search-result-item');
     resultItems.forEach(item => {
-        item.addEventListener('click', (e) => {
+        // Видаляємо старий обробник, якщо є
+        item.removeEventListener('click', item._handler);
+        
+        // Створюємо новий обробник
+        const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            const sealValue = item.getAttribute('data-seal');
-            const inputField = document.getElementById(fieldId);
+            const sealValue = this.getAttribute('data-seal');
+            const targetField = document.getElementById(fieldId);
             
-            if (inputField) {
-                // Вставляємо пломбу в поле
-                inputField.value = sealValue;
-                // Закриваємо результати
+            if (targetField) {
+                // ВСТАВЛЯЄМО ПЛОМБУ В ПОЛЕ
+                targetField.value = sealValue;
+                // Закриваємо результати пошуку
                 container.classList.add('hidden');
                 container.innerHTML = '';
                 // Візуальний зворотній зв'язок
-                inputField.style.backgroundColor = '#d1fae5';
-                inputField.style.border = '2px solid #10b981';
+                targetField.style.backgroundColor = '#d1fae5';
+                targetField.style.border = '2px solid #10b981';
                 showToast(`✅ Пломбу додано: ${sealValue}`);
                 setTimeout(() => {
-                    inputField.style.backgroundColor = 'white';
-                    inputField.style.border = '1px solid #e2e8f0';
+                    targetField.style.backgroundColor = 'white';
+                    targetField.style.border = '1px solid #e2e8f0';
                 }, 500);
             }
-        });
+        };
+        
+        item._handler = handler;
+        item.addEventListener('click', handler);
     });
 }
 
@@ -436,12 +444,20 @@ function setupValidation() {
         meterInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g,'').slice(0,8); });
     }
     if (sealCoverInput) {
-        sealCoverInput.addEventListener('input', function() { showSearchResults('sealCover', this.value); });
-        sealCoverInput.addEventListener('blur', function() { setTimeout(() => hideSearchResults('sealCover'), 300); });
+        sealCoverInput.addEventListener('input', function() { 
+            showSearchResults('sealCover', this.value); 
+        });
+        sealCoverInput.addEventListener('blur', function() { 
+            setTimeout(() => hideSearchResults('sealCover'), 300); 
+        });
     }
     if (sealOptoInput) {
-        sealOptoInput.addEventListener('input', function() { showSearchResults('sealOpto', this.value); });
-        sealOptoInput.addEventListener('blur', function() { setTimeout(() => hideSearchResults('sealOpto'), 300); });
+        sealOptoInput.addEventListener('input', function() { 
+            showSearchResults('sealOpto', this.value); 
+        });
+        sealOptoInput.addEventListener('blur', function() { 
+            setTimeout(() => hideSearchResults('sealOpto'), 300); 
+        });
     }
 }
 
