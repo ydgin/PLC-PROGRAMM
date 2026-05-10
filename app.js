@@ -93,18 +93,29 @@ function pinReset() {
 // ========== БАЗА ПЛОМБ ==========
 function loadSeals() {
     const stored = localStorage.getItem('pls_seals');
-    if (stored) { try { sealsDB = JSON.parse(stored); } catch(e) { sealsDB = []; } }
-    if (!sealsDB.length) { sealsDB = ['PL7890', 'OP5566', 'SEAL123', 'TEST456']; saveSeals(); }
+    if (stored) {
+        try { sealsDB = JSON.parse(stored); } catch(e) { sealsDB = []; }
+    } else {
+        sealsDB = [];
+    }
+    // НЕ додаємо тестові пломби автоматично!
+    saveSeals();
     renderSealsList();
 }
 
-function saveSeals() { localStorage.setItem('pls_seals', JSON.stringify(sealsDB)); renderSealsList(); }
+function saveSeals() { 
+    localStorage.setItem('pls_seals', JSON.stringify(sealsDB)); 
+    renderSealsList(); 
+}
 
 function renderSealsList(filter = '') {
     if (!sealsListDiv) return;
     let filtered = sealsDB;
     if (filter) filtered = sealsDB.filter(s => s.toLowerCase().includes(filter.toLowerCase()));
-    if (!filtered.length) { sealsListDiv.innerHTML = '<div class="empty-seals">➕ Додайте першу пломбу</div>'; return; }
+    if (!filtered.length) { 
+        sealsListDiv.innerHTML = '<div class="empty-seals">📦 База пломб порожня. Додайте пломбу ➕</div>'; 
+        return; 
+    }
     let html = '';
     filtered.forEach(seal => {
         html += `<div class="seal-item">
@@ -153,6 +164,71 @@ function addNewSeal() {
     if (sealSearch) sealSearch.value = '';
     renderSealsList('');
     showToast(`✅ Додано пломбу: ${newSeal}`);
+}
+
+// Додавання пломби через сканер
+async function addSealByScanner() {
+    const scannerContainerId = 'addSealScannerTemp';
+    let tempContainer = document.getElementById(scannerContainerId);
+    if (!tempContainer) {
+        tempContainer = document.createElement('div');
+        tempContainer.id = scannerContainerId;
+        tempContainer.className = 'scanner-container';
+        tempContainer.style.position = 'fixed';
+        tempContainer.style.top = '50%';
+        tempContainer.style.left = '50%';
+        tempContainer.style.transform = 'translate(-50%, -50%)';
+        tempContainer.style.width = '90%';
+        tempContainer.style.maxWidth = '400px';
+        tempContainer.style.zIndex = '10000';
+        tempContainer.style.backgroundColor = '#000';
+        tempContainer.style.borderRadius = '20px';
+        tempContainer.style.overflow = 'hidden';
+        document.body.appendChild(tempContainer);
+    }
+    
+    tempContainer.classList.remove('hidden');
+    tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код пломби</span><button class="btn-close-scanner" id="closeScannerBtn">✕</button></div><div id="${scannerContainerId}_reader" style="width:100%"></div>`;
+    
+    document.getElementById('closeScannerBtn').onclick = async () => {
+        if (activeScanners[scannerContainerId]) {
+            try { await activeScanners[scannerContainerId].stop(); } catch(e) {}
+            delete activeScanners[scannerContainerId];
+        }
+        tempContainer.classList.add('hidden');
+    };
+    
+    const reader = new Html5Qrcode(`${scannerContainerId}_reader`);
+    activeScanners[scannerContainerId] = reader;
+    
+    try {
+        await reader.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+                let result = decodedText.trim();
+                if (result) {
+                    if (!sealsDB.includes(result)) {
+                        sealsDB.push(result);
+                        saveSeals();
+                        showToast(`✅ Пломбу додано: ${result}`);
+                        if (newSealInput) newSealInput.value = result;
+                    } else {
+                        showToast(`⚠️ Пломба ${result} вже існує`);
+                    }
+                }
+                reader.stop().then(() => {
+                    tempContainer.classList.add('hidden');
+                    delete activeScanners[scannerContainerId];
+                }).catch(e => console.log(e));
+            },
+            (error) => { console.log(error); }
+        );
+    } catch(err) {
+        alert('❌ Не вдалося запустити камеру');
+        tempContainer.classList.add('hidden');
+        delete activeScanners[scannerContainerId];
+    }
 }
 
 // ========== ПОШУК ПІД ПОЛЯМИ ==========
@@ -231,7 +307,7 @@ function smartMeterExtract(t) {
 }
 function digitsExtract(t) { return t.replace(/\D/g, '').substring(0, 10); }
 
-// ========== QR СКАНЕР ==========
+// ========== QR СКАНЕР ДЛЯ ПОЛІВ ==========
 async function stopScanner(id) { 
     if (activeScanners[id]) { 
         try { await activeScanners[id].stop(); } catch(e) {} 
@@ -378,7 +454,18 @@ document.addEventListener("DOMContentLoaded", function() {
         sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
     }
     
-    // QR сканер
+    // Кнопка додавання пломби через сканер
+    const scanToAddBtn = document.createElement('button');
+    scanToAddBtn.textContent = '📷 Сканувати QR';
+    scanToAddBtn.className = 'btn-small';
+    scanToAddBtn.style.marginLeft = '8px';
+    scanToAddBtn.style.background = '#9333ea';
+    scanToAddBtn.onclick = addSealByScanner;
+    if (addSealBtn && addSealBtn.parentNode) {
+        addSealBtn.parentNode.appendChild(scanToAddBtn);
+    }
+    
+    // QR сканер для полів
     document.querySelectorAll(".btn-scan").forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
