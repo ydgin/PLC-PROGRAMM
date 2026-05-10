@@ -86,7 +86,7 @@ function pinCheck() {
 function pinReset() { 
     enteredPin = ""; 
     updatePinDisplay(); 
-    if (pinError) pinError.innerText = '✅ PIN залишається 3268. Введіть його для входу.'; 
+    if (pinError) pinError.innerText = '✅ PIN: 3268'; 
     setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
 }
 
@@ -165,7 +165,7 @@ function addNewSeal() {
     showToast(`✅ Додано пломбу: ${newSeal}`);
 }
 
-// ========== ЗБЕРЕЖЕННЯ ОКРЕМОГО ПОЛЯ В ЖУРНАЛ ==========
+// ========== ЗБЕРЕЖЕННЯ ОКРЕМОГО ПОЛЯ ==========
 function saveFieldToLog(fieldId, label) {
     const input = document.getElementById(fieldId);
     if (!input) return;
@@ -176,13 +176,11 @@ function saveFieldToLog(fieldId, label) {
         return;
     }
     
-    // Перевірка для особового рахунку
     if (fieldId === 'accountNumber' && value.length !== 10) {
         alert(`❌ Особовий рахунок має містити 10 цифр. Зараз: ${value.length}`);
         return;
     }
     
-    // Перевірка для лічильника
     if (fieldId === 'meterNumber' && value.length !== 8) {
         alert(`❌ Лічильник має містити 8 цифр. Зараз: ${value.length}`);
         return;
@@ -200,10 +198,10 @@ function saveFieldToLog(fieldId, label) {
     });
     
     saveData();
-    showToast(`✅ "${label}" збережено в журнал: ${value.substring(0, 30)}`);
+    showToast(`✅ "${label}" збережено: ${value.substring(0, 30)}`);
 }
 
-// ========== ЗАГАЛЬНЕ ЗБЕРЕЖЕННЯ ВСІХ ПОЛІВ ==========
+// ========== ЗАГАЛЬНЕ ЗБЕРЕЖЕННЯ ==========
 function saveAllFieldsToLog() {
     const account = accountInput.value.trim();
     const meter = meterInput.value.trim();
@@ -230,7 +228,6 @@ function saveAllFieldsToLog() {
     
     saveData();
     
-    // Очищення полів після збереження (опціонально)
     accountInput.value = "";
     meterInput.value = "";
     sealCoverInput.value = "";
@@ -373,7 +370,4 @@ async function startQrScanner(containerId, inputId, mode) {
         const c = document.getElementById(s); 
         if (c) c.classList.add('hidden'); 
     }
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.classList.remove('hidden');
-    container.innerHTML = `<div class="scanner-header"><span>📷 Наведіть камеру на QR-код</span><button class="btn-close-scanner">✕</button></div><
+    const container = document
