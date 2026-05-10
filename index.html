@@ -2,10 +2,9 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>PLS INVEST - Облік лічильників та пломб</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -14,7 +13,7 @@
 <div id="pinScreen" class="pin-screen">
     <div class="pin-card">
         <div class="pin-lock">🔒</div>
-        <div class="pin-title">PLC INVEST</div>
+        <div class="pin-title">PLS INVEST</div>
         <div class="pin-subtitle">Введіть PIN-код</div>
         <div id="pinDisplay" class="pin-display"></div>
         <div id="pinError" class="pin-error"></div>
@@ -48,102 +47,89 @@
 <div id="mainApp" class="hidden">
     <div class="container">
         <div class="card header-card">
-            <h1>🏦 PLC INVEST</h1>
+            <h1>🏦 PLS INVEST</h1>
             <div class="sub">Облік лічильників та пломб</div>
         </div>
 
         <div class="card">
-            <label class="field-label">Особовий рахунок (10 цифр)</label>
+            <label class="field-label">📋 Особовий рахунок (10 цифр)</label>
             <div class="input-scan-row">
-                <input id="accountNumber" class="field-input" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
-                <button class="btn-camera-icon" data-target="accountNumber" data-mode="digits">📷</button>
-                <button class="btn-photo-icon" data-target="accountNumber" data-mode="digits">🖼️</button>
+                <input id="accountNumber" class="field-input" type="tel" placeholder="1234567890" maxlength="10" inputmode="numeric">
+                <button class="btn-qr" data-target="accountNumber" data-mode="digits">📷</button>
             </div>
             <div id="accountScanner" class="scanner-container hidden"></div>
         </div>
 
         <div class="card">
-            <label class="field-label">Лічильник (8 цифр)</label>
+            <label class="field-label">🔢 Лічильник (8 цифр)</label>
             <div class="input-scan-row">
-                <input id="meterNumber" class="field-input" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
-                <button class="btn-camera-icon" data-target="meterNumber" data-mode="smart">📷</button>
-                <button class="btn-photo-icon" data-target="meterNumber" data-mode="smart">🖼️</button>
+                <input id="meterNumber" class="field-input" type="tel" placeholder="12345678" maxlength="8" inputmode="numeric">
+                <button class="btn-qr" data-target="meterNumber" data-mode="smart">📷</button>
             </div>
             <div id="meterScanner" class="scanner-container hidden"></div>
-            <div class="info-hint">ℹ️ При скануванні ігноруються перші 4 та останні 4 цифри</div>
+            <div class="info-hint">ℹ️ Ігноруються перші 4 та останні 4 цифри</div>
         </div>
 
         <div class="card">
-            <label class="field-label">Пломба кришки</label>
+            <label class="field-label">🔒 Пломба кришки</label>
             <div class="input-scan-row">
-                <input id="sealCoverNumber" class="field-input seal-input" placeholder="Номер пломби" autocomplete="off">
-                <button class="btn-camera-icon" data-target="sealCoverNumber" data-mode="text">📷</button>
-                <button class="btn-photo-icon" data-target="sealCoverNumber" data-mode="text">🖼️</button>
+                <input id="sealCoverNumber" class="field-input seal-input" type="text" placeholder="Номер пломби" autocomplete="off">
+                <button class="btn-qr" data-target="sealCoverNumber" data-mode="text">📷</button>
             </div>
             <div id="sealCoverScanner" class="scanner-container hidden"></div>
-            <div id="sealCoverSearchResults" class="search-results hidden"></div>
+            <div id="sealCoverResults" class="search-results hidden"></div>
         </div>
 
         <div class="card">
-            <label class="field-label">Пломба оптопорту</label>
+            <label class="field-label">🔒 Пломба оптопорту</label>
             <div class="input-scan-row">
-                <input id="sealOptoNumber" class="field-input seal-input" placeholder="Номер пломби" autocomplete="off">
-                <button class="btn-camera-icon" data-target="sealOptoNumber" data-mode="text">📷</button>
-                <button class="btn-photo-icon" data-target="sealOptoNumber" data-mode="text">🖼️</button>
+                <input id="sealOptoNumber" class="field-input seal-input" type="text" placeholder="Номер пломби" autocomplete="off">
+                <button class="btn-qr" data-target="sealOptoNumber" data-mode="text">📷</button>
             </div>
             <div id="sealOptoScanner" class="scanner-container hidden"></div>
-            <div id="sealOptoSearchResults" class="search-results hidden"></div>
+            <div id="sealOptoResults" class="search-results hidden"></div>
         </div>
 
         <div class="card">
-            <label class="field-label">Адреса</label>
+            <label class="field-label">📍 Адреса</label>
             <div class="input-scan-row">
-                <input id="address" class="field-input" placeholder="Введіть адресу">
-                <button class="btn-camera-icon" data-target="address" data-mode="text">📷</button>
-                <button class="btn-photo-icon" data-target="address" data-mode="text">🖼️</button>
+                <input id="address" class="field-input" type="text" placeholder="Введіть адресу">
+                <button class="btn-qr" data-target="address" data-mode="text">📷</button>
             </div>
             <div id="addressScanner" class="scanner-container hidden"></div>
         </div>
 
-        <div class="save-button-container">
-            <button id="saveRecordBtn" class="btn-round-save">✔</button>
-            <div class="save-label">Зберегти</div>
-        </div>
+        <button id="saveRecordBtn" class="btn-save">💾 ЗБЕРЕГТИ</button>
 
         <!-- БАЗА ПЛОМБ -->
         <div class="card">
             <div class="flex-between">
-                <label class="field-label">📦 База пломб</label>
-                <button id="addSealBtn" class="btn-small">+ Додати пломбу</button>
+                <label class="field-label">📦 БАЗА ПЛОМБ</label>
+                <button id="addSealBtn" class="btn-small-add">➕ Додати</button>
             </div>
-            <div class="seal-add-form hidden" id="sealAddForm">
+            <div id="sealAddPanel" class="seal-add-panel hidden">
                 <div class="seal-add-row">
-                    <input type="text" id="newSealNumber" class="field-input" placeholder="Номер пломби">
-                    <button class="btn-photo-icon" id="addSealPhotoBtn" style="background:#f3e8ff;color:#9333ea;">🖼️</button>
-                    <button id="confirmAddSealBtn" class="btn-small btn-success">✔ Додати</button>
-                    <button id="cancelAddSealBtn" class="btn-small btn-outline">✖</button>
+                    <input type="text" id="newSealInput" class="field-input" placeholder="Номер пломби">
+                    <button id="confirmSealBtn" class="btn-small-ok">✔ Додати</button>
+                    <button id="cancelSealBtn" class="btn-small-cancel">✖</button>
                 </div>
             </div>
-            <div class="seal-list-container">
-                <input type="text" id="sealSearchFilter" class="seal-search-filter" placeholder="🔍 Пошук по базі пломб...">
-                <div id="sealList" class="seal-list">
-                    <div class="empty-seals">Немає пломб у базі. Додайте першу пломбу ➕</div>
-                </div>
-            </div>
+            <input type="text" id="sealSearch" class="seal-search" placeholder="🔍 Пошук пломб...">
+            <div id="sealsList" class="seals-list"></div>
         </div>
 
-        <!-- ЖУРНАЛ РОБІТ -->
+        <!-- ЖУРНАЛ -->
         <div class="card">
             <div class="btn-group">
-                <button id="exportLogBtn" class="btn-outline">📄 Експорт CSV</button>
-                <button id="clearLogBtn" class="btn-danger">🗑 Очистити журнал</button>
+                <button id="exportBtn" class="btn-outline">📄 Експорт CSV</button>
+                <button id="clearLogBtn" class="btn-danger">🗑 Очистити</button>
             </div>
-            <div style="overflow-x: auto;">
+            <div class="table-wrapper">
                 <table>
                     <thead>
-                        <tr><th>Дата</th><th>Особовий</th><th>Лічильник</th><th>Пломба кришки</th><th>Пломба оптопорту</th><th>Адреса</th><th></th></tr>
+                        <tr><th>Дата</th><th>Особовий</th><th>Лічильник</th><th>Пломба-1</th><th>Пломба-2</th><th>Адреса</th><th></th></tr>
                     </thead>
-                    <tbody id="logBody"></tbody>
+                    <tbody id="logTable"></tbody>
                 </table>
             </div>
         </div>
