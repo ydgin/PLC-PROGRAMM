@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     // QR сканер
-    document.querySelectorAll(".btn-icon[data-type='qr']").forEach(btn => {
+    document.querySelectorAll(".btn-qr").forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const target = btn.getAttribute('data-target');
@@ -336,16 +336,4 @@ document.addEventListener("DOMContentLoaded", function() {
             switch(target) {
                 case 'accountNumber': scannerId='accountScanner'; break;
                 case 'meterNumber': scannerId='meterScanner'; break;
-                case 'sealCoverNumber': scannerId='sealCoverScanner'; break;
-                case 'sealOptoNumber': scannerId='sealOptoScanner'; break;
-                case 'address': scannerId='addressScanner'; break;
-                default: return;
-            }
-            startQrScanner(scannerId, target, mode);
-        });
-    });
-    
-    // Видаляємо кнопки фото (аналіз фото вимкнено)
-    const photoBtns = document.querySelectorAll(".btn-icon[data-type='photo']");
-    photoBtns.forEach(btn => btn.remove());
-});
+                case 'sealCoverNumber
