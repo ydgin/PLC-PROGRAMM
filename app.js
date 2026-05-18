@@ -93,7 +93,7 @@ const FORM_FIELDS = {
     address: "entry.969182756"
 };
 
-// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (УНІКАЛЬНІ, БЕЗ ПОВТОРІВ) ==========
+// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (УНІКАЛЬНІ) ==========
 const meterTypesList = [
     "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
     "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis310",
@@ -355,6 +355,49 @@ function hideSearchResults(fieldId) {
     }
 }
 
+// ========== ОТРИМАННЯ ВСІХ ДАНИХ ДЛЯ ЖУРНАЛУ ==========
+function getAllFormData() {
+    return {
+        date: new Date().toLocaleString('uk-UA'),
+        workType: workType?.value || '',
+        employeeId: employeeId?.value || '',
+        accountNumber: accountNumber?.value || '',
+        oldMeterType: oldMeterType?.value || '',
+        oldMeterNumber: oldMeterNumber?.value || '',
+        oldMeterReading: oldMeterReading?.value || '',
+        newMeterType: newMeterType?.value || '',
+        newMeterNumber: newMeterNumber?.value || '',
+        newMeterReading: newMeterReading?.value || '',
+        address: address?.value || '',
+        // Демонтовані пломби
+        oldSealCover: oldSealCover?.value || '',
+        oldSealVKP: oldSealVKP?.value || '',
+        oldSealSHO1: oldSealSHO1?.value || '',
+        oldSealSHO2: oldSealSHO2?.value || '',
+        oldSealOpto: oldSealOpto?.value || '',
+        oldIMP1: oldIMP1?.value || '',
+        oldIMP2: oldIMP2?.value || '',
+        oldIMP3: oldIMP3?.value || '',
+        // Встановлені пломби
+        newSealCover: newSealCover?.value || '',
+        newSealVKP: newSealVKP?.value || '',
+        newSealSHO1: newSealSHO1?.value || '',
+        newSealSHO2: newSealSHO2?.value || '',
+        newSealOpto: newSealOpto?.value || '',
+        newIMP1: newIMP1?.value || '',
+        newIMP2: newIMP2?.value || '',
+        newIMP3: newIMP3?.value || ''
+    };
+}
+
+// ========== ЗБЕРЕЖЕННЯ В ЛОКАЛЬНИЙ ЖУРНАЛ ==========
+function saveAllFieldsToLog() {
+    const data = getAllFormData();
+    workLog.unshift(data);
+    saveData();
+    alert('✅ Всі дані збережено в локальний журнал!');
+}
+
 // ========== ВІДПРАВКА В GOOGLE FORM ==========
 async function sendToGoogleForm() {
     if (!workType.value) { alert('❌ Виберіть виконувану роботу'); workType.focus(); return; }
@@ -405,17 +448,9 @@ async function sendToGoogleForm() {
             body: formData
         });
         
-        const now = new Date().toLocaleString('uk-UA');
-        workLog.unshift({
-            date: now,
-            workType: workType.value,
-            employeeId: employeeId.value,
-            accountNumber: accountNumber.value,
-            oldMeter: oldMeterNumber?.value || '',
-            newMeter: newMeterNumber?.value || '',
-            address: address?.value || '',
-            status: 'Відправлено в Google Form'
-        });
+        const data = getAllFormData();
+        data.status = 'Відправлено в Google Form';
+        workLog.unshift(data);
         saveData();
         
         alert('✅ Дані успішно відправлено в Google Form!');
@@ -439,24 +474,7 @@ function clearAllFields() {
     showToast('✅ Всі поля очищено');
 }
 
-function saveAllFieldsToLog() {
-    const now = new Date().toLocaleString('uk-UA');
-    
-    workLog.unshift({
-        date: now,
-        workType: workType.value,
-        employeeId: employeeId.value,
-        accountNumber: accountNumber.value,
-        oldMeter: oldMeterNumber?.value || '',
-        newMeter: newMeterNumber?.value || '',
-        address: address?.value || '',
-        status: 'Збережено локально'
-    });
-    
-    saveData();
-    alert('✅ Всі дані збережено в локальний журнал!');
-}
-
+// ========== ДАНІ ЖУРНАЛУ ==========
 function loadData() {
     const stored = localStorage.getItem('pls_log');
     if (stored) { try { workLog = JSON.parse(stored); } catch(e) { workLog = []; } }
@@ -472,7 +490,7 @@ function saveData() {
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) { 
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="8">Немає записів</td></tr>'; 
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Немає записів</td></tr>'; 
         return; 
     }
     let html = '';
@@ -482,14 +500,16 @@ function renderLog() {
                     <td>${escapeHtml(r.workType || '')}</td>
                     <td>${escapeHtml(r.employeeId || '')}</td>
                     <td>${escapeHtml(r.accountNumber || '')}</td>
-                    <td>${escapeHtml(r.oldMeter || '')}</td>
-                    <td>${escapeHtml(r.newMeter || '')}</td>
+                    <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+                    <td>${escapeHtml(r.newMeterNumber || '')}</td>
                     <td>${escapeHtml(r.address || '')}</td>
-                    <td><span class="badge">${escapeHtml(r.status || '')}</span></td>
+                    <td><span class="badge">🔻 Зняті</span><br>${escapeHtml(r.oldSealCover || '')}<br>${escapeHtml(r.oldSealVKP || '')}<br>${escapeHtml(r.oldSealSHO1 || '')}<br>${escapeHtml(r.oldSealSHO2 || '')}<br>${escapeHtml(r.oldSealOpto || '')}<br>${escapeHtml(r.oldIMP1 || '')}<br>${escapeHtml(r.oldIMP2 || '')}<br>${escapeHtml(r.oldIMP3 || '')}</td>
+                    <td><span class="badge">🔺 Встановлені</span><br>${escapeHtml(r.newSealCover || '')}<br>${escapeHtml(r.newSealVKP || '')}<br>${escapeHtml(r.newSealSHO1 || '')}<br>${escapeHtml(r.newSealSHO2 || '')}<br>${escapeHtml(r.newSealOpto || '')}<br>${escapeHtml(r.newIMP1 || '')}<br>${escapeHtml(r.newIMP2 || '')}<br>${escapeHtml(r.newIMP3 || '')}</td>
                     <td><span class="delete-icon" data-idx="${idx}">🗑️</span></td>
                 </tr>`;
     });
     logTable.innerHTML = html;
+    
     document.querySelectorAll('.delete-icon').forEach(el => {
         el.addEventListener('click', () => {
             const idx = parseInt(el.getAttribute('data-idx'));
@@ -509,6 +529,7 @@ function smartMeterExtract(t) {
 }
 function digitsExtract(t) { return t.replace(/\D/g, '').substring(0, 10); }
 
+// ========== QR СКАНЕР ==========
 async function stopScanner(id) { 
     if (activeScanners[id]) { 
         try { await activeScanners[id].stop(); } catch(e) {} 
@@ -568,8 +589,13 @@ function showToast(msg) {
 
 function exportCSV() {
     if (!workLog.length) { alert('Немає даних для експорту'); return; }
-    const headers = ['Дата','Робота','Табельний','Особовий','Дем.лічильник','Нов.лічильник','Адреса','Статус'];
-    const rows = workLog.map(r => [`"${r.date}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeter || ''}"`,`"${r.newMeter || ''}"`,`"${r.address || ''}"`,`"${r.status || ''}"`]);
+    const headers = ['Дата','Робота','Табельний','Особовий','Дем.лічильник','Нов.лічильник','Адреса','Зняті пломби','Встановлені пломби'];
+    const rows = workLog.map(r => [
+        `"${r.date}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,
+        `"${r.oldMeterNumber || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.address || ''}"`,
+        `"${r.oldSealCover || ''} ${r.oldSealVKP || ''} ${r.oldSealSHO1 || ''} ${r.oldSealSHO2 || ''} ${r.oldSealOpto || ''} ${r.oldIMP1 || ''} ${r.oldIMP2 || ''} ${r.oldIMP3 || ''}"`,
+        `"${r.newSealCover || ''} ${r.newSealVKP || ''} ${r.newSealSHO1 || ''} ${r.newSealSHO2 || ''} ${r.newSealOpto || ''} ${r.newIMP1 || ''} ${r.newIMP2 || ''} ${r.newIMP3 || ''}"`
+    ]);
     const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
     const a = document.createElement('a');
