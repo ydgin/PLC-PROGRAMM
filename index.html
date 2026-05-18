@@ -51,65 +51,227 @@
             <div class="sub">Облік лічильників та пломб</div>
         </div>
 
-        <!-- Особовий рахунок -->
+        <!-- ============= ОСНОВНА ІНФОРМАЦІЯ ============= -->
         <div class="card">
-            <label class="field-label">Особовий рахунок (10 цифр)</label>
+            <label class="field-label">📋 Оберіть виконувану роботу</label>
+            <select id="workType" class="field-input">
+                <option value="">-- Виберіть --</option>
+                <option value="Фасадні роботи">Фасадні роботи</option>
+                <option value="Заміна лічильника">Заміна лічильника</option>
+                <option value="Технічна перевірка">Технічна перевірка</option>
+                <option value="Контрольний огляд">Контрольний огляд</option>
+                <option value="Закриття о/р з демонтажем">Закриття о/р з демонтажем</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <label class="field-label">👤 Табельний номер</label>
+            <div class="input-scan-row">
+                <input id="employeeId" class="field-input" type="text" placeholder="Введіть табельний номер">
+                <button class="btn-scan" data-target="employeeId" data-mode="digits">📷</button>
+            </div>
+            <div id="employeeIdScanner" class="scanner-container hidden"></div>
+        </div>
+
+        <div class="card">
+            <label class="field-label">📋 Особовий рахунок (10 цифр)</label>
             <div class="input-scan-row">
                 <input id="accountNumber" class="field-input" type="tel" placeholder="Введіть 10 цифр" maxlength="10" inputmode="numeric">
                 <button class="btn-scan" data-target="accountNumber" data-mode="digits">📷</button>
-                <button class="btn-save-field" data-field="accountNumber" data-label="Особовий рахунок">💾</button>
             </div>
             <div id="accountScanner" class="scanner-container hidden"></div>
         </div>
 
-        <!-- Лічильник -->
+        <!-- ============= ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ============= -->
         <div class="card">
-            <label class="field-label">Лічильник (8 цифр)</label>
+            <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Демонтований лічильник</h3>
+            
+            <label class="field-label">Тип демонтованого лічильника</label>
+            <select id="oldMeterType" class="field-input">
+                <option value="">-- Виберіть --</option>
+                <option value="Однофазний">Однофазний</option>
+                <option value="Трифазний">Трифазний</option>
+            </select>
+
+            <label class="field-label" style="margin-top: 12px;">Номер демонтованого лічильника</label>
             <div class="input-scan-row">
-                <input id="meterNumber" class="field-input" type="tel" placeholder="Введіть 8 цифр" maxlength="8" inputmode="numeric">
-                <button class="btn-scan" data-target="meterNumber" data-mode="smart">📷</button>
-                <button class="btn-save-field" data-field="meterNumber" data-label="Лічильник">💾</button>
+                <input id="oldMeterNumber" class="field-input" type="text" placeholder="Номер лічильника">
+                <button class="btn-scan" data-target="oldMeterNumber" data-mode="smart">📷</button>
             </div>
-            <div id="meterScanner" class="scanner-container hidden"></div>
-            <div class="info-hint">ℹ️ При скануванні ігноруються перші 4 та останні 4 цифри</div>
+            <div id="oldMeterNumberScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Покази демонтованого лічильника</label>
+            <div class="input-scan-row">
+                <input id="oldMeterReading" class="field-input" type="number" placeholder="Покази">
+                <button class="btn-scan" data-target="oldMeterReading" data-mode="digits">📷</button>
+            </div>
+            <div id="oldMeterReadingScanner" class="scanner-container hidden"></div>
         </div>
 
-        <!-- Пломба кришки -->
+        <!-- ============= ДЕМОНТОВАНІ ПЛОМБИ ============= -->
         <div class="card">
-            <label class="field-label">Пломба кришки</label>
+            <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Демонтовані пломби</h3>
+            
+            <label class="field-label">Знята пломба кл. кришка</label>
             <div class="input-scan-row">
-                <input id="sealCoverNumber" class="field-input seal-input" type="text" placeholder="Номер пломби" autocomplete="off">
-                <button class="btn-scan" data-target="sealCoverNumber" data-mode="text">📷</button>
-                <button class="btn-save-field" data-field="sealCoverNumber" data-label="Пломба кришки">💾</button>
+                <input id="oldSealCover" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="oldSealCover" data-mode="text">📷</button>
             </div>
-            <div id="sealCoverScanner" class="scanner-container hidden"></div>
-            <div id="sealCoverResults" class="search-results hidden"></div>
+            <div id="oldSealCoverScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Знята пломба ВКП</label>
+            <div class="input-scan-row">
+                <input id="oldSealVKP" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="oldSealVKP" data-mode="text">📷</button>
+            </div>
+            <div id="oldSealVKPScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Знята пломба ШО (1)</label>
+            <div class="input-scan-row">
+                <input id="oldSealSHO1" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="oldSealSHO1" data-mode="text">📷</button>
+            </div>
+            <div id="oldSealSHO1Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Знята пломба ШО (2)</label>
+            <div class="input-scan-row">
+                <input id="oldSealSHO2" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="oldSealSHO2" data-mode="text">📷</button>
+            </div>
+            <div id="oldSealSHO2Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Знята пломба оптопорт</label>
+            <div class="input-scan-row">
+                <input id="oldSealOpto" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="oldSealOpto" data-mode="text">📷</button>
+            </div>
+            <div id="oldSealOptoScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Знята ИМП (1)</label>
+            <div class="input-scan-row">
+                <input id="oldIMP1" class="field-input seal-input" type="text" placeholder="Номер ИМП">
+                <button class="btn-scan" data-target="oldIMP1" data-mode="text">📷</button>
+            </div>
+            <div id="oldIMP1Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Знята ИМП (2)</label>
+            <div class="input-scan-row">
+                <input id="oldIMP2" class="field-input seal-input" type="text" placeholder="Номер ИМП">
+                <button class="btn-scan" data-target="oldIMP2" data-mode="text">📷</button>
+            </div>
+            <div id="oldIMP2Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Знята ИМП (3)</label>
+            <div class="input-scan-row">
+                <input id="oldIMP3" class="field-input seal-input" type="text" placeholder="Номер ИМП">
+                <button class="btn-scan" data-target="oldIMP3" data-mode="text">📷</button>
+            </div>
+            <div id="oldIMP3Scanner" class="scanner-container hidden"></div>
         </div>
 
-        <!-- Пломба оптопорту -->
+        <!-- ============= ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ============= -->
         <div class="card">
-            <label class="field-label">Пломба оптопорту</label>
+            <h3 style="margin-bottom: 12px; color: #16a34a;">🔺 Встановлений лічильник</h3>
+            
+            <label class="field-label">Тип встановленого лічильника</label>
+            <select id="newMeterType" class="field-input">
+                <option value="">-- Виберіть --</option>
+                <option value="Однофазний">Однофазний</option>
+                <option value="Трифазний">Трифазний</option>
+            </select>
+
+            <label class="field-label" style="margin-top: 12px;">Номер встановленого лічильника</label>
             <div class="input-scan-row">
-                <input id="sealOptoNumber" class="field-input seal-input" type="text" placeholder="Номер пломби" autocomplete="off">
-                <button class="btn-scan" data-target="sealOptoNumber" data-mode="text">📷</button>
-                <button class="btn-save-field" data-field="sealOptoNumber" data-label="Пломба оптопорту">💾</button>
+                <input id="newMeterNumber" class="field-input" type="text" placeholder="Номер лічильника">
+                <button class="btn-scan" data-target="newMeterNumber" data-mode="smart">📷</button>
             </div>
-            <div id="sealOptoScanner" class="scanner-container hidden"></div>
-            <div id="sealOptoResults" class="search-results hidden"></div>
+            <div id="newMeterNumberScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Покази встановленого лічильника</label>
+            <div class="input-scan-row">
+                <input id="newMeterReading" class="field-input" type="number" placeholder="Покази">
+                <button class="btn-scan" data-target="newMeterReading" data-mode="digits">📷</button>
+            </div>
+            <div id="newMeterReadingScanner" class="scanner-container hidden"></div>
+        </div>
+
+        <!-- ============= ВСТАНОВЛЕНІ ПЛОМБИ ============= -->
+        <div class="card">
+            <h3 style="margin-bottom: 12px; color: #16a34a;">🔺 Встановлені пломби</h3>
+            
+            <label class="field-label">Встановлена пломба кл. кришка</label>
+            <div class="input-scan-row">
+                <input id="newSealCover" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="newSealCover" data-mode="text">📷</button>
+            </div>
+            <div id="newSealCoverScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Встановлена пломба ВКП</label>
+            <div class="input-scan-row">
+                <input id="newSealVKP" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="newSealVKP" data-mode="text">📷</button>
+            </div>
+            <div id="newSealVKPScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Встановлена пломба ШО (1)</label>
+            <div class="input-scan-row">
+                <input id="newSealSHO1" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="newSealSHO1" data-mode="text">📷</button>
+            </div>
+            <div id="newSealSHO1Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Встановлена пломба ШО (2)</label>
+            <div class="input-scan-row">
+                <input id="newSealSHO2" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="newSealSHO2" data-mode="text">📷</button>
+            </div>
+            <div id="newSealSHO2Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Встановлена пломба оптопорт</label>
+            <div class="input-scan-row">
+                <input id="newSealOpto" class="field-input seal-input" type="text" placeholder="Номер пломби">
+                <button class="btn-scan" data-target="newSealOpto" data-mode="text">📷</button>
+            </div>
+            <div id="newSealOptoScanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Встановлена ИМП (1)</label>
+            <div class="input-scan-row">
+                <input id="newIMP1" class="field-input seal-input" type="text" placeholder="Номер ИМП">
+                <button class="btn-scan" data-target="newIMP1" data-mode="text">📷</button>
+            </div>
+            <div id="newIMP1Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Встановлена ИМП (2)</label>
+            <div class="input-scan-row">
+                <input id="newIMP2" class="field-input seal-input" type="text" placeholder="Номер ИМП">
+                <button class="btn-scan" data-target="newIMP2" data-mode="text">📷</button>
+            </div>
+            <div id="newIMP2Scanner" class="scanner-container hidden"></div>
+
+            <label class="field-label" style="margin-top: 12px;">Встановлена ИМП (3)</label>
+            <div class="input-scan-row">
+                <input id="newIMP3" class="field-input seal-input" type="text" placeholder="Номер ИМП">
+                <button class="btn-scan" data-target="newIMP3" data-mode="text">📷</button>
+            </div>
+            <div id="newIMP3Scanner" class="scanner-container hidden"></div>
         </div>
 
         <!-- Адреса -->
         <div class="card">
-            <label class="field-label">Адреса</label>
+            <label class="field-label">📍 Адреса</label>
             <div class="input-scan-row">
                 <input id="address" class="field-input" type="text" placeholder="Введіть адресу">
                 <button class="btn-scan" data-target="address" data-mode="text">📷</button>
-                <button class="btn-save-field" data-field="address" data-label="Адреса">💾</button>
             </div>
             <div id="addressScanner" class="scanner-container hidden"></div>
         </div>
 
-        <!-- ЗАГАЛЬНА КНОПКА ЗБЕРЕЖЕННЯ -->
+        <!-- КНОПКА ВІДПРАВКИ В GOOGLE FORM -->
+        <div class="save-container">
+            <button id="sendToFormBtn" class="btn-send-form">📨 ВІДПРАВИТИ ДАНІ В ФОРМУ</button>
+        </div>
+
+        <!-- ЗАГАЛЬНА КНОПКА ЗБЕРЕЖЕННЯ В ЛОКАЛЬНИЙ ЖУРНАЛ -->
         <div class="save-container">
             <button id="saveRecordBtn" class="btn-save-all">💾 ЗБЕРЕГТИ ВСЕ В ЖУРНАЛ</button>
         </div>
@@ -140,7 +302,7 @@
             <div class="table-wrapper">
                 <table>
                     <thead>
-                        <tr><th>Дата</th><th>Особовий</th><th>Лічильник</th><th>Пломба кришки</th><th>Пломба оптопорту</th><th>Адреса</th><th></th></tr>
+                        <tr><th>Дата</th><th>Робота</th><th>Табельний</th><th>Особовий</th><th>Дем.лічильник</th><th>Нов.лічильник</th><th>Адреса</th><th>Статус</th></tr>
                     </thead>
                     <tbody id="logTable"></tbody>
                 </table>
