@@ -86,7 +86,7 @@ body {
 .input-scan-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     margin-bottom: 6px;
 }
 
@@ -106,35 +106,37 @@ body {
 }
 .field-input::placeholder { color: #9ca3af; }
 
+/* ЗБІЛЬШЕНА КНОПКА СКАНЕРА */
 .btn-scan {
-    width: 48px;
-    height: 48px;
-    border-radius: 48px;
+    width: 56px;
+    height: 56px;
+    border-radius: 56px;
     border: none;
-    font-size: 1.2rem;
+    font-size: 1.6rem;
     background: #f3e8ff;
     color: #9333ea;
     cursor: pointer;
     flex-shrink: 0;
+    transition: 0.2s;
 }
-.btn-scan:active { transform: scale(0.95); }
+.btn-scan:active { transform: scale(0.95); background: #e9d5ff; }
 
-.btn-save-field {
-    width: 48px;
-    height: 48px;
-    border-radius: 48px;
+/* Кнопка відправки в Google Form */
+.btn-send-form {
+    width: 100%;
+    padding: 18px;
+    border-radius: 60px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     border: none;
     font-size: 1.2rem;
-    background: #d1fae5;
-    color: #10b981;
+    font-weight: bold;
+    color: white;
     cursor: pointer;
-    flex-shrink: 0;
+    margin-bottom: 12px;
 }
-.btn-save-field:active { transform: scale(0.95); }
+.btn-send-form:active { transform: scale(0.98); }
 
-.save-container {
-    margin-bottom: 16px;
-}
+/* Кнопка збереження в журнал */
 .btn-save-all {
     width: 100%;
     padding: 16px;
@@ -348,5 +350,5 @@ th { background: #f8fafd; font-weight: 700; color: #2c3e66; }
     .card { padding: 16px; }
     .pin-btn { width: 60px; height: 60px; font-size: 24px; }
     .pin-card { width: 280px; padding: 30px 20px; }
-    .btn-scan, .btn-save-field { width: 44px; height: 44px; font-size: 1rem; }
+    .btn-scan { width: 48px; height: 48px; font-size: 1.3rem; }
 }
