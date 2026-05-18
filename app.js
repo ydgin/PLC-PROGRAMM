@@ -60,49 +60,74 @@ const newSealInput = document.getElementById('newSealInput');
 const confirmSealBtn = document.getElementById('confirmSealBtn');
 const cancelSealBtn = document.getElementById('cancelSealBtn');
 
-// GOOGLE FORM URL (для відправки)
+// GOOGLE FORM URL
 const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSfJ1wXEHewOvsHAmkIY_MwK_a9cbzDgyIPmPJ3h11CijIwAL-A/formResponse";
 
-// ⚠️ ПРАВИЛЬНІ ID ПОЛІВ З ВАШОЇ ФОРМИ (отримані з HTML)
+// ID полів Google Form
 const FORM_FIELDS = {
-    // Основна інформація
-    workType: "entry.1609399626",           // Оберіть виконувану роботу (Заміна лічильника)
-    employeeId: "entry.1583379400",         // Табельний номер (58388)
-    accountNumber: "entry.244962092",       // Особовий рахунок (1231265789)
-    
-    // Демонтований лічильник
-    oldMeterType: "entry.1262021573",       // Тип демонтованого лічильника
-    oldMeterNumber: "entry.1666715724",     // Номер демонтованого лічильника (00000000)
-    oldMeterReading: "entry.1779114186107", // Покази демонтованого лічильника (GAMMA 300)
-    
-    // Демонтовані пломби
-    oldSealCover: "entry.950038743",        // Знята пломба кл. кришка
-    oldSealVKP: "entry.9515038743",         // Знята пломба ВКП
-    oldSealSHO1: "entry.952083469",         // Знята пломба ШО (1)
-    oldSealSHO2: "entry.953142835",         // Знята пломба ШО (2)
-    oldSealOpto: "entry.954162369",         // Знята пломба оптопорт
-    oldIMP1: "entry.955182756",             // Знята ИМП (1)
-    oldIMP2: "entry.956182756",             // Знята ИМП (2)
-    oldIMP3: "entry.957182756",             // Знята ИМП (3)
-    
-    // Встановлений лічильник
-    newMeterType: "entry.958182756",        // Тип встановленого лічильника
-    newMeterNumber: "entry.959182756",      // Номер встановленого лічильника
-    newMeterReading: "entry.960182756",     // Покази встановленого лічильника
-    
-    // Встановлені пломби
-    newSealCover: "entry.961182756",        // Встановлена пломба кл. кришка
-    newSealVKP: "entry.962182756",          // Встановлена пломба ВКП
-    newSealSHO1: "entry.963182756",         // Встановлена пломба ШО (1)
-    newSealSHO2: "entry.964182756",         // Встановлена пломба ШО (2)
-    newSealOpto: "entry.965182756",         // Встановлена пломба оптопорт
-    newIMP1: "entry.966182756",             // Встановлена ИМП (1)
-    newIMP2: "entry.967182756",             // Встановлена ИМП (2)
-    newIMP3: "entry.968182756",             // Встановлена ИМП (3)
-    
-    // Адреса
-    address: "entry.969182756"              // Адреса
+    workType: "entry.1609399626",
+    employeeId: "entry.1583379400",
+    accountNumber: "entry.244962092",
+    oldMeterType: "entry.1262021573",
+    oldMeterNumber: "entry.1666715724",
+    oldMeterReading: "entry.1779114186107",
+    oldSealCover: "entry.950038743",
+    oldSealVKP: "entry.9515038743",
+    oldSealSHO1: "entry.952083469",
+    oldSealSHO2: "entry.953142835",
+    oldSealOpto: "entry.954162369",
+    oldIMP1: "entry.955182756",
+    oldIMP2: "entry.956182756",
+    oldIMP3: "entry.957182756",
+    newMeterType: "entry.958182756",
+    newMeterNumber: "entry.959182756",
+    newMeterReading: "entry.960182756",
+    newSealCover: "entry.961182756",
+    newSealVKP: "entry.962182756",
+    newSealSHO1: "entry.963182756",
+    newSealSHO2: "entry.964182756",
+    newSealOpto: "entry.965182756",
+    newIMP1: "entry.966182756",
+    newIMP2: "entry.967182756",
+    newIMP3: "entry.968182756",
+    address: "entry.969182756"
 };
+
+// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (УНІКАЛЬНІ) ==========
+const meterTypesList = [
+    "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
+    "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis310",
+    "MCS301-CE51B 30MIS-004 000", "MTX 1A10.DF.2LO-CO4", "MTX 1A10.DF.2LO-Y04",
+    "MTX 1A10.DF.2ZO-CD4", "MTX 1A10.DF.2ZO-CO4", "MTX 3A 10.DF.4Z1-C4",
+    "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", "NIK 2100 AP2.0000.0.11",
+    "NIK 2100 AP2T.1000.C.11", "NIK 2100 AP2T.1002.MC.11", "NIK 2100 AP2T.1002.C.11",
+    "NIK 2100 AP6T.1002.MC.11", "NIK 2100 AP6T.2000.MC.11", "NIK 2100 AP6T.2802.MC.11",
+    "NIK 2100 AP2T.2802.MC.11", "NIK 2100 AP6T.2902.MC.11", "NIK 2104 AP2T.1000.M.11",
+    "NIK 2104 AP2T.1000.C.11", "NIK 2104 AP2T.1002.MC.11", "NIK 2104 AP2T.1802.MC.11",
+    "NIK 2104 AP2TB.1802.M.11", "NIK 2104 AP6T.2602.MC.21", "NIK 2300 AP6T.1000.C.11",
+    "NIK 2300 ARP3T.2900 MC 21", "NIK 2300 ATT.2900 MC 21", "NIK 2300 ARTT.2902.MC.11",
+    "NIK 2300 AP3.2000.MC.11", "NIK 2300 AP3T.2000.MC.11", "NIK 2300 AP6T.2002.MC.11",
+    "NIK 2300 AP6T.2802.MC.11", "NIK 2300 AP6T.2902.MC.11", "NIK 2301 AP3.0 0000.0.11",
+    "NIK 2303 ARP3T.1202.MC.11", "NIK 2303 ARP3T.1802.MC.11", "NIK 2303 ARP6T.1002.MC.11",
+    "NIK 2303 ARP6T.1800.MC.11", "NIK 2303 ART T.1800.MC.11", "NIK 2303 AT T.1800.MC.21",
+    "NIK 2303 ARP3T.1802.MC.21", "NIK 2303 ARP6T.1802.MC.11", "NIK 2303 AP3T.1000.MC.11",
+    "NIK 2303 AP3T.1002.MC.11", "NIK 2303 AP3T.1802.MC.11", "NIK 2303 AP3T.2000.MC.11",
+    "NIK 2303 AP6T.1000.MC.11", "NIK 2303 AP6T.1000.C.11", "NIK 2303 AP6T.1002.MC.11",
+    "NIK 2303 AP6T.1802.MC.11", "NIK 2303 AP6T.1802MC.21", "NIK 2303 AP6T.2000.MC.11",
+    "NIK 2307 0.5s ARTT.1600.MC.21", "NIK 2307 ARP3T.1602.M.21", "NIK 2307 ARP3T.1602.MC.21",
+    "NP-06 TD MME 1F 2S-U", "NP-06 TD MME 1F 3S-U", "ACE-3000", "ЛЭО", "ЛЭО-M1.4",
+    "МЕРИДИАН ЛТЕ-1.03", "МЕРИДИАН ЛТЕ-1.03T", "МЕРИДИАН ЛТЕ-1.03TY", "Меркурій 200",
+    "Меркурій 200.02", "Меркурій 201", "Меркурій 206", "МЕРКУРІЙ 231 АТ-01",
+    "НІК 2102-01.E2MCT", "НІК 2102-01.E2P1", "НІК 2102-01.E2CT", "НІК 2102-01.E2MT",
+    "НІК 2102-01.E2MT1", "НІК 2102-01.E2T", "НІК 2102-01.E2TP1", "НІК 2102-02.M1",
+    "НІК 2102-02.M1B", "НІК 2102-02.M2", "НІК 2102-02.M2B", "НІК 2301 AP1",
+    "НІК 2303 AP2", "НІК 2301 AP2B", "НІК 2301 AP3", "НІК 2301 AP3B", "НІК 2303 AP2T",
+    "НІК 2303 AP3T", "НІК 2303L AP1T", "НІК 2303L AP6", "НІК 2303L AП6Т", "CA4-195",
+    "CA4-И672п", "CO-193", "CO-197", "CO-197M", "CO-2", "CO-2M", "COEA09M",
+    "CO-И446", "CO-И446M", "CO-И449", "CO-И449М1", "CO-И449М1-1", "CO-И449М1-2",
+    "СОЭ-1.02/2", "СОЭ-1.02/2КРТ", "СОЭ-1.02/2KT", "СОЭ-1.02/2T", "СОЭ-1.02/5KPTД",
+    "СО-3A10Д", "СО-3G6705", "CT-3A05", "Ц36807Бк"
+];
 
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
@@ -126,6 +151,7 @@ function pinAddNum(num) {
                 mainApp.classList.remove('hidden');
                 loadData();
                 loadSeals();
+                initMeterTypes();
             } else {
                 pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
@@ -151,6 +177,7 @@ function pinCheck() {
         mainApp.classList.remove('hidden');
         loadData();
         loadSeals();
+        initMeterTypes();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
@@ -163,6 +190,28 @@ function pinReset() {
     updatePinDisplay(); 
     if (pinError) pinError.innerText = '✅ PIN: 3268'; 
     setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
+}
+
+// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ ==========
+function initMeterTypes() {
+    // Додаємо типи для демонтованого лічильника
+    if (oldMeterType && oldMeterType.children.length <= 1) {
+        meterTypesList.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            oldMeterType.appendChild(option);
+        });
+    }
+    // Додаємо типи для встановленого лічильника
+    if (newMeterType && newMeterType.children.length <= 1) {
+        meterTypesList.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            newMeterType.appendChild(option);
+        });
+    }
 }
 
 // ========== БАЗА ПЛОМБ ==========
@@ -313,7 +362,7 @@ async function sendToGoogleForm() {
     
     const formData = new FormData();
     
-    // Додаємо всі поля в FormData з правильними ID
+    // Додаємо всі поля в FormData
     formData.append(FORM_FIELDS.workType, workType.value);
     formData.append(FORM_FIELDS.employeeId, employeeId.value);
     formData.append(FORM_FIELDS.accountNumber, accountNumber.value);
@@ -346,14 +395,12 @@ async function sendToGoogleForm() {
     formData.append(FORM_FIELDS.newIMP3, newIMP3?.value || '');
     
     try {
-        // Відправляємо дані
         await fetch(GOOGLE_FORM_ACTION_URL, {
             method: 'POST',
             mode: 'no-cors',
             body: formData
         });
         
-        // Додаємо в локальний журнал
         const now = new Date().toLocaleString('uk-UA');
         workLog.unshift({
             date: now,
@@ -369,7 +416,6 @@ async function sendToGoogleForm() {
         
         alert('✅ Дані успішно відправлено в Google Form!');
         
-        // Очищаємо всі поля після відправки (опціонально)
         if (confirm('Очистити всі поля після відправки?')) {
             clearAllFields();
         }
@@ -380,7 +426,6 @@ async function sendToGoogleForm() {
 }
 
 function clearAllFields() {
-    // Очищаємо всі поля форми (крім табельного номера)
     const allInputs = document.querySelectorAll('input, select');
     allInputs.forEach(input => {
         if (input.id !== 'employeeId') {
@@ -538,7 +583,6 @@ function clearLog() {
 }
 
 function setupSearch() {
-    // Додаємо пошук для всіх полів пломб
     const sealInputs = document.querySelectorAll('.seal-input');
     sealInputs.forEach(input => {
         input.addEventListener('input', function() { 
