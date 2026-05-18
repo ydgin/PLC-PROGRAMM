@@ -55,6 +55,7 @@ body {
 .pin-btn:active { transform: scale(0.95); background: #e2e8f0; }
 .pin-clear { background: #fee2e2; color: #ef4444; font-size: 20px; }
 .pin-enter { background: #22c55e; color: white; }
+.pin-forgot { margin-top: 20px; font-size: 12px; color: #3b82f6; text-decoration: underline; cursor: pointer; }
 
 /* Картки */
 .card {
@@ -76,25 +77,25 @@ body {
 
 .field-label {
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #2c3e66;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .input-scan-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 6px;
 }
 
 .field-input {
     flex: 1;
-    padding: 14px 16px;
+    padding: 12px 14px;
     border: 1px solid #e2e8f0;
     border-radius: 18px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     background: #fafcff;
     font-family: monospace;
 }
@@ -106,19 +107,30 @@ body {
 .field-input::placeholder { color: #9ca3af; }
 
 .btn-scan {
-    width: 56px;
-    height: 56px;
-    border-radius: 56px;
+    width: 48px;
+    height: 48px;
+    border-radius: 48px;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     background: #f3e8ff;
     color: #9333ea;
     cursor: pointer;
     flex-shrink: 0;
-    transition: 0.2s;
 }
-.btn-scan:active { transform: scale(0.95); background: #e9d5ff; }
+.btn-scan:active { transform: scale(0.95); }
 
+.btn-send-form {
+    width: 100%;
+    padding: 16px;
+    border-radius: 60px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
 .btn-save-all {
     width: 100%;
     padding: 16px;
@@ -130,13 +142,12 @@ body {
     color: white;
     cursor: pointer;
 }
-.btn-save-all:active { transform: scale(0.98); }
 
 .scanner-container {
     width: 100%;
-    margin-top: 12px;
+    margin-top: 10px;
     background: #1a1a1a;
-    border-radius: 24px;
+    border-radius: 20px;
     overflow: hidden;
 }
 .scanner-header {
@@ -144,28 +155,26 @@ body {
     justify-content: space-between;
     align-items: center;
     background: #2d2d2d;
-    padding: 8px 12px;
+    padding: 6px 10px;
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
 }
 .btn-close-scanner {
     background: none;
     border: none;
     color: white;
-    font-size: 1.2rem;
+    font-size: 1rem;
     cursor: pointer;
-    padding: 0 6px;
 }
 
 .flex-between {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
-
 .btn-small {
-    padding: 6px 16px;
+    padding: 6px 14px;
     border-radius: 30px;
     border: none;
     font-size: 0.7rem;
@@ -174,12 +183,11 @@ body {
     color: white;
     cursor: pointer;
 }
-
 .seal-add-panel {
-    margin-bottom: 12px;
-    padding: 12px;
+    margin-bottom: 10px;
+    padding: 10px;
     background: #f8fafc;
-    border-radius: 18px;
+    border-radius: 16px;
 }
 .seal-add-row {
     display: flex;
@@ -187,90 +195,68 @@ body {
     align-items: center;
 }
 .btn-small-ok {
-    padding: 8px 18px;
+    padding: 6px 14px;
     border-radius: 30px;
     border: none;
     background: #22c55e;
     color: white;
     cursor: pointer;
-    font-size: 0.75rem;
 }
 .btn-small-cancel {
-    padding: 8px 18px;
+    padding: 6px 14px;
     border-radius: 30px;
     border: none;
     background: #fee2e2;
     color: #dc2626;
     cursor: pointer;
-    font-size: 0.75rem;
 }
-
 .seal-search {
     width: 100%;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border: 1px solid #e2e8f0;
     border-radius: 30px;
-    font-size: 0.85rem;
-    margin-bottom: 12px;
-    background: #fafcff;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
 }
-
 .seals-list {
-    max-height: 250px;
+    max-height: 200px;
     overflow-y: auto;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 14px;
 }
 .seal-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-bottom: 1px solid #e5e7eb;
     font-family: monospace;
 }
 .seal-item:last-child { border-bottom: none; }
-.seal-number {
-    cursor: pointer;
-    color: #1e3c72;
-    font-weight: 500;
-}
-.delete-seal {
-    background: none;
-    border: none;
-    color: #dc2626;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 4px 8px;
-}
-.empty-seals {
-    padding: 20px;
-    text-align: center;
-    color: #9ca3af;
-    font-size: 0.8rem;
-}
+.seal-number { cursor: pointer; color: #1e3c72; }
+.delete-seal { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 1rem; }
+.empty-seals { padding: 20px; text-align: center; color: #9ca3af; }
 
 .btn-group {
     display: flex;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 }
 .btn-outline {
     background: white;
     border: 1px solid #e2e8f0;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 30px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     cursor: pointer;
-    color: #1e3c72;
 }
 .btn-danger {
     background: #fee2e2;
     border: none;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 30px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #dc2626;
     cursor: pointer;
@@ -282,20 +268,20 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
 }
 th, td {
     text-align: left;
-    padding: 10px 6px;
+    padding: 8px 4px;
     border-bottom: 1px solid #e5e7eb;
 }
 th { background: #f8fafd; font-weight: 700; color: #2c3e66; }
-.empty-row td { text-align: center; color: #9ca3af; padding: 24px; }
+.empty-row td { text-align: center; color: #9ca3af; padding: 20px; }
 
 @media (max-width: 550px) {
     body { padding: 12px; }
-    .card { padding: 16px; }
-    .pin-btn { width: 60px; height: 60px; font-size: 24px; }
-    .pin-card { width: 280px; padding: 30px 20px; }
-    .btn-scan { width: 48px; height: 48px; font-size: 1.3rem; }
+    .card { padding: 14px; }
+    .pin-btn { width: 55px; height: 55px; font-size: 22px; }
+    .pin-card { width: 280px; padding: 25px 20px; }
+    .btn-scan { width: 42px; height: 42px; font-size: 1rem; }
 }
