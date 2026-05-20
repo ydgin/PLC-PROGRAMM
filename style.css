@@ -90,7 +90,7 @@ body {
     margin-bottom: 6px;
 }
 
-.field-input {
+.field-input, select.field-input {
     flex: 1;
     padding: 12px 14px;
     border: 1px solid #e2e8f0;
@@ -99,7 +99,7 @@ body {
     background: #fafcff;
     font-family: monospace;
 }
-.field-input:focus {
+.field-input:focus, select.field-input:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
