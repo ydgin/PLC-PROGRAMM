@@ -120,17 +120,7 @@ function initMeterTypes() {
 }
 
 // ========== GOOGLE FORM URL ==========
-const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse";
-
-// ID полів Google Form (замініть на реальні)
-const FORM_FIELDS = {
-    workType: "entry.1609399626",
-    employeeId: "entry.1583379400",
-    accountNumber: "entry.244962092",
-    oldMeterNumber: "entry.1666715724",
-    newMeterNumber: "entry.959182756",
-    address: "entry.1458846130"
-};
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
@@ -402,43 +392,66 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ВІДПРАВКА В GOOGLE FORM ==========
-async function sendToGoogleForm() {
-    if (!workType.value) { alert('❌ Виберіть виконувану роботу'); workType.focus(); return; }
-    if (!employeeId.value) { alert('❌ Введіть табельний номер'); employeeId.focus(); return; }
+// ========== ВІДПРАВКА В GOOGLE FORM (ВІДКРИТТЯ ФОРМИ) ==========
+function sendToGoogleForm() {
+    // Перевірка обов'язкових полів
+    if (!workType.value) { 
+        alert('❌ Виберіть виконувану роботу'); 
+        workType.focus(); 
+        return; 
+    }
+    if (!employeeId.value) { 
+        alert('❌ Введіть табельний номер'); 
+        employeeId.focus(); 
+        return; 
+    }
     if (!accountNumber.value || accountNumber.value.length !== 10) { 
         alert('❌ Введіть особовий рахунок (10 цифр)'); 
         accountNumber.focus(); 
         return; 
     }
     
-    const formData = new FormData();
-    formData.append(FORM_FIELDS.workType, workType.value);
-    formData.append(FORM_FIELDS.employeeId, employeeId.value);
-    formData.append(FORM_FIELDS.accountNumber, accountNumber.value);
-    formData.append(FORM_FIELDS.oldMeterNumber, oldMeterNumber?.value || '');
-    formData.append(FORM_FIELDS.newMeterNumber, newMeterNumber?.value || '');
-    formData.append(FORM_FIELDS.address, address?.value || '');
+    // Параметри для заповнення форми
+    const params = new URLSearchParams();
     
-    try {
-        await fetch(GOOGLE_FORM_ACTION_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: formData
-        });
-        
-        const data = getFormData();
-        workLog.unshift(data);
-        saveData();
-        alert('✅ Дані успішно відправлено в Google Form!');
-        
-        if (confirm('Очистити всі поля після відправки?')) {
-            clearAllFields();
-        }
-    } catch(error) {
-        console.error('Помилка відправки:', error);
-        alert('❌ Помилка відправки. Перевірте підключення до інтернету.');
-    }
+    // Основні поля
+    params.append('entry.1609399626', workType.value);
+    params.append('entry.1583379400', employeeId.value);
+    params.append('entry.244962092', accountNumber.value);
+    params.append('entry.1666715724', oldMeterNumber?.value || '');
+    params.append('entry.959182756', newMeterNumber?.value || '');
+    params.append('entry.1458846130', address?.value || '');
+    
+    // Демонтовані пломби
+    if (oldSealCover) params.append('entry.950038743', oldSealCover.value || '');
+    if (oldSealVKP) params.append('entry.9515038743', oldSealVKP.value || '');
+    if (oldSealSHO1) params.append('entry.952083469', oldSealSHO1.value || '');
+    if (oldSealSHO2) params.append('entry.953142835', oldSealSHO2.value || '');
+    if (oldSealOpto) params.append('entry.954162369', oldSealOpto.value || '');
+    if (oldIMP1) params.append('entry.955182756', oldIMP1.value || '');
+    if (oldIMP2) params.append('entry.956182756', oldIMP2.value || '');
+    if (oldIMP3) params.append('entry.957182756', oldIMP3.value || '');
+    
+    // Встановлені пломби
+    if (newSealCover) params.append('entry.961182756', newSealCover.value || '');
+    if (newSealVKP) params.append('entry.962182756', newSealVKP.value || '');
+    if (newSealSHO1) params.append('entry.963182756', newSealSHO1.value || '');
+    if (newSealSHO2) params.append('entry.964182756', newSealSHO2.value || '');
+    if (newSealOpto) params.append('entry.965182756', newSealOpto.value || '');
+    if (newIMP1) params.append('entry.966182756', newIMP1.value || '');
+    if (newIMP2) params.append('entry.967182756', newIMP2.value || '');
+    if (newIMP3) params.append('entry.968182756', newIMP3.value || '');
+    
+    // Відкриваємо форму в новій вкладці
+    const formUrl = `${GOOGLE_FORM_URL}?${params.toString()}`;
+    window.open(formUrl, '_blank');
+    
+    // Зберігаємо в локальний журнал
+    const data = getFormData();
+    workLog.unshift(data);
+    saveData();
+    
+    alert('✅ Форму відкрито в новій вкладці!\n\nПеревірте дані та натисніть "Надіслати" у формі.');
 }
 
 function clearAllFields() {
@@ -461,7 +474,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів<\/td><\/tr>';
         return;
     }
     let html = '';
@@ -469,17 +482,17 @@ function renderLog() {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
-            <td>${escapeHtml(r.date || '')}</td>
-            <td>${escapeHtml(r.workType || '')}</td>
-            <td>${escapeHtml(r.employeeId || '')}</td>
-            <td>${escapeHtml(r.accountNumber || '')}</td>
-            <td>${escapeHtml(r.oldMeterNumber || '')}</td>
-            <td>${escapeHtml(r.newMeterNumber || '')}</td>
-            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
-            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
-            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
-            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
-        </tr>`;
+            <td>${escapeHtml(r.date || '')}<\/td>
+            <td>${escapeHtml(r.workType || '')}<\/td>
+            <td>${escapeHtml(r.employeeId || '')}<\/td>
+            <td>${escapeHtml(r.accountNumber || '')}<\/td>
+            <td>${escapeHtml(r.oldMeterNumber || '')}<\/td>
+            <td>${escapeHtml(r.newMeterNumber || '')}<\/td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}<\/td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}<\/div><\/td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}<\/div><\/td>
+            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️<\/button><\/td>
+        <\/tr>`;
     });
     logTable.innerHTML = html;
     document.querySelectorAll('.delete-icon').forEach(btn => {
