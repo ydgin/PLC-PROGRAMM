@@ -119,7 +119,7 @@ function initMeterTypes() {
     }
 }
 
-// ========== GOOGLE FORM URL ==========
+// ========== GOOGLE FORM URL (ДЛЯ ВІДКРИТТЯ ЗАПОВНЕНОЇ ФОРМИ) ==========
 const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
 // ========== PIN ФУНКЦІЇ ==========
@@ -354,7 +354,7 @@ function setupSearch() {
     });
 }
 
-// ========== ЗБЕРЕЖЕННЯ В ЖУРНАЛ ==========
+// ========== ЗБЕРЕЖЕННЯ В ЛОКАЛЬНИЙ ЖУРНАЛ ==========
 function getFormData() {
     return {
         date: new Date().toLocaleString('uk-UA'),
@@ -392,7 +392,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ВІДПРАВКА В GOOGLE FORM (ВІДКРИТТЯ ФОРМИ) ==========
+// ========== ВІДПРАВКА В GOOGLE FORM (ВІДКРИТТЯ ФОРМИ З ЗАПОВНЕНИМИ ПОЛЯМИ) ==========
 function sendToGoogleForm() {
     // Перевірка обов'язкових полів
     if (!workType.value) { 
@@ -411,7 +411,7 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Параметри для заповнення форми
+    // Створюємо параметри для заповнення форми
     const params = new URLSearchParams();
     
     // Основні поля
@@ -442,7 +442,7 @@ function sendToGoogleForm() {
     if (newIMP2 && newIMP2.value) params.append('entry.967182756', newIMP2.value);
     if (newIMP3 && newIMP3.value) params.append('entry.968182756', newIMP3.value);
     
-    // Відкриваємо форму в новій вкладці
+    // Відкриваємо форму в новій вкладці з заповненими полями
     const formUrl = `${GOOGLE_FORM_URL}?${params.toString()}`;
     window.open(formUrl, '_blank');
     
@@ -470,7 +470,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів<\/td><\/tr>';
         return;
     }
     let html = '';
@@ -478,17 +478,17 @@ function renderLog() {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
-            <td>${escapeHtml(r.date || '')}</td>
-            <td>${escapeHtml(r.workType || '')}</td>
-            <td>${escapeHtml(r.employeeId || '')}</td>
-            <td>${escapeHtml(r.accountNumber || '')}</td>
-            <td>${escapeHtml(r.oldMeterNumber || '')}</td>
-            <td>${escapeHtml(r.newMeterNumber || '')}</td>
-            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
-            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
-            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
-            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
-        </tr>`;
+            <td>${escapeHtml(r.date || '')}<\/td>
+            <td>${escapeHtml(r.workType || '')}<\/td>
+            <td>${escapeHtml(r.employeeId || '')}<\/td>
+            <td>${escapeHtml(r.accountNumber || '')}<\/td>
+            <td>${escapeHtml(r.oldMeterNumber || '')}<\/td>
+            <td>${escapeHtml(r.newMeterNumber || '')}<\/td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}<\/td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}<\/div><\/td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}<\/div><\/td>
+            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️<\/button><\/td>
+        <\/tr>`;
     });
     logTable.innerHTML = html;
     document.querySelectorAll('.delete-icon').forEach(btn => {
