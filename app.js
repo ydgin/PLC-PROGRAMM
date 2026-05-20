@@ -423,35 +423,31 @@ function sendToGoogleForm() {
     params.append('entry.1458846130', address?.value || '');
     
     // Демонтовані пломби
-    if (oldSealCover) params.append('entry.950038743', oldSealCover.value || '');
-    if (oldSealVKP) params.append('entry.9515038743', oldSealVKP.value || '');
-    if (oldSealSHO1) params.append('entry.952083469', oldSealSHO1.value || '');
-    if (oldSealSHO2) params.append('entry.953142835', oldSealSHO2.value || '');
-    if (oldSealOpto) params.append('entry.954162369', oldSealOpto.value || '');
-    if (oldIMP1) params.append('entry.955182756', oldIMP1.value || '');
-    if (oldIMP2) params.append('entry.956182756', oldIMP2.value || '');
-    if (oldIMP3) params.append('entry.957182756', oldIMP3.value || '');
+    if (oldSealCover && oldSealCover.value) params.append('entry.950038743', oldSealCover.value);
+    if (oldSealVKP && oldSealVKP.value) params.append('entry.9515038743', oldSealVKP.value);
+    if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.952083469', oldSealSHO1.value);
+    if (oldSealSHO2 && oldSealSHO2.value) params.append('entry.953142835', oldSealSHO2.value);
+    if (oldSealOpto && oldSealOpto.value) params.append('entry.954162369', oldSealOpto.value);
+    if (oldIMP1 && oldIMP1.value) params.append('entry.955182756', oldIMP1.value);
+    if (oldIMP2 && oldIMP2.value) params.append('entry.956182756', oldIMP2.value);
+    if (oldIMP3 && oldIMP3.value) params.append('entry.957182756', oldIMP3.value);
     
     // Встановлені пломби
-    if (newSealCover) params.append('entry.961182756', newSealCover.value || '');
-    if (newSealVKP) params.append('entry.962182756', newSealVKP.value || '');
-    if (newSealSHO1) params.append('entry.963182756', newSealSHO1.value || '');
-    if (newSealSHO2) params.append('entry.964182756', newSealSHO2.value || '');
-    if (newSealOpto) params.append('entry.965182756', newSealOpto.value || '');
-    if (newIMP1) params.append('entry.966182756', newIMP1.value || '');
-    if (newIMP2) params.append('entry.967182756', newIMP2.value || '');
-    if (newIMP3) params.append('entry.968182756', newIMP3.value || '');
+    if (newSealCover && newSealCover.value) params.append('entry.961182756', newSealCover.value);
+    if (newSealVKP && newSealVKP.value) params.append('entry.962182756', newSealVKP.value);
+    if (newSealSHO1 && newSealSHO1.value) params.append('entry.963182756', newSealSHO1.value);
+    if (newSealSHO2 && newSealSHO2.value) params.append('entry.964182756', newSealSHO2.value);
+    if (newSealOpto && newSealOpto.value) params.append('entry.965182756', newSealOpto.value);
+    if (newIMP1 && newIMP1.value) params.append('entry.966182756', newIMP1.value);
+    if (newIMP2 && newIMP2.value) params.append('entry.967182756', newIMP2.value);
+    if (newIMP3 && newIMP3.value) params.append('entry.968182756', newIMP3.value);
     
     // Відкриваємо форму в новій вкладці
     const formUrl = `${GOOGLE_FORM_URL}?${params.toString()}`;
     window.open(formUrl, '_blank');
     
-    // Зберігаємо в локальний журнал
-    const data = getFormData();
-    workLog.unshift(data);
-    saveData();
-    
-    alert('✅ Форму відкрито в новій вкладці!\n\nПеревірте дані та натисніть "Надіслати" у формі.');
+    // Показуємо повідомлення
+    alert('✅ Google Form відкрито в новій вкладці!\n\nПеревірте дані та натисніть "Надіслати" у формі.');
 }
 
 function clearAllFields() {
@@ -474,7 +470,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів<\/td><\/tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів</td></tr>';
         return;
     }
     let html = '';
@@ -482,17 +478,17 @@ function renderLog() {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
-            <td>${escapeHtml(r.date || '')}<\/td>
-            <td>${escapeHtml(r.workType || '')}<\/td>
-            <td>${escapeHtml(r.employeeId || '')}<\/td>
-            <td>${escapeHtml(r.accountNumber || '')}<\/td>
-            <td>${escapeHtml(r.oldMeterNumber || '')}<\/td>
-            <td>${escapeHtml(r.newMeterNumber || '')}<\/td>
-            <td style="min-width:220px;">${escapeHtml(r.address || '')}<\/td>
-            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}<\/div><\/td>
-            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}<\/div><\/td>
-            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️<\/button><\/td>
-        <\/tr>`;
+            <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.workType || '')}</td>
+            <td>${escapeHtml(r.employeeId || '')}</td>
+            <td>${escapeHtml(r.accountNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+            <td>${escapeHtml(r.newMeterNumber || '')}</td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
+        </tr>`;
     });
     logTable.innerHTML = html;
     document.querySelectorAll('.delete-icon').forEach(btn => {
