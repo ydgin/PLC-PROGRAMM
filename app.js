@@ -642,3 +642,10 @@ document.addEventListener("DOMContentLoaded", function() {
         sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
     }
 });
+    // КНОПКА ПЕРЕХОДУ В ГУГЛ ФОРМУ
+    const openFormBtn = document.getElementById('openFormBtn');
+    if (openFormBtn) {
+        openFormBtn.addEventListener('click', () => {
+            window.open(GOOGLE_FORM_URL, '_blank');
+        });
+    }

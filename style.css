@@ -285,3 +285,15 @@ th { background: #f8fafd; font-weight: 700; color: #2c3e66; }
     .pin-card { width: 280px; padding: 25px 20px; }
     .btn-scan { width: 42px; height: 42px; font-size: 1rem; }
 }
+.btn-open-form {
+    width: 100%;
+    padding: 16px;
+    border-radius: 60px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+}
+.btn-open-form:active { transform: scale(0.98); }
