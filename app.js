@@ -371,10 +371,7 @@ function addNewSeal() {
 // ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
-    if (!container) {
-        console.warn(`Контейнер для результатів не знайдено: ${fieldId}Results`);
-        return;
-    }
+    if (!container) return;
     if (!query || query.length < 1) { 
         container.classList.add('hidden'); 
         container.innerHTML = ''; 
@@ -421,11 +418,9 @@ function hideSearchResults(fieldId) {
 
 function setupSearch() {
     const sealInputs = document.querySelectorAll('.seal-input');
-    console.log('🔍 Знайдено полів з пошуком:', sealInputs.length);
     sealInputs.forEach(input => {
         if (input) {
             input.addEventListener('input', function() { 
-                console.log('Введено в поле:', this.id, '→', this.value);
                 showSearchResults(this.id, this.value); 
             });
             input.addEventListener('blur', function() { 
@@ -473,7 +468,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ВІДПРАВКА В GOOGLE FORM ==========
+// ========== ВІДПРАВКА В GOOGLE FORM (СТВОРЕННЯ ФОРМИ З ДАНИМИ) ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -491,35 +486,59 @@ function sendToGoogleForm() {
         return; 
     }
     
-    const params = new URLSearchParams();
-    params.append('entry.1609399626', workType.value);
-    params.append('entry.1583379400', employeeId.value);
-    params.append('entry.244962092', accountNumber.value);
-    params.append('entry.1666715724', oldMeterNumber?.value || '');
-    params.append('entry.959182756', newMeterNumber?.value || '');
-    params.append('entry.1458846130', address?.value || '');
+    // Створюємо тимчасову форму для відправки
+    const tempForm = document.createElement('form');
+    tempForm.method = 'POST';
+    tempForm.action = GOOGLE_FORM_URL;
+    tempForm.target = '_blank';
+    tempForm.style.display = 'none';
     
-    if (oldSealCover && oldSealCover.value) params.append('entry.950038743', oldSealCover.value);
-    if (oldSealVKP && oldSealVKP.value) params.append('entry.9515038743', oldSealVKP.value);
-    if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.952083469', oldSealSHO1.value);
-    if (oldSealSHO2 && oldSealSHO2.value) params.append('entry.953142835', oldSealSHO2.value);
-    if (oldSealOpto && oldSealOpto.value) params.append('entry.954162369', oldSealOpto.value);
-    if (oldIMP1 && oldIMP1.value) params.append('entry.955182756', oldIMP1.value);
-    if (oldIMP2 && oldIMP2.value) params.append('entry.956182756', oldIMP2.value);
-    if (oldIMP3 && oldIMP3.value) params.append('entry.957182756', oldIMP3.value);
+    // Додаємо всі поля
+    const fields = {
+        'entry.1609399626': workType.value,
+        'entry.1583379400': employeeId.value,
+        'entry.244962092': accountNumber.value,
+        'entry.1666715724': oldMeterNumber?.value || '',
+        'entry.959182756': newMeterNumber?.value || '',
+        'entry.1458846130': address?.value || '',
+        'entry.950038743': oldSealCover?.value || '',
+        'entry.9515038743': oldSealVKP?.value || '',
+        'entry.952083469': oldSealSHO1?.value || '',
+        'entry.953142835': oldSealSHO2?.value || '',
+        'entry.954162369': oldSealOpto?.value || '',
+        'entry.955182756': oldIMP1?.value || '',
+        'entry.956182756': oldIMP2?.value || '',
+        'entry.957182756': oldIMP3?.value || '',
+        'entry.961182756': newSealCover?.value || '',
+        'entry.962182756': newSealVKP?.value || '',
+        'entry.963182756': newSealSHO1?.value || '',
+        'entry.964182756': newSealSHO2?.value || '',
+        'entry.965182756': newSealOpto?.value || '',
+        'entry.966182756': newIMP1?.value || '',
+        'entry.967182756': newIMP2?.value || '',
+        'entry.968182756': newIMP3?.value || ''
+    };
     
-    if (newSealCover && newSealCover.value) params.append('entry.961182756', newSealCover.value);
-    if (newSealVKP && newSealVKP.value) params.append('entry.962182756', newSealVKP.value);
-    if (newSealSHO1 && newSealSHO1.value) params.append('entry.963182756', newSealSHO1.value);
-    if (newSealSHO2 && newSealSHO2.value) params.append('entry.964182756', newSealSHO2.value);
-    if (newSealOpto && newSealOpto.value) params.append('entry.965182756', newSealOpto.value);
-    if (newIMP1 && newIMP1.value) params.append('entry.966182756', newIMP1.value);
-    if (newIMP2 && newIMP2.value) params.append('entry.967182756', newIMP2.value);
-    if (newIMP3 && newIMP3.value) params.append('entry.968182756', newIMP3.value);
+    for (const [name, value] of Object.entries(fields)) {
+        if (value) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = name;
+            input.value = value;
+            tempForm.appendChild(input);
+        }
+    }
     
-    const formUrl = `${GOOGLE_FORM_URL}?${params.toString()}`;
-    window.open(formUrl, '_blank');
-    alert('✅ Google Form відкрито в новій вкладці!\n\nПеревірте дані та натисніть "Надіслати" у формі.');
+    document.body.appendChild(tempForm);
+    tempForm.submit();
+    setTimeout(() => tempForm.remove(), 1000);
+    
+    alert('✅ Дані відправлено в Google Form!');
+}
+
+// КНОПКА ПРОСТОГО ПЕРЕХОДУ В ФОРМУ
+function openGoogleForm() {
+    window.open(GOOGLE_FORM_URL, '_blank');
 }
 
 function clearAllFields() {
@@ -615,6 +634,12 @@ document.addEventListener("DOMContentLoaded", function() {
     if (clearLogBtn) clearLogBtn.onclick = clearLog;
     if (sendToFormBtn) sendToFormBtn.onclick = sendToGoogleForm;
     
+    // КНОПКА ПЕРЕХОДУ В ФОРМУ (без заповнення)
+    const openFormBtn = document.getElementById('openFormBtn');
+    if (openFormBtn) {
+        openFormBtn.addEventListener('click', openGoogleForm);
+    }
+    
     const scanAccountBtn = document.getElementById('scanAccountBtn');
     if (scanAccountBtn) {
         scanAccountBtn.addEventListener('click', () => {
@@ -633,6 +658,65 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
+    const scanSealBtn = document.getElementById('scanSealBtn');
+    if (scanSealBtn) {
+        scanSealBtn.addEventListener('click', async () => {
+            const tempContainerId = 'tempSealScanner';
+            let tempContainer = document.getElementById(tempContainerId);
+            if (!tempContainer) {
+                tempContainer = document.createElement('div');
+                tempContainer.id = tempContainerId;
+                tempContainer.className = 'scanner-container';
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.top = '50%';
+                tempContainer.style.left = '50%';
+                tempContainer.style.transform = 'translate(-50%, -50%)';
+                tempContainer.style.width = '90%';
+                tempContainer.style.maxWidth = '400px';
+                tempContainer.style.zIndex = '10000';
+                tempContainer.style.backgroundColor = '#000';
+                tempContainer.style.borderRadius = '20px';
+                tempContainer.style.overflow = 'hidden';
+                document.body.appendChild(tempContainer);
+            }
+            
+            tempContainer.classList.remove('hidden');
+            tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код пломби</span><button class="btn-close-scanner" id="closeTempScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
+            
+            document.getElementById('closeTempScanner').onclick = async () => {
+                if (activeScanners[tempContainerId]) {
+                    try { await activeScanners[tempContainerId].stop(); } catch(e) {}
+                    delete activeScanners[tempContainerId];
+                }
+                tempContainer.classList.add('hidden');
+            };
+            
+            const reader = new Html5Qrcode(`${tempContainerId}_reader`);
+            activeScanners[tempContainerId] = reader;
+            
+            try {
+                await reader.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        const result = decodedText.trim();
+                        if (newSealInput) newSealInput.value = result;
+                        reader.stop().then(() => {
+                            tempContainer.classList.add('hidden');
+                            delete activeScanners[tempContainerId];
+                        }).catch(e => console.log(e));
+                        showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
+                    },
+                    (error) => { console.log(error); }
+                );
+            } catch(err) {
+                alert('❌ Не вдалося запустити камеру');
+                tempContainer.classList.add('hidden');
+                delete activeScanners[tempContainerId];
+            }
+        });
+    }
+    
     if (addSealBtn) {
         addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');
         if (confirmSealBtn) confirmSealBtn.onclick = addNewSeal;
@@ -642,10 +726,3 @@ document.addEventListener("DOMContentLoaded", function() {
         sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
     }
 });
-    // КНОПКА ПЕРЕХОДУ В ГУГЛ ФОРМУ
-    const openFormBtn = document.getElementById('openFormBtn');
-    if (openFormBtn) {
-        openFormBtn.addEventListener('click', () => {
-            window.open(GOOGLE_FORM_URL, '_blank');
-        });
-    }
