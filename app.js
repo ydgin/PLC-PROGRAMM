@@ -209,17 +209,27 @@ function smartMeterExtract(text) {
 // ========== РОЗПАРСУВАННЯ ДІАПАЗОНУ ПЛОМБ ==========
 function parseSealRange(input) {
     input = input.trim();
-    const rangePattern = /^([A-Za-zА-Яа-я]*)(\d+)-([A-Za-zА-Яа-я]*)(\d+)$/i;
+    
+    // Шаблон для формату: К123456769-780 або К123456769-123456780
+    const rangePattern = /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/i;
     const match = input.match(rangePattern);
     
     if (match) {
-        const prefix1 = match[1];
+        const prefix = match[1];
         const startNum = parseInt(match[2], 10);
-        const prefix2 = match[3];
-        const endNum = parseInt(match[4], 10);
-        const prefix = prefix1 || prefix2;
+        let endNum = parseInt(match[3], 10);
         
-        if (startNum && endNum && startNum < endNum) {
+        const startNumStr = match[2];
+        const endNumStr = match[3];
+        
+        // Якщо кінцеве число коротше за початкове (780 vs 123456769)
+        if (endNumStr.length < startNumStr.length) {
+            const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
+            const diff = endNum - startEndPart;
+            endNum = startNum + diff;
+        }
+        
+        if (startNum <= endNum) {
             const seals = [];
             for (let i = startNum; i <= endNum; i++) {
                 seals.push(prefix + i);
@@ -250,11 +260,17 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
         if (c) c.classList.add('hidden'); 
     }
     const container = document.getElementById(containerId);
-    if (!container) { alert('❌ Контейнер сканера не знайдено'); return; }
+    if (!container) { 
+        alert('❌ Контейнер сканера не знайдено: ' + containerId); 
+        return; 
+    }
     container.classList.remove('hidden');
     container.innerHTML = `<div class="scanner-header"><span>📷 Наведіть камеру на QR-код</span><button class="btn-close-scanner">✕</button></div><div id="${containerId}_reader" style="width:100%"></div>`;
     const closeBtn = container.querySelector('.btn-close-scanner');
-    if (closeBtn) closeBtn.onclick = async () => { await stopScanner(containerId); container.classList.add('hidden'); };
+    if (closeBtn) closeBtn.onclick = async () => { 
+        await stopScanner(containerId); 
+        container.classList.add('hidden'); 
+    };
     const reader = new Html5Qrcode(`${containerId}_reader`);
     activeScanners[containerId] = reader;
     try {
@@ -292,7 +308,10 @@ function loadSeals() {
     renderSealsList();
 }
 
-function saveSeals() { localStorage.setItem('pls_seals', JSON.stringify(sealsDB)); renderSealsList(); }
+function saveSeals() { 
+    localStorage.setItem('pls_seals', JSON.stringify(sealsDB)); 
+    renderSealsList(); 
+}
 
 function renderSealsList(filter = '') {
     if (!sealsListDiv) return;
@@ -356,17 +375,17 @@ function addNewSeal() {
     renderSealsList('');
     
     if (addedCount > 0) {
-        showToast(`✅ Додано пломб: ${addedCount}`);
+        showToast(`✅ Додано пломб: ${addedCount} (${addedSeals[0]} ... ${addedSeals[addedSeals.length-1]})`);
     } else {
         showToast(`⚠️ Всі пломби вже існують`);
     }
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ (ВИПРАВЛЕНО) ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) {
-        console.warn(`Контейнер не знайдено: ${fieldId}Results`);
+        console.warn(`Контейнер для результатів не знайдено: ${fieldId}Results`);
         return;
     }
     if (!query || query.length < 1) { 
@@ -415,9 +434,11 @@ function hideSearchResults(fieldId) {
 
 function setupSearch() {
     const sealInputs = document.querySelectorAll('.seal-input');
+    console.log('🔍 Знайдено полів з пошуком:', sealInputs.length);
     sealInputs.forEach(input => {
         if (input) {
             input.addEventListener('input', function() { 
+                console.log('Введено в поле:', this.id, '→', this.value);
                 showSearchResults(this.id, this.value); 
             });
             input.addEventListener('blur', function() { 
@@ -627,7 +648,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
-    // СКАНЕР ДЛЯ ДОДАВАННЯ ПЛОМБ (кнопка 📷 в панелі додавання)
+    // СКАНЕР ДЛЯ ДОДАВАННЯ ПЛОМБ
     const scanSealBtn = document.getElementById('scanSealBtn');
     if (scanSealBtn) {
         scanSealBtn.addEventListener('click', async () => {
