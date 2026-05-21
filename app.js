@@ -210,7 +210,7 @@ function smartMeterExtract(text) {
 function parseSealRange(input) {
     input = input.trim();
     // Шаблон: С17356789-792 або С17356789-С17356792
-    const rangePattern = /^([A-Za-z]*)(\d+)-([A-Za-z]*)(\d+)$/i;
+    const rangePattern = /^([A-Za-zА-Яа-я]*)(\d+)-([A-Za-zА-Яа-я]*)(\d+)$/i;
     const match = input.match(rangePattern);
     
     if (match) {
@@ -219,7 +219,6 @@ function parseSealRange(input) {
         const prefix2 = match[3];
         const endNum = parseInt(match[4], 10);
         
-        // Якщо префікси однакові або другий пустий
         const prefix = prefix1 || prefix2;
         
         if (startNum && endNum && startNum < endNum) {
@@ -342,11 +341,13 @@ function addNewSeal() {
     
     const sealsToAdd = parseSealRange(newSeal);
     let addedCount = 0;
+    const addedSeals = [];
     
     sealsToAdd.forEach(seal => {
         if (!sealsDB.includes(seal)) {
             sealsDB.push(seal);
             addedCount++;
+            addedSeals.push(seal);
         }
     });
     
@@ -355,31 +356,54 @@ function addNewSeal() {
     sealAddPanel.classList.add('hidden');
     if (sealSearch) sealSearch.value = '';
     renderSealsList('');
-    showToast(`✅ Додано пломб: ${addedCount} (${sealsToAdd[0]} ... ${sealsToAdd[sealsToAdd.length-1]})`);
+    
+    if (addedCount > 0) {
+        showToast(`✅ Додано пломб: ${addedCount} (${addedSeals[0]} ... ${addedSeals[addedSeals.length-1]})`);
+    } else {
+        showToast(`⚠️ Всі пломби вже існують у базі`);
+    }
 }
 
 // ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
-    if (!query || query.length < 1) { container.classList.add('hidden'); container.innerHTML = ''; return; }
+    if (!query || query.length < 1) { 
+        container.classList.add('hidden'); 
+        container.innerHTML = ''; 
+        return; 
+    }
     const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { container.classList.add('hidden'); return; }
+    if (!filtered.length) { 
+        container.classList.add('hidden'); 
+        return; 
+    }
     container.classList.remove('hidden');
     let html = '';
     filtered.forEach(seal => { html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; });
     container.innerHTML = html;
-    container.querySelectorAll('.search-result-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const seal = item.getAttribute('data-seal');
+    
+    // Використовуємо нові обробники для кожного елемента
+    const items = container.querySelectorAll('.search-result-item');
+    items.forEach(item => {
+        // Видаляємо старий обробник, якщо є
+        const oldHandler = item._clickHandler;
+        if (oldHandler) item.removeEventListener('click', oldHandler);
+        
+        const handler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sealValue = this.getAttribute('data-seal');
             const targetInput = document.getElementById(fieldId);
             if (targetInput) {
-                targetInput.value = seal;
+                targetInput.value = sealValue;
                 container.classList.add('hidden');
                 container.innerHTML = '';
-                showToast(`✅ Пломбу додано: ${seal}`);
+                showToast(`✅ Пломбу додано: ${sealValue}`);
             }
-        });
+        };
+        item._clickHandler = handler;
+        item.addEventListener('click', handler);
     });
 }
 
@@ -392,8 +416,12 @@ function setupSearch() {
     const sealInputs = document.querySelectorAll('.seal-input');
     sealInputs.forEach(input => {
         if (input) {
-            input.addEventListener('input', function() { showSearchResults(this.id, this.value); });
-            input.addEventListener('blur', function() { setTimeout(() => hideSearchResults(this.id), 300); });
+            input.addEventListener('input', function() { 
+                showSearchResults(this.id, this.value); 
+            });
+            input.addEventListener('blur', function() { 
+                setTimeout(() => hideSearchResults(this.id), 300); 
+            });
         }
     });
 }
@@ -505,7 +533,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів<\/td><\/tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів</td></tr>';
         return;
     }
     let html = '';
@@ -513,17 +541,17 @@ function renderLog() {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
-            <td>${escapeHtml(r.date || '')}<\/td>
-            <td>${escapeHtml(r.workType || '')}<\/td>
-            <td>${escapeHtml(r.employeeId || '')}<\/td>
-            <td>${escapeHtml(r.accountNumber || '')}<\/td>
-            <td>${escapeHtml(r.oldMeterNumber || '')}<\/td>
-            <td>${escapeHtml(r.newMeterNumber || '')}<\/td>
-            <td style="min-width:220px;">${escapeHtml(r.address || '')}<\/td>
-            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}<\/div><\/td>
-            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}<\/div><\/td>
-            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️<\/button><\/td>
-        <\/tr>`;
+            <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.workType || '')}</td>
+            <td>${escapeHtml(r.employeeId || '')}</td>
+            <td>${escapeHtml(r.accountNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+            <td>${escapeHtml(r.newMeterNumber || '')}</td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
+        </tr>`;
     });
     logTable.innerHTML = html;
     document.querySelectorAll('.delete-icon').forEach(btn => {
@@ -597,36 +625,12 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
-    // Додавання кнопки сканера QR для пломб
+    // БАЗА ПЛОМБ
     if (addSealBtn) {
         addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');
         if (confirmSealBtn) confirmSealBtn.onclick = addNewSeal;
         if (cancelSealBtn) cancelSealBtn.onclick = () => sealAddPanel.classList.add('hidden');
-        
-        // Додаємо кнопку сканера поруч з полем вводу пломби
-        const sealAddRow = document.querySelector('.seal-add-row');
-        if (sealAddRow && !document.getElementById('scanSealBtn')) {
-            const scanSealBtn = document.createElement('button');
-            scanSealBtn.id = 'scanSealBtn';
-            scanSealBtn.textContent = '📷';
-            scanSealBtn.className = 'btn-scan';
-            scanSealBtn.style.background = '#f3e8ff';
-            scanSealBtn.style.color = '#9333ea';
-            scanSealBtn.style.width = '48px';
-            scanSealBtn.style.height = '48px';
-            scanSealBtn.style.borderRadius = '48px';
-            scanSealBtn.style.border = 'none';
-            scanSealBtn.style.fontSize = '1.2rem';
-            scanSealBtn.style.cursor = 'pointer';
-            scanSealBtn.onclick = () => {
-                startQrScanner('scanSealTemp', 'newSealInput', 'text', (result) => {
-                    if (newSealInput) newSealInput.value = result;
-                });
-            };
-            sealAddRow.appendChild(scanSealBtn);
-        }
     }
-    
     if (sealSearch) {
         sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
     }
