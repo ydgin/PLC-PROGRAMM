@@ -627,6 +627,66 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
+    // СКАНЕР ДЛЯ ДОДАВАННЯ ПЛОМБ (кнопка 📷 в панелі додавання)
+    const scanSealBtn = document.getElementById('scanSealBtn');
+    if (scanSealBtn) {
+        scanSealBtn.addEventListener('click', async () => {
+            const tempContainerId = 'tempSealScanner';
+            let tempContainer = document.getElementById(tempContainerId);
+            if (!tempContainer) {
+                tempContainer = document.createElement('div');
+                tempContainer.id = tempContainerId;
+                tempContainer.className = 'scanner-container';
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.top = '50%';
+                tempContainer.style.left = '50%';
+                tempContainer.style.transform = 'translate(-50%, -50%)';
+                tempContainer.style.width = '90%';
+                tempContainer.style.maxWidth = '400px';
+                tempContainer.style.zIndex = '10000';
+                tempContainer.style.backgroundColor = '#000';
+                tempContainer.style.borderRadius = '20px';
+                tempContainer.style.overflow = 'hidden';
+                document.body.appendChild(tempContainer);
+            }
+            
+            tempContainer.classList.remove('hidden');
+            tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код пломби</span><button class="btn-close-scanner" id="closeTempScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
+            
+            document.getElementById('closeTempScanner').onclick = async () => {
+                if (activeScanners[tempContainerId]) {
+                    try { await activeScanners[tempContainerId].stop(); } catch(e) {}
+                    delete activeScanners[tempContainerId];
+                }
+                tempContainer.classList.add('hidden');
+            };
+            
+            const reader = new Html5Qrcode(`${tempContainerId}_reader`);
+            activeScanners[tempContainerId] = reader;
+            
+            try {
+                await reader.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        const result = decodedText.trim();
+                        if (newSealInput) newSealInput.value = result;
+                        reader.stop().then(() => {
+                            tempContainer.classList.add('hidden');
+                            delete activeScanners[tempContainerId];
+                        }).catch(e => console.log(e));
+                        showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
+                    },
+                    (error) => { console.log(error); }
+                );
+            } catch(err) {
+                alert('❌ Не вдалося запустити камеру');
+                tempContainer.classList.add('hidden');
+                delete activeScanners[tempContainerId];
+            }
+        });
+    }
+    
     // БАЗА ПЛОМБ - ДОДАВАННЯ
     if (addSealBtn) {
         addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');

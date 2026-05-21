@@ -225,18 +225,20 @@
 
         <!-- БАЗА ПЛОМБ -->
         <div class="card">
-            <div class="flex-between"><label class="field-label">📦 База пломб</label><button id="addSealBtn" class="btn-small">+ Додати пломбу</button></div>
+            <div class="flex-between">
+                <label class="field-label">📦 База пломб</label>
+                <button id="addSealBtn" class="btn-small">+ Додати пломбу</button>
+            </div>
             <div id="sealAddPanel" class="seal-add-panel hidden">
                 <div class="seal-add-row">
                     <input type="text" id="newSealInput" class="field-input" placeholder="Номер пломби (наприклад: С17356789-792)">
+                    <button id="scanSealBtn" class="btn-scan" style="background:#f3e8ff; color:#9333ea; width:48px; height:48px; border-radius:48px; border:none; font-size:1.2rem; cursor:pointer;">📷</button>
                     <button id="confirmSealBtn" class="btn-small-ok">✔ Додати</button>
-                    <button id="cancelSealBtn" class="btn-small-cancel">✖</button>
                 </div>
             </div>
             <input type="text" id="sealSearch" class="seal-search" placeholder="🔍 Пошук по базі пломб...">
             <div id="sealsList" class="seals-list"></div>
         </div>
-
         <!-- ЖУРНАЛ -->
         <div class="card">
             <div class="btn-group"><button id="exportBtn" class="btn-outline">📄 Експорт CSV</button><button id="clearLogBtn" class="btn-danger">🗑 Очистити журнал</button></div>
