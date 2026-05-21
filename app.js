@@ -209,8 +209,6 @@ function smartMeterExtract(text) {
 // ========== РОЗПАРСУВАННЯ ДІАПАЗОНУ ПЛОМБ ==========
 function parseSealRange(input) {
     input = input.trim();
-    
-    // Шаблон для формату: К123456769-780 або К123456769-123456780
     const rangePattern = /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/i;
     const match = input.match(rangePattern);
     
@@ -218,11 +216,9 @@ function parseSealRange(input) {
         const prefix = match[1];
         const startNum = parseInt(match[2], 10);
         let endNum = parseInt(match[3], 10);
-        
         const startNumStr = match[2];
         const endNumStr = match[3];
         
-        // Якщо кінцеве число коротше за початкове (780 vs 123456769)
         if (endNumStr.length < startNumStr.length) {
             const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
             const diff = endNum - startEndPart;
@@ -260,17 +256,11 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
         if (c) c.classList.add('hidden'); 
     }
     const container = document.getElementById(containerId);
-    if (!container) { 
-        alert('❌ Контейнер сканера не знайдено: ' + containerId); 
-        return; 
-    }
+    if (!container) { alert('❌ Контейнер сканера не знайдено: ' + containerId); return; }
     container.classList.remove('hidden');
     container.innerHTML = `<div class="scanner-header"><span>📷 Наведіть камеру на QR-код</span><button class="btn-close-scanner">✕</button></div><div id="${containerId}_reader" style="width:100%"></div>`;
     const closeBtn = container.querySelector('.btn-close-scanner');
-    if (closeBtn) closeBtn.onclick = async () => { 
-        await stopScanner(containerId); 
-        container.classList.add('hidden'); 
-    };
+    if (closeBtn) closeBtn.onclick = async () => { await stopScanner(containerId); container.classList.add('hidden'); };
     const reader = new Html5Qrcode(`${containerId}_reader`);
     activeScanners[containerId] = reader;
     try {
@@ -308,10 +298,7 @@ function loadSeals() {
     renderSealsList();
 }
 
-function saveSeals() { 
-    localStorage.setItem('pls_seals', JSON.stringify(sealsDB)); 
-    renderSealsList(); 
-}
+function saveSeals() { localStorage.setItem('pls_seals', JSON.stringify(sealsDB)); renderSealsList(); }
 
 function renderSealsList(filter = '') {
     if (!sealsListDiv) return;
@@ -381,7 +368,7 @@ function addNewSeal() {
     }
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ (ВИПРАВЛЕНО) ==========
+// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) {
@@ -628,7 +615,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (clearLogBtn) clearLogBtn.onclick = clearLog;
     if (sendToFormBtn) sendToFormBtn.onclick = sendToGoogleForm;
     
-    // СКАНЕР ДЛЯ ОСОБОВОГО РАХУНКУ
     const scanAccountBtn = document.getElementById('scanAccountBtn');
     if (scanAccountBtn) {
         scanAccountBtn.addEventListener('click', () => {
@@ -636,7 +622,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
-    // СКАНЕР ДЛЯ ВСІХ ІНШИХ ПОЛІВ
     document.querySelectorAll(".btn-scan:not(#scanAccountBtn)").forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -648,67 +633,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
-    // СКАНЕР ДЛЯ ДОДАВАННЯ ПЛОМБ
-    const scanSealBtn = document.getElementById('scanSealBtn');
-    if (scanSealBtn) {
-        scanSealBtn.addEventListener('click', async () => {
-            const tempContainerId = 'tempSealScanner';
-            let tempContainer = document.getElementById(tempContainerId);
-            if (!tempContainer) {
-                tempContainer = document.createElement('div');
-                tempContainer.id = tempContainerId;
-                tempContainer.className = 'scanner-container';
-                tempContainer.style.position = 'fixed';
-                tempContainer.style.top = '50%';
-                tempContainer.style.left = '50%';
-                tempContainer.style.transform = 'translate(-50%, -50%)';
-                tempContainer.style.width = '90%';
-                tempContainer.style.maxWidth = '400px';
-                tempContainer.style.zIndex = '10000';
-                tempContainer.style.backgroundColor = '#000';
-                tempContainer.style.borderRadius = '20px';
-                tempContainer.style.overflow = 'hidden';
-                document.body.appendChild(tempContainer);
-            }
-            
-            tempContainer.classList.remove('hidden');
-            tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код пломби</span><button class="btn-close-scanner" id="closeTempScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
-            
-            document.getElementById('closeTempScanner').onclick = async () => {
-                if (activeScanners[tempContainerId]) {
-                    try { await activeScanners[tempContainerId].stop(); } catch(e) {}
-                    delete activeScanners[tempContainerId];
-                }
-                tempContainer.classList.add('hidden');
-            };
-            
-            const reader = new Html5Qrcode(`${tempContainerId}_reader`);
-            activeScanners[tempContainerId] = reader;
-            
-            try {
-                await reader.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    (decodedText) => {
-                        const result = decodedText.trim();
-                        if (newSealInput) newSealInput.value = result;
-                        reader.stop().then(() => {
-                            tempContainer.classList.add('hidden');
-                            delete activeScanners[tempContainerId];
-                        }).catch(e => console.log(e));
-                        showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
-                    },
-                    (error) => { console.log(error); }
-                );
-            } catch(err) {
-                alert('❌ Не вдалося запустити камеру');
-                tempContainer.classList.add('hidden');
-                delete activeScanners[tempContainerId];
-            }
-        });
-    }
-    
-    // БАЗА ПЛОМБ - ДОДАВАННЯ
     if (addSealBtn) {
         addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');
         if (confirmSealBtn) confirmSealBtn.onclick = addNewSeal;
