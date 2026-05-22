@@ -60,6 +60,47 @@ const cancelSealBtn = document.getElementById('cancelSealBtn');
 // ========== GOOGLE FORM URL ==========
 const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
+// ========== ПРАВИЛЬНІ ID ПОЛІВ З ВАШОЇ ФОРМИ ==========
+const FORM_FIELDS = {
+    // СТОРІНКА 1
+    workType: "entry.1609399626",        // Заміна лічильника
+    employeeId: "entry.1583379400",      // Табельний номер (58388)
+    accountNumber: "entry.244962092",    // Особовий рахунок (1230504567)
+    
+    // ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК (СТОРІНКА 2)
+    oldMeterType: "entry.1262021573",    // Тип демонтованого лічильника
+    oldMeterNumber: "entry.1666715724",  // Номер демонтованого лічильника (21467890)
+    oldMeterReading: "entry.155422969",  // Покази демонтованого лічильника
+    
+    // ДЕМОНТОВАНІ ПЛОМБИ (СТОРІНКА 2)
+    oldSealCover: "entry.950038743",     // Знята пломба кл. кришка (K34078908)
+    oldSealVKP: "entry.9515038743",      // Знята пломба ВКП
+    oldSealSHO1: "entry.952083469",      // Знята пломба ШО (1)
+    oldSealSHO2: "entry.953142835",      // Знята пломба ШО (2)
+    oldSealOpto: "entry.954162369",      // Знята пломба оптопорт
+    oldIMP1: "entry.955182756",          // Знята ИМП (1)
+    oldIMP2: "entry.956182756",          // Знята ИМП (2)
+    oldIMP3: "entry.957182756",          // Знята ИМП (3)
+    
+    // ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК (СТОРІНКА 3)
+    newMeterType: "entry.958182756",     // Тип встановленого лічильника
+    newMeterNumber: "entry.959182756",   // Номер встановленого лічильника
+    newMeterReading: "entry.960182756",  // Покази встановленого лічильника
+    
+    // ВСТАНОВЛЕНІ ПЛОМБИ (СТОРІНКА 3)
+    newSealCover: "entry.961182756",     // Встановлена пломба кл. кришка
+    newSealVKP: "entry.962182756",       // Встановлена пломба ВКП
+    newSealSHO1: "entry.963182756",      // Встановлена пломба ШО (1)
+    newSealSHO2: "entry.964182756",      // Встановлена пломба ШО (2)
+    newSealOpto: "entry.965182756",      // Встановлена пломба оптопорт
+    newIMP1: "entry.966182756",          // Встановлена ИМП (1)
+    newIMP2: "entry.967182756",          // Встановлена ИМП (2)
+    newIMP3: "entry.968182756",          // Встановлена ИМП (3)
+    
+    // СТОРІНКА 4
+    address: "entry.1458846130"          // Адреса
+};
+
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
 
@@ -467,8 +508,8 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== КОПІЮВАННЯ ДАНИХ В БУФЕР ОБМІНУ ==========
-function copyToClipboard() {
+// ========== ВІДПРАВКА В GOOGLE FORM ==========
+function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
         workType.focus(); 
@@ -485,72 +526,48 @@ function copyToClipboard() {
         return; 
     }
     
-    // Формуємо текст для копіювання
-    let copyText = "📋 ДАНІ ДЛЯ ЗАПОВНЕННЯ ФОРМИ:\n\n";
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `📌 ОСНОВНА ІНФОРМАЦІЯ:\n`;
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `▪ Виконувана робота: ${workType.value}\n`;
-    copyText += `▪ Табельний номер: ${employeeId.value}\n`;
-    copyText += `▪ Особовий рахунок: ${accountNumber.value}\n\n`;
+    const params = new URLSearchParams();
     
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `🔻 ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК:\n`;
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `▪ Тип лічильника: ${oldMeterType?.value || 'Не вибрано'}\n`;
-    copyText += `▪ Номер лічильника: ${oldMeterNumber?.value || ''}\n`;
-    copyText += `▪ Покази лічильника: ${oldMeterReading?.value || ''}\n\n`;
+    // ВСІ ПОЛЯ (текстові + випадаючі)
+    params.append(FORM_FIELDS.workType, workType.value);
+    params.append(FORM_FIELDS.employeeId, employeeId.value);
+    params.append(FORM_FIELDS.accountNumber, accountNumber.value);
+    params.append(FORM_FIELDS.address, address?.value || '');
     
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `🔺 ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК:\n`;
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `▪ Тип лічильника: ${newMeterType?.value || 'Не вибрано'}\n`;
-    copyText += `▪ Номер лічильника: ${newMeterNumber?.value || ''}\n`;
-    copyText += `▪ Покази лічильника: ${newMeterReading?.value || ''}\n\n`;
+    params.append(FORM_FIELDS.oldMeterType, oldMeterType?.value || '');
+    params.append(FORM_FIELDS.oldMeterNumber, oldMeterNumber?.value || '');
+    params.append(FORM_FIELDS.oldMeterReading, oldMeterReading?.value || '');
     
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `🔻 ДЕМОНТОВАНІ ПЛОМБИ:\n`;
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `▪ Пломба кл. кришка: ${oldSealCover?.value || '—'}\n`;
-    copyText += `▪ Пломба ВКП: ${oldSealVKP?.value || '—'}\n`;
-    copyText += `▪ Пломба ШО (1): ${oldSealSHO1?.value || '—'}\n`;
-    copyText += `▪ Пломба ШО (2): ${oldSealSHO2?.value || '—'}\n`;
-    copyText += `▪ Пломба оптопорт: ${oldSealOpto?.value || '—'}\n`;
-    copyText += `▪ ИМП (1): ${oldIMP1?.value || '—'}\n`;
-    copyText += `▪ ИМП (2): ${oldIMP2?.value || '—'}\n`;
-    copyText += `▪ ИМП (3): ${oldIMP3?.value || '—'}\n\n`;
+    params.append(FORM_FIELDS.newMeterType, newMeterType?.value || '');
+    params.append(FORM_FIELDS.newMeterNumber, newMeterNumber?.value || '');
+    params.append(FORM_FIELDS.newMeterReading, newMeterReading?.value || '');
     
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `🔺 ВСТАНОВЛЕНІ ПЛОМБИ:\n`;
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `▪ Пломба кл. кришка: ${newSealCover?.value || '—'}\n`;
-    copyText += `▪ Пломба ВКП: ${newSealVKP?.value || '—'}\n`;
-    copyText += `▪ Пломба ШО (1): ${newSealSHO1?.value || '—'}\n`;
-    copyText += `▪ Пломба ШО (2): ${newSealSHO2?.value || '—'}\n`;
-    copyText += `▪ Пломба оптопорт: ${newSealOpto?.value || '—'}\n`;
-    copyText += `▪ ИМП (1): ${newIMP1?.value || '—'}\n`;
-    copyText += `▪ ИМП (2): ${newIMP2?.value || '—'}\n`;
-    copyText += `▪ ИМП (3): ${newIMP3?.value || '—'}\n\n`;
+    params.append(FORM_FIELDS.oldSealCover, oldSealCover?.value || '');
+    params.append(FORM_FIELDS.oldSealVKP, oldSealVKP?.value || '');
+    params.append(FORM_FIELDS.oldSealSHO1, oldSealSHO1?.value || '');
+    params.append(FORM_FIELDS.oldSealSHO2, oldSealSHO2?.value || '');
+    params.append(FORM_FIELDS.oldSealOpto, oldSealOpto?.value || '');
+    params.append(FORM_FIELDS.oldIMP1, oldIMP1?.value || '');
+    params.append(FORM_FIELDS.oldIMP2, oldIMP2?.value || '');
+    params.append(FORM_FIELDS.oldIMP3, oldIMP3?.value || '');
     
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `📍 АДРЕСА:\n`;
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `${address?.value || '—'}\n\n`;
-    copyText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    copyText += `📅 Дата: ${new Date().toLocaleString('uk-UA')}\n`;
+    params.append(FORM_FIELDS.newSealCover, newSealCover?.value || '');
+    params.append(FORM_FIELDS.newSealVKP, newSealVKP?.value || '');
+    params.append(FORM_FIELDS.newSealSHO1, newSealSHO1?.value || '');
+    params.append(FORM_FIELDS.newSealSHO2, newSealSHO2?.value || '');
+    params.append(FORM_FIELDS.newSealOpto, newSealOpto?.value || '');
+    params.append(FORM_FIELDS.newIMP1, newIMP1?.value || '');
+    params.append(FORM_FIELDS.newIMP2, newIMP2?.value || '');
+    params.append(FORM_FIELDS.newIMP3, newIMP3?.value || '');
     
-    // Копіюємо в буфер обміну
-    navigator.clipboard.writeText(copyText).then(() => {
-        alert('✅ Дані скопійовано в буфер обміну!\n\nВідкрийте Google Form і вставте дані (Ctrl+V) у відповідні поля.');
-        window.open(GOOGLE_FORM_URL, '_blank');
-    }).catch(() => {
-        alert('❌ Не вдалося скопіювати. Спробуйте вручну скопіювати дані.');
-    });
+    const formUrl = `${GOOGLE_FORM_URL}?${params.toString()}`;
+    window.open(formUrl, '_blank');
     
-    // Додаємо в локальний журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
+    
+    alert('✅ Google Form відкрито в новій вкладці!\n\nВсі поля мають бути заповнені.');
 }
 
 function openGoogleForm() {
@@ -647,7 +664,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (saveBtn) saveBtn.onclick = saveAllFieldsToLog;
     if (exportBtn) exportBtn.onclick = exportCSV;
     if (clearLogBtn) clearLogBtn.onclick = clearLog;
-    if (sendToFormBtn) sendToFormBtn.onclick = copyToClipboard;
+    if (sendToFormBtn) sendToFormBtn.onclick = sendToGoogleForm;
     
     const openFormBtn = document.getElementById('openFormBtn');
     if (openFormBtn) {
