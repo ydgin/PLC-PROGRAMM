@@ -57,11 +57,8 @@ const newSealInput = document.getElementById('newSealInput');
 const confirmSealBtn = document.getElementById('confirmSealBtn');
 const cancelSealBtn = document.getElementById('cancelSealBtn');
 
-// ========== GOOGLE FORM URL (ПРАВИЛЬНА ДЛЯ ВІДПРАВКИ) ==========
-// URL для відправки даних (formResponse)
-const GOOGLE_FORM_SUBMIT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse";
-// URL для відкриття форми (viewform)
-const GOOGLE_FORM_VIEW_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
+// ========== GOOGLE FORM URL ==========
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
@@ -466,7 +463,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ВІДПРАВКА В GOOGLE FORM ==========
+// ========== ВІДПРАВКА В GOOGLE FORM (ВІДКРИТТЯ ФОРМИ З ДАНИМИ) ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -484,58 +481,48 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Створюємо тимчасову форму для відправки
-    const tempForm = document.createElement('form');
-    tempForm.method = 'POST';
-    tempForm.action = GOOGLE_FORM_SUBMIT_URL;
-    tempForm.target = '_blank';
-    tempForm.style.display = 'none';
+    // Створюємо параметри для GET-запиту (для заповнення форми)
+    const params = new URLSearchParams();
+    params.append('entry.1609399626', workType.value);
+    params.append('entry.1583379400', employeeId.value);
+    params.append('entry.244962092', accountNumber.value);
+    params.append('entry.1666715724', oldMeterNumber?.value || '');
+    params.append('entry.959182756', newMeterNumber?.value || '');
+    params.append('entry.1458846130', address?.value || '');
     
-    // Додаємо всі поля
-    const fields = {
-        'entry.1609399626': workType.value,
-        'entry.1583379400': employeeId.value,
-        'entry.244962092': accountNumber.value,
-        'entry.1666715724': oldMeterNumber?.value || '',
-        'entry.959182756': newMeterNumber?.value || '',
-        'entry.1458846130': address?.value || '',
-        'entry.950038743': oldSealCover?.value || '',
-        'entry.9515038743': oldSealVKP?.value || '',
-        'entry.952083469': oldSealSHO1?.value || '',
-        'entry.953142835': oldSealSHO2?.value || '',
-        'entry.954162369': oldSealOpto?.value || '',
-        'entry.955182756': oldIMP1?.value || '',
-        'entry.956182756': oldIMP2?.value || '',
-        'entry.957182756': oldIMP3?.value || '',
-        'entry.961182756': newSealCover?.value || '',
-        'entry.962182756': newSealVKP?.value || '',
-        'entry.963182756': newSealSHO1?.value || '',
-        'entry.964182756': newSealSHO2?.value || '',
-        'entry.965182756': newSealOpto?.value || '',
-        'entry.966182756': newIMP1?.value || '',
-        'entry.967182756': newIMP2?.value || '',
-        'entry.968182756': newIMP3?.value || ''
-    };
+    params.append('entry.950038743', oldSealCover?.value || '');
+    params.append('entry.9515038743', oldSealVKP?.value || '');
+    params.append('entry.952083469', oldSealSHO1?.value || '');
+    params.append('entry.953142835', oldSealSHO2?.value || '');
+    params.append('entry.954162369', oldSealOpto?.value || '');
+    params.append('entry.955182756', oldIMP1?.value || '');
+    params.append('entry.956182756', oldIMP2?.value || '');
+    params.append('entry.957182756', oldIMP3?.value || '');
     
-    for (const [name, value] of Object.entries(fields)) {
-        if (value) {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.name = name;
-            input.value = value;
-            tempForm.appendChild(input);
-        }
-    }
+    params.append('entry.961182756', newSealCover?.value || '');
+    params.append('entry.962182756', newSealVKP?.value || '');
+    params.append('entry.963182756', newSealSHO1?.value || '');
+    params.append('entry.964182756', newSealSHO2?.value || '');
+    params.append('entry.965182756', newSealOpto?.value || '');
+    params.append('entry.966182756', newIMP1?.value || '');
+    params.append('entry.967182756', newIMP2?.value || '');
+    params.append('entry.968182756', newIMP3?.value || '');
     
-    document.body.appendChild(tempForm);
-    tempForm.submit();
-    setTimeout(() => tempForm.remove(), 1000);
+    // Відкриваємо форму в новій вкладці з заповненими даними
+    const formUrl = `${GOOGLE_FORM_URL}?${params.toString()}`;
+    window.open(formUrl, '_blank');
     
-    alert('✅ Дані відправлено в Google Form!');
+    // Додаємо в локальний журнал
+    const data = getFormData();
+    workLog.unshift(data);
+    saveData();
+    
+    alert('✅ Google Form відкрито в новій вкладці!\n\nПеревірте дані та натисніть "Надіслати" у формі.');
 }
 
+// КНОПКА ПРОСТОГО ПЕРЕХОДУ В ФОРМУ
 function openGoogleForm() {
-    window.open(GOOGLE_FORM_VIEW_URL, '_blank');
+    window.open(GOOGLE_FORM_URL, '_blank');
 }
 
 function clearAllFields() {
