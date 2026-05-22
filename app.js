@@ -57,70 +57,11 @@ const newSealInput = document.getElementById('newSealInput');
 const confirmSealBtn = document.getElementById('confirmSealBtn');
 const cancelSealBtn = document.getElementById('cancelSealBtn');
 
-// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ ==========
-const meterTypesList = [
-    "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
-    "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis310",
-    "MCS301-CE51B 30MIS-004 000", "MTX 1A10.DF.2LO-CO4", "MTX 1A10.DF.2LO-Y04",
-    "MTX 1A10.DF.2ZO-CD4", "MTX 1A10.DF.2ZO-CO4", "MTX 3A 10.DF.4Z1-C4",
-    "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", "NIK 2100 AP2.0000.0.11",
-    "NIK 2100 AP2T.1000.C.11", "NIK 2100 AP2T.1002.MC.11", "NIK 2100 AP2T.1002.C.11",
-    "NIK 2100 AP6T.1002.MC.11", "NIK 2100 AP6T.2000.MC.11", "NIK 2100 AP6T.2002.MC.11",
-    "NIK 2100 AP2T.2802.MC.11", "NIK 2100 AP6T.2802.MC.11", "NIK 2100 AP6T.2902.MC.11",
-    "NIK 2104 AP2T.1000.M.11", "NIK 2104 AP2T.1000.C.11", "NIK 2104 AP2T.1002.MC.11",
-    "NIK 2104 AP2T.1802.MC.11", "NIK 2104 AP2TB.1802.M.11", "NIK 2104 AP6T.2602.MC.21",
-    "NIK 2300 AP6T.1000.C.11", "NIK 2300 ARP3T.2900 MC 21", "NIK 2300 ATT.2900 MC 21",
-    "NIK 2300 ARTT.2902.MC.11", "NIK 2300 AP3.2000.MC.11", "NIK 2300 AP3T.2000.MC.11",
-    "NIK 2300 AP6T.2002.MC.11", "NIK 2300 AP6T.2802.MC.11", "NIK 2300 AP6T.2902.MC.11",
-    "NIK 2301 AP3.0 0000.0.11", "NIK 2303 ARP3T.1202.MC.11", "NIK 2303 ARP3T.1802.MC.11",
-    "NIK 2303 ARP6T.1002.MC.11", "NIK 2303 ARP6T.1800.MC.11", "NIK 2303 ART T.1800.MC.11",
-    "NIK 2303 AT T.1800.MC.21", "NIK 2303 ARP3T.1802.MC.21", "NIK 2303 ARP6T.1802.MC.11",
-    "NIK 2303 AP3T.1000.MC.11", "NIK 2303 AP3T.1002.MC.11", "NIK 2303 AP3T.1802.MC.11",
-    "NIK 2303 AP3T.2000.MC.11", "NIK 2303 AP6T.1000.MC.11", "NIK 2303 AP6T.1000.C.11",
-    "NIK 2303 AP6T.1002.MC.11", "NIK 2303 AP6T.1802.MC.11", "NIK 2303 AP6T.1802MC.21",
-    "NIK 2303 AP6T.2000.MC.11", "NIK 2307 0.5s ARTT.1600.MC.21", "NIK 2307 ARP3T.1602.M.21",
-    "NIK 2307 ARP3T.1602.MC.21", "NP-06 TD MME 1F 2S-U", "NP-06 TD MME 1F 3S-U",
-    "ACE-3000", "ЛЭО", "ЛЭО-M1.4", "МЕРИДИАН ЛТЕ-1.03", "МЕРИДИАН ЛТЕ-1.03T",
-    "МЕРИДИАН ЛТЕ-1.03TY", "Меркурій 200", "Меркурій 200.02", "Меркурій 201",
-    "Меркурій 206", "МЕРКУРІЙ 231 АТ-01", "НІК 2102-01.E2MCT", "НІК 2102-01.E2P1",
-    "НІК 2102-01.E2CT", "НІК 2102-01.E2MT", "НІК 2102-01.E2MT1", "НІК 2102-01.E2T",
-    "НІК 2102-01.E2TP1", "НІК 2102-02.M1", "НІК 2102-02.M1B", "НІК 2102-02.M2",
-    "НІК 2102-02.M2B", "НІК 2301 AP1", "НІК 2303 AP2", "НІК 2301 AP2B",
-    "НІК 2301 AP3", "НІК 2301 AP3B", "НІК 2303 AP2T", "НІК 2303 AP3T",
-    "НІК 2303L AP1T", "НІК 2303L AP6", "НІК 2303L AП6Т", "CA4-195", "CA4-И672п",
-    "CO-193", "CO-197", "CO-197M", "CO-2", "CO-2M", "COEA09M", "CO-И446",
-    "CO-И446M", "CO-И449", "CO-И449М1", "CO-И449М1-1", "CO-И449М1-2",
-    "СОЭ-1.02/2", "СОЭ-1.02/2КРТ", "СОЭ-1.02/2KT", "СОЭ-1.02/2T",
-    "СОЭ-1.02/5KPTД", "СО-3A10Д", "СО-3G6705", "CT-3A05", "Ц36807Бк",
-    "HIK 2102-01.E2MT1", "HIK 2102-01.E2P1", "HIK 2102-01.E2CT", "HIK 2102-01.E2T",
-    "HIK 2102-01.E2TP1", "HIK 2102-02.M1", "HIK 2102-02.M1B", "HIK 2102-02.M2",
-    "HIK 2102-02.M2B", "HIK 2301 AP1", "HIK 2303 AP2", "HIK 2301 AP2B",
-    "HIK 2301 AP3", "HIK 2301 AP3B", "HIK 2303 AP2T", "HIK 2303 AP3T",
-    "HIK 2303L AP1T", "HIK 2303L AP6", "HIK 2303L AP6T"
-];
-
-// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ ==========
-function initMeterTypes() {
-    if (oldMeterType && oldMeterType.children.length <= 1) {
-        meterTypesList.forEach(type => {
-            const option = document.createElement('option');
-            option.value = type;
-            option.textContent = type;
-            oldMeterType.appendChild(option);
-        });
-    }
-    if (newMeterType && newMeterType.children.length <= 1) {
-        meterTypesList.forEach(type => {
-            const option = document.createElement('option');
-            option.value = type;
-            option.textContent = type;
-            newMeterType.appendChild(option);
-        });
-    }
-}
-
-// ========== GOOGLE FORM URL ==========
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
+// ========== GOOGLE FORM URL (ПРАВИЛЬНА ДЛЯ ВІДПРАВКИ) ==========
+// URL для відправки даних (formResponse)
+const GOOGLE_FORM_SUBMIT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse";
+// URL для відкриття форми (viewform)
+const GOOGLE_FORM_VIEW_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
@@ -185,6 +126,67 @@ function pinReset() {
     setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
 }
 
+// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ ==========
+const meterTypesList = [
+    "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
+    "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis310",
+    "MCS301-CE51B 30MIS-004 000", "MTX 1A10.DF.2LO-CO4", "MTX 1A10.DF.2LO-Y04",
+    "MTX 1A10.DF.2ZO-CD4", "MTX 1A10.DF.2ZO-CO4", "MTX 3A 10.DF.4Z1-C4",
+    "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", "NIK 2100 AP2.0000.0.11",
+    "NIK 2100 AP2T.1000.C.11", "NIK 2100 AP2T.1002.MC.11", "NIK 2100 AP2T.1002.C.11",
+    "NIK 2100 AP6T.1002.MC.11", "NIK 2100 AP6T.2000.MC.11", "NIK 2100 AP6T.2002.MC.11",
+    "NIK 2100 AP2T.2802.MC.11", "NIK 2100 AP6T.2802.MC.11", "NIK 2100 AP6T.2902.MC.11",
+    "NIK 2104 AP2T.1000.M.11", "NIK 2104 AP2T.1000.C.11", "NIK 2104 AP2T.1002.MC.11",
+    "NIK 2104 AP2T.1802.MC.11", "NIK 2104 AP2TB.1802.M.11", "NIK 2104 AP6T.2602.MC.21",
+    "NIK 2300 AP6T.1000.C.11", "NIK 2300 ARP3T.2900 MC 21", "NIK 2300 ATT.2900 MC 21",
+    "NIK 2300 ARTT.2902.MC.11", "NIK 2300 AP3.2000.MC.11", "NIK 2300 AP3T.2000.MC.11",
+    "NIK 2300 AP6T.2002.MC.11", "NIK 2300 AP6T.2802.MC.11", "NIK 2300 AP6T.2902.MC.11",
+    "NIK 2301 AP3.0 0000.0.11", "NIK 2303 ARP3T.1202.MC.11", "NIK 2303 ARP3T.1802.MC.11",
+    "NIK 2303 ARP6T.1002.MC.11", "NIK 2303 ARP6T.1800.MC.11", "NIK 2303 ART T.1800.MC.11",
+    "NIK 2303 AT T.1800.MC.21", "NIK 2303 ARP3T.1802.MC.21", "NIK 2303 ARP6T.1802.MC.11",
+    "NIK 2303 AP3T.1000.MC.11", "NIK 2303 AP3T.1002.MC.11", "NIK 2303 AP3T.1802.MC.11",
+    "NIK 2303 AP3T.2000.MC.11", "NIK 2303 AP6T.1000.MC.11", "NIK 2303 AP6T.1000.C.11",
+    "NIK 2303 AP6T.1002.MC.11", "NIK 2303 AP6T.1802.MC.11", "NIK 2303 AP6T.1802MC.21",
+    "NIK 2303 AP6T.2000.MC.11", "NIK 2307 0.5s ARTT.1600.MC.21", "NIK 2307 ARP3T.1602.M.21",
+    "NIK 2307 ARP3T.1602.MC.21", "NP-06 TD MME 1F 2S-U", "NP-06 TD MME 1F 3S-U",
+    "ACE-3000", "ЛЭО", "ЛЭО-M1.4", "МЕРИДИАН ЛТЕ-1.03", "МЕРИДИАН ЛТЕ-1.03T",
+    "МЕРИДИАН ЛТЕ-1.03TY", "Меркурій 200", "Меркурій 200.02", "Меркурій 201",
+    "Меркурій 206", "МЕРКУРІЙ 231 АТ-01", "НІК 2102-01.E2MCT", "НІК 2102-01.E2P1",
+    "НІК 2102-01.E2CT", "НІК 2102-01.E2MT", "НІК 2102-01.E2MT1", "НІК 2102-01.E2T",
+    "НІК 2102-01.E2TP1", "НІК 2102-02.M1", "НІК 2102-02.M1B", "НІК 2102-02.M2",
+    "НІК 2102-02.M2B", "НІК 2301 AP1", "НІК 2303 AP2", "НІК 2301 AP2B",
+    "НІК 2301 AP3", "НІК 2301 AP3B", "НІК 2303 AP2T", "НІК 2303 AP3T",
+    "НІК 2303L AP1T", "НІК 2303L AP6", "НІК 2303L AП6Т", "CA4-195", "CA4-И672п",
+    "CO-193", "CO-197", "CO-197M", "CO-2", "CO-2M", "COEA09M", "CO-И446",
+    "CO-И446M", "CO-И449", "CO-И449М1", "CO-И449М1-1", "CO-И449М1-2",
+    "СОЭ-1.02/2", "СОЭ-1.02/2КРТ", "СОЭ-1.02/2KT", "СОЭ-1.02/2T",
+    "СОЭ-1.02/5KPTД", "СО-3A10Д", "СО-3G6705", "CT-3A05", "Ц36807Бк",
+    "HIK 2102-01.E2MT1", "HIK 2102-01.E2P1", "HIK 2102-01.E2CT", "HIK 2102-01.E2T",
+    "HIK 2102-01.E2TP1", "HIK 2102-02.M1", "HIK 2102-02.M1B", "HIK 2102-02.M2",
+    "HIK 2102-02.M2B", "HIK 2301 AP1", "HIK 2303 AP2", "HIK 2301 AP2B",
+    "HIK 2301 AP3", "HIK 2301 AP3B", "HIK 2303 AP2T", "HIK 2303 AP3T",
+    "HIK 2303L AP1T", "HIK 2303L AP6", "HIK 2303L AP6T"
+];
+
+function initMeterTypes() {
+    if (oldMeterType && oldMeterType.children.length <= 1) {
+        meterTypesList.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            oldMeterType.appendChild(option);
+        });
+    }
+    if (newMeterType && newMeterType.children.length <= 1) {
+        meterTypesList.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            newMeterType.appendChild(option);
+        });
+    }
+}
+
 // ========== ДОПОМІЖНІ ФУНКЦІЇ ==========
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
@@ -196,7 +198,6 @@ function showToast(msg) {
     setTimeout(() => t.remove(), 2500);
 }
 
-// ========== ОБРОБКА QR ==========
 function digitsExtract(text) { return text.replace(/\D/g, '').substring(0, 10); }
 function smartMeterExtract(text) {
     const d = text.replace(/\D/g, '');
@@ -206,7 +207,6 @@ function smartMeterExtract(text) {
     return d;
 }
 
-// ========== РОЗПАРСУВАННЯ ДІАПАЗОНУ ПЛОМБ ==========
 function parseSealRange(input) {
     input = input.trim();
     const rangePattern = /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/i;
@@ -368,7 +368,7 @@ function addNewSeal() {
     }
 }
 
-// ========== ПОШУК ПЛОМБ У ПОЛЯХ ==========
+// ========== ПОШУК ПЛОМБ ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
@@ -430,7 +430,7 @@ function setupSearch() {
     });
 }
 
-// ========== ЗБЕРЕЖЕННЯ В ЖУРНАЛ ==========
+// ========== ДАНІ ДЛЯ ЖУРНАЛУ ==========
 function getFormData() {
     return {
         date: new Date().toLocaleString('uk-UA'),
@@ -439,8 +439,6 @@ function getFormData() {
         accountNumber: accountNumber?.value || '',
         oldMeterNumber: oldMeterNumber?.value || '',
         newMeterNumber: newMeterNumber?.value || '',
-        oldMeterReading: oldMeterReading?.value || '',
-        newMeterReading: newMeterReading?.value || '',
         address: address?.value || '',
         oldSealCover: oldSealCover?.value || '',
         oldSealVKP: oldSealVKP?.value || '',
@@ -468,7 +466,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ВІДПРАВКА В GOOGLE FORM (СТВОРЕННЯ ФОРМИ З ДАНИМИ) ==========
+// ========== ВІДПРАВКА В GOOGLE FORM ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -489,7 +487,7 @@ function sendToGoogleForm() {
     // Створюємо тимчасову форму для відправки
     const tempForm = document.createElement('form');
     tempForm.method = 'POST';
-    tempForm.action = GOOGLE_FORM_URL;
+    tempForm.action = GOOGLE_FORM_SUBMIT_URL;
     tempForm.target = '_blank';
     tempForm.style.display = 'none';
     
@@ -536,9 +534,8 @@ function sendToGoogleForm() {
     alert('✅ Дані відправлено в Google Form!');
 }
 
-// КНОПКА ПРОСТОГО ПЕРЕХОДУ В ФОРМУ
 function openGoogleForm() {
-    window.open(GOOGLE_FORM_URL, '_blank');
+    window.open(GOOGLE_FORM_VIEW_URL, '_blank');
 }
 
 function clearAllFields() {
@@ -590,7 +587,6 @@ function renderLog() {
     });
 }
 
-// ========== CSV ==========
 function exportCSV() {
     if (!workLog.length) { alert('Немає даних для експорту'); return; }
     const headers = ['Дата','Робота','Табельний','Особовий','Дем.лічильник','Нов.лічильник','Адреса','Зняті пломби','Встановлені пломби'];
@@ -634,7 +630,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (clearLogBtn) clearLogBtn.onclick = clearLog;
     if (sendToFormBtn) sendToFormBtn.onclick = sendToGoogleForm;
     
-    // КНОПКА ПЕРЕХОДУ В ФОРМУ (без заповнення)
     const openFormBtn = document.getElementById('openFormBtn');
     if (openFormBtn) {
         openFormBtn.addEventListener('click', openGoogleForm);
