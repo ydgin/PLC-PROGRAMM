@@ -436,6 +436,10 @@ function getFormData() {
         accountNumber: accountNumber?.value || '',
         oldMeterNumber: oldMeterNumber?.value || '',
         newMeterNumber: newMeterNumber?.value || '',
+        oldMeterType: oldMeterType?.value || '',
+        newMeterType: newMeterType?.value || '',
+        oldMeterReading: oldMeterReading?.value || '',
+        newMeterReading: newMeterReading?.value || '',
         address: address?.value || '',
         oldSealCover: oldSealCover?.value || '',
         oldSealVKP: oldSealVKP?.value || '',
@@ -481,8 +485,10 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Створюємо параметри для GET-запиту (для заповнення форми)
+    // Створюємо параметри для GET-запиту
     const params = new URLSearchParams();
+    
+    // Основні поля (текстові)
     params.append('entry.1609399626', workType.value);
     params.append('entry.1583379400', employeeId.value);
     params.append('entry.244962092', accountNumber.value);
@@ -490,6 +496,15 @@ function sendToGoogleForm() {
     params.append('entry.959182756', newMeterNumber?.value || '');
     params.append('entry.1458846130', address?.value || '');
     
+    // Випадаючі списки (типи лічильників) - відправляємо ТЕКСТОВЕ значення
+    params.append('entry.1262021573', oldMeterType?.value || '');
+    params.append('entry.958182756', newMeterType?.value || '');
+    
+    // Покази лічильників
+    params.append('entry.1779114186107', oldMeterReading?.value || '');
+    params.append('entry.960182756', newMeterReading?.value || '');
+    
+    // Демонтовані пломби
     params.append('entry.950038743', oldSealCover?.value || '');
     params.append('entry.9515038743', oldSealVKP?.value || '');
     params.append('entry.952083469', oldSealSHO1?.value || '');
@@ -499,6 +514,7 @@ function sendToGoogleForm() {
     params.append('entry.956182756', oldIMP2?.value || '');
     params.append('entry.957182756', oldIMP3?.value || '');
     
+    // Встановлені пломби
     params.append('entry.961182756', newSealCover?.value || '');
     params.append('entry.962182756', newSealVKP?.value || '');
     params.append('entry.963182756', newSealSHO1?.value || '');
@@ -508,7 +524,7 @@ function sendToGoogleForm() {
     params.append('entry.967182756', newIMP2?.value || '');
     params.append('entry.968182756', newIMP3?.value || '');
     
-    // Відкриваємо форму в новій вкладці з заповненими даними
+    // Відкриваємо форму в новій вкладці
     const formUrl = `${GOOGLE_FORM_URL}?${params.toString()}`;
     window.open(formUrl, '_blank');
     
