@@ -464,7 +464,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== АВТОМАТИЧНА ВІДПРАВКА В GOOGLE FORM ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -521,8 +521,6 @@ function sendToGoogleForm() {
     const data = getFormData();
     workLog.unshift(data);
     saveData();
-    
-    alert('✅ Форму відкрито! Всі поля автоматично заповнені.\n\nПеревірте дані та натисніть "Відправити звіт".');
 }
 
 function openGoogleForm() {
