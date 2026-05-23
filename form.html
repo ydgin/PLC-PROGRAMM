@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Звіт по проведеній роботі</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        .sub { color: #666; margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #4CAF50; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover { background: #45a049; }
+        hr { margin: 20px 0; border: none; border-top: 1px solid #eee; }
+        .section-title { font-size: 1.2rem; margin: 20px 0 12px; color: #2c3e66; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 PLS INVEST</h1>
+        <div class="sub">Звіт по проведеній роботі</div>
+        
+        <form id="reportForm" method="POST" action="https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse">
+            
+            <div class="form-group">
+                <label>Оберіть виконувану роботу *</label>
+                <select name="entry.1609399626" id="workType">
+                    <option value="Фасадні роботи">Фасадні роботи</option>
+                    <option value="Заміна лічильника">Заміна лічильника</option>
+                    <option value="Технічна перевірка">Технічна перевірка</option>
+                    <option value="Контрольний огляд">Контрольний огляд</option>
+                    <option value="Закриття о/р з демонтажем">Закриття о/р з демонтажем</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Введіть табельний номер *</label>
+                <input type="text" name="entry.1583379400" id="employeeId">
+            </div>
+            
+            <div class="form-group">
+                <label>Введіть особовий рахунок *</label>
+                <input type="text" name="entry.244962092" id="accountNumber">
+            </div>
+            
+            <hr>
+            <div class="section-title">🔻 Демонтований лічильник</div>
+            
+            <div class="form-group">
+                <label>Тип демонтованого лічильника</label>
+                <input type="text" name="entry.1262021573" id="oldMeterType">
+            </div>
+            
+            <div class="form-group">
+                <label>Номер демонтованого лічильника</label>
+                <input type="text" name="entry.1666715724" id="oldMeterNumber">
+            </div>
+            
+            <div class="form-group">
+                <label>Покази демонтованого лічильника</label>
+                <input type="text" name="entry.1779114186107" id="oldMeterReading">
+            </div>
+            
+            <div class="section-title">🔻 Демонтовані пломби</div>
+            
+            <div class="form-group"><label>Знята пломба кл. кришка</label><input type="text" name="entry.950038743" id="oldSealCover"></div>
+            <div class="form-group"><label>Знята пломба ВКП</label><input type="text" name="entry.9515038743" id="oldSealVKP"></div>
+            <div class="form-group"><label>Знята пломба ШО (1)</label><input type="text" name="entry.952083469" id="oldSealSHO1"></div>
+            <div class="form-group"><label>Знята пломба ШО (2)</label><input type="text" name="entry.953142835" id="oldSealSHO2"></div>
+            <div class="form-group"><label>Знята пломба оптопорт</label><input type="text" name="entry.954162369" id="oldSealOpto"></div>
+            <div class="form-group"><label>Знята ИМП (1)</label><input type="text" name="entry.955182756" id="oldIMP1"></div>
+            <div class="form-group"><label>Знята ИМП (2)</label><input type="text" name="entry.956182756" id="oldIMP2"></div>
+            <div class="form-group"><label>Знята ИМП (3)</label><input type="text" name="entry.957182756" id="oldIMP3"></div>
+            
+            <hr>
+            <div class="section-title">🔺 Встановлений лічильник</div>
+            
+            <div class="form-group"><label>Тип встановленого лічильника</label><input type="text" name="entry.958182756" id="newMeterType"></div>
+            <div class="form-group"><label>Номер встановленого лічильника</label><input type="text" name="entry.959182756" id="newMeterNumber"></div>
+            <div class="form-group"><label>Покази встановленого лічильника</label><input type="text" name="entry.960182756" id="newMeterReading"></div>
+            
+            <div class="section-title">🔺 Встановлені пломби</div>
+            
+            <div class="form-group"><label>Встановлена пломба кл. кришка</label><input type="text" name="entry.961182756" id="newSealCover"></div>
+            <div class="form-group"><label>Встановлена пломба ВКП</label><input type="text" name="entry.962182756" id="newSealVKP"></div>
+            <div class="form-group"><label>Встановлена пломба ШО (1)</label><input type="text" name="entry.963182756" id="newSealSHO1"></div>
+            <div class="form-group"><label>Встановлена пломба ШО (2)</label><input type="text" name="entry.964182756" id="newSealSHO2"></div>
+            <div class="form-group"><label>Встановлена пломба оптопорт</label><input type="text" name="entry.965182756" id="newSealOpto"></div>
+            <div class="form-group"><label>Встановлена ИМП (1)</label><input type="text" name="entry.966182756" id="newIMP1"></div>
+            <div class="form-group"><label>Встановлена ИМП (2)</label><input type="text" name="entry.967182756" id="newIMP2"></div>
+            <div class="form-group"><label>Встановлена ИМП (3)</label><input type="text" name="entry.968182756" id="newIMP3"></div>
+            
+            <hr>
+            <div class="form-group"><label>📍 Адреса</label><input type="text" name="entry.1458846130" id="address"></div>
+            
+            <button type="submit">📨 ВІДПРАВИТИ ЗВІТ</button>
+        </form>
+    </div>
+    
+    <script>
+        // Отримуємо параметри з URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Заповнюємо поля, якщо є параметри
+        if (urlParams.has('workType')) document.getElementById('workType').value = urlParams.get('workType');
+        if (urlParams.has('employeeId')) document.getElementById('employeeId').value = urlParams.get('employeeId');
+        if (urlParams.has('accountNumber')) document.getElementById('accountNumber').value = urlParams.get('accountNumber');
+        if (urlParams.has('oldMeterType')) document.getElementById('oldMeterType').value = urlParams.get('oldMeterType');
+        if (urlParams.has('oldMeterNumber')) document.getElementById('oldMeterNumber').value = urlParams.get('oldMeterNumber');
+        if (urlParams.has('oldMeterReading')) document.getElementById('oldMeterReading').value = urlParams.get('oldMeterReading');
+        if (urlParams.has('newMeterType')) document.getElementById('newMeterType').value = urlParams.get('newMeterType');
+        if (urlParams.has('newMeterNumber')) document.getElementById('newMeterNumber').value = urlParams.get('newMeterNumber');
+        if (urlParams.has('newMeterReading')) document.getElementById('newMeterReading').value = urlParams.get('newMeterReading');
+        if (urlParams.has('address')) document.getElementById('address').value = urlParams.get('address');
+        
+        // Пломби
+        const sealFields = ['oldSealCover', 'oldSealVKP', 'oldSealSHO1', 'oldSealSHO2', 'oldSealOpto', 'oldIMP1', 'oldIMP2', 'oldIMP3', 'newSealCover', 'newSealVKP', 'newSealSHO1', 'newSealSHO2', 'newSealOpto', 'newIMP1', 'newIMP2', 'newIMP3'];
+        sealFields.forEach(field => {
+            if (urlParams.has(field)) document.getElementById(field).value = urlParams.get(field);
+        });
+    </script>
+</body>
+</html>

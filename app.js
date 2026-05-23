@@ -60,36 +60,6 @@ const cancelSealBtn = document.getElementById('cancelSealBtn');
 // ========== GOOGLE FORM URL ==========
 const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
-// ========== ПРАВИЛЬНІ ID ПОЛІВ З ВАШОЇ ФОРМИ ==========
-const FORM_FIELDS = {
-    workType: "entry.1609399626",
-    employeeId: "entry.1583379400",
-    accountNumber: "entry.244962092",
-    oldMeterType: "entry.1262021573",
-    oldMeterNumber: "entry.1666715724",
-    oldMeterReading: "entry.1779114186107",
-    oldSealCover: "entry.950038743",
-    oldSealVKP: "entry.9515038743",
-    oldSealSHO1: "entry.952083469",
-    oldSealSHO2: "entry.953142835",
-    oldSealOpto: "entry.954162369",
-    oldIMP1: "entry.955182756",
-    oldIMP2: "entry.956182756",
-    oldIMP3: "entry.957182756",
-    newMeterType: "entry.958182756",
-    newMeterNumber: "entry.959182756",
-    newMeterReading: "entry.960182756",
-    newSealCover: "entry.961182756",
-    newSealVKP: "entry.962182756",
-    newSealSHO1: "entry.963182756",
-    newSealSHO2: "entry.964182756",
-    newSealOpto: "entry.965182756",
-    newIMP1: "entry.966182756",
-    newIMP2: "entry.967182756",
-    newIMP3: "entry.968182756",
-    address: "entry.1458846130"
-};
-
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
 
@@ -497,7 +467,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ФУНКЦІЯ КОПІЮВАННЯ В БУФЕР ОБМІНУ ==========
+// ========== АВТОМАТИЧНА ВІДПРАВКА В GOOGLE FORM ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -515,49 +485,55 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Формуємо дані для копіювання (простий текст, кожне значення на окремому рядку)
-    let copyText = "";
-    copyText += workType.value + "\n";
-    copyText += employeeId.value + "\n";
-    copyText += accountNumber.value + "\n";
-    copyText += (oldMeterType?.selectedOptions[0]?.text || "") + "\n";
-    copyText += (oldMeterNumber?.value || "") + "\n";
-    copyText += (oldMeterReading?.value || "") + "\n";
-    copyText += (newMeterType?.selectedOptions[0]?.text || "") + "\n";
-    copyText += (newMeterNumber?.value || "") + "\n";
-    copyText += (newMeterReading?.value || "") + "\n";
-    copyText += (oldSealCover?.value || "") + "\n";
-    copyText += (oldSealVKP?.value || "") + "\n";
-    copyText += (oldSealSHO1?.value || "") + "\n";
-    copyText += (oldSealSHO2?.value || "") + "\n";
-    copyText += (oldSealOpto?.value || "") + "\n";
-    copyText += (oldIMP1?.value || "") + "\n";
-    copyText += (oldIMP2?.value || "") + "\n";
-    copyText += (oldIMP3?.value || "") + "\n";
-    copyText += (newSealCover?.value || "") + "\n";
-    copyText += (newSealVKP?.value || "") + "\n";
-    copyText += (newSealSHO1?.value || "") + "\n";
-    copyText += (newSealSHO2?.value || "") + "\n";
-    copyText += (newSealOpto?.value || "") + "\n";
-    copyText += (newIMP1?.value || "") + "\n";
-    copyText += (newIMP2?.value || "") + "\n";
-    copyText += (newIMP3?.value || "") + "\n";
-    copyText += (address?.value || "");
+    // Формуємо URL з параметрами для автоматичного заповнення
+    const params = new URLSearchParams();
     
-    navigator.clipboard.writeText(copyText).then(() => {
-        alert('✅ Дані скопійовано в буфер обміну!\n\n' +
-              '1. Відкрийте Google Form\n' +
-              '2. Клікніть у ПЕРШЕ поле форми\n' +
-              '3. Натисніть Ctrl+V (Вставити)\n\n' +
-              'Google Form автоматично розподілить дані по полях!');
-        window.open(GOOGLE_FORM_URL, '_blank');
-    }).catch(() => {
-        alert('❌ Не вдалося скопіювати. Спробуйте виділити дані вручну.');
-    });
+    // Основні поля
+    params.append('entry.1609399626', workType.value);
+    params.append('entry.1583379400', employeeId.value);
+    params.append('entry.244962092', accountNumber.value);
+    params.append('entry.1458846130', address?.value || '');
     
+    // Демонтований лічильник
+    params.append('entry.1262021573', oldMeterType?.value || '');
+    params.append('entry.1666715724', oldMeterNumber?.value || '');
+    params.append('entry.1779114186107', oldMeterReading?.value || '');
+    
+    // Встановлений лічильник
+    params.append('entry.958182756', newMeterType?.value || '');
+    params.append('entry.959182756', newMeterNumber?.value || '');
+    params.append('entry.960182756', newMeterReading?.value || '');
+    
+    // Демонтовані пломби
+    params.append('entry.950038743', oldSealCover?.value || '');
+    params.append('entry.9515038743', oldSealVKP?.value || '');
+    params.append('entry.952083469', oldSealSHO1?.value || '');
+    params.append('entry.953142835', oldSealSHO2?.value || '');
+    params.append('entry.954162369', oldSealOpto?.value || '');
+    params.append('entry.955182756', oldIMP1?.value || '');
+    params.append('entry.956182756', oldIMP2?.value || '');
+    params.append('entry.957182756', oldIMP3?.value || '');
+    
+    // Встановлені пломби
+    params.append('entry.961182756', newSealCover?.value || '');
+    params.append('entry.962182756', newSealVKP?.value || '');
+    params.append('entry.963182756', newSealSHO1?.value || '');
+    params.append('entry.964182756', newSealSHO2?.value || '');
+    params.append('entry.965182756', newSealOpto?.value || '');
+    params.append('entry.966182756', newIMP1?.value || '');
+    params.append('entry.967182756', newIMP2?.value || '');
+    params.append('entry.968182756', newIMP3?.value || '');
+    
+    // Відкриваємо форму в новій вкладці з заповненими даними
+    const formUrl = `${GOOGLE_FORM_URL}?usp=pp_url&${params.toString()}`;
+    window.open(formUrl, '_blank');
+    
+    // Зберігаємо в локальний журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
+    
+    alert('✅ Google Form відкрито!\n\nВсі текстові поля заповнені автоматично.\nВипадаючі списки виберіть вручну.');
 }
 
 function openGoogleForm() {
