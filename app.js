@@ -60,18 +60,19 @@ const cancelSealBtn = document.getElementById('cancelSealBtn');
 // ========== GOOGLE FORM URL ==========
 const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
-// ========== ПРАВИЛЬНИЙ МАПІНГ ПОЛІВ (на основі вашого порівняння) ==========
+// ========== ПРАВИЛЬНІ ID ПОЛІВ З ВАШОЇ ФОРМИ ==========
 const FORM_FIELDS = {
-    // СТОРІНКА 1
+    // Сторінка 1
     workType: "entry.1609399626",        // Оберіть виконувану роботу
     employeeId: "entry.1583379400",      // Введіть табельний номер
     accountNumber: "entry.244962092",    // Введіть особовий рахунок
     
-    // ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК (СТОРІНКА 2)
+    // Сторінка 2 - Демонтований лічильник
+    oldMeterType: "entry.1262021573",    // Тип знятого лічильника
     oldMeterNumber: "entry.1666715724",  // Номер знятого лічильника
     oldMeterReading: "entry.1779114186107", // Покази знятого лічильника
     
-    // ДЕМОНТОВАНІ ПЛОМБИ (СТОРІНКА 2)
+    // Сторінка 2 - Демонтовані пломби
     oldSealCover: "entry.950038743",     // Знята пломба кл. кришка
     oldSealVKP: "entry.9515038743",      // Знята пломба ВКП
     oldSealSHO1: "entry.952083469",      // Знята пломба ШО (1)
@@ -81,12 +82,12 @@ const FORM_FIELDS = {
     oldIMP2: "entry.956182756",          // Знята ИМП (2)
     oldIMP3: "entry.957182756",          // Знята ИМП (3)
     
-    // ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК (СТОРІНКА 3)
+    // Сторінка 3 - Встановлений лічильник
     newMeterType: "entry.958182756",     // Тип встановленого лічильника
     newMeterNumber: "entry.959182756",   // Номер встановленого лічильника
     newMeterReading: "entry.960182756",  // Покази встановленого лічильника
     
-    // ВСТАНОВЛЕНІ ПЛОМБИ (СТОРІНКА 3)
+    // Сторінка 3 - Встановлені пломби
     newSealCover: "entry.961182756",     // Встановлена пломба кл. кришка
     newSealVKP: "entry.962182756",       // Встановлена пломба ВКП
     newSealSHO1: "entry.963182756",      // Встановлена пломба ШО (1)
@@ -96,7 +97,7 @@ const FORM_FIELDS = {
     newIMP2: "entry.967182756",          // Встановлена ИМП (2)
     newIMP3: "entry.968182756",          // Встановлена ИМП (3)
     
-    // СТОРІНКА 4
+    // Сторінка 4
     address: "entry.1458846130"          // Адреса
 };
 
@@ -507,7 +508,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ВІДПРАВКА В GOOGLE FORM ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -525,6 +526,7 @@ function sendToGoogleForm() {
         return; 
     }
     
+    // Формуємо URL з усіма параметрами
     const params = new URLSearchParams();
     
     // Додаємо ВСІ поля з правильними ID
@@ -533,8 +535,13 @@ function sendToGoogleForm() {
     params.append(FORM_FIELDS.accountNumber, accountNumber.value);
     params.append(FORM_FIELDS.address, address?.value || '');
     
+    params.append(FORM_FIELDS.oldMeterType, oldMeterType?.value || '');
     params.append(FORM_FIELDS.oldMeterNumber, oldMeterNumber?.value || '');
     params.append(FORM_FIELDS.oldMeterReading, oldMeterReading?.value || '');
+    
+    params.append(FORM_FIELDS.newMeterType, newMeterType?.value || '');
+    params.append(FORM_FIELDS.newMeterNumber, newMeterNumber?.value || '');
+    params.append(FORM_FIELDS.newMeterReading, newMeterReading?.value || '');
     
     params.append(FORM_FIELDS.oldSealCover, oldSealCover?.value || '');
     params.append(FORM_FIELDS.oldSealVKP, oldSealVKP?.value || '');
@@ -544,10 +551,6 @@ function sendToGoogleForm() {
     params.append(FORM_FIELDS.oldIMP1, oldIMP1?.value || '');
     params.append(FORM_FIELDS.oldIMP2, oldIMP2?.value || '');
     params.append(FORM_FIELDS.oldIMP3, oldIMP3?.value || '');
-    
-    params.append(FORM_FIELDS.newMeterType, newMeterType?.value || '');
-    params.append(FORM_FIELDS.newMeterNumber, newMeterNumber?.value || '');
-    params.append(FORM_FIELDS.newMeterReading, newMeterReading?.value || '');
     
     params.append(FORM_FIELDS.newSealCover, newSealCover?.value || '');
     params.append(FORM_FIELDS.newSealVKP, newSealVKP?.value || '');
@@ -565,7 +568,7 @@ function sendToGoogleForm() {
     workLog.unshift(data);
     saveData();
     
-    alert('✅ Google Form відкрито в новій вкладці!\n\nВсі поля мають бути заповнені.');
+    alert('✅ Google Form відкрито в новій вкладці!\n\nПеревірте всі поля та натисніть "Надіслати".');
 }
 
 function openGoogleForm() {
