@@ -62,17 +62,12 @@ const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHA
 
 // ========== ПРАВИЛЬНІ ID ПОЛІВ З ВАШОЇ ФОРМИ ==========
 const FORM_FIELDS = {
-    // Сторінка 1
     workType: "entry.1609399626",
     employeeId: "entry.1583379400",
     accountNumber: "entry.244962092",
-    
-    // Сторінка 2 - Демонтований лічильник
     oldMeterType: "entry.1262021573",
     oldMeterNumber: "entry.1666715724",
     oldMeterReading: "entry.1779114186107",
-    
-    // Сторінка 2 - Демонтовані пломби
     oldSealCover: "entry.950038743",
     oldSealVKP: "entry.9515038743",
     oldSealSHO1: "entry.952083469",
@@ -81,13 +76,9 @@ const FORM_FIELDS = {
     oldIMP1: "entry.955182756",
     oldIMP2: "entry.956182756",
     oldIMP3: "entry.957182756",
-    
-    // Сторінка 3 - Встановлений лічильник
     newMeterType: "entry.958182756",
     newMeterNumber: "entry.959182756",
     newMeterReading: "entry.960182756",
-    
-    // Сторінка 3 - Встановлені пломби
     newSealCover: "entry.961182756",
     newSealVKP: "entry.962182756",
     newSealSHO1: "entry.963182756",
@@ -96,8 +87,6 @@ const FORM_FIELDS = {
     newIMP1: "entry.966182756",
     newIMP2: "entry.967182756",
     newIMP3: "entry.968182756",
-    
-    // Сторінка 4
     address: "entry.1458846130"
 };
 
@@ -526,63 +515,44 @@ function sendToGoogleForm() {
         return; 
     }
     
-    let copyText = "📋 ДАНІ ДЛЯ ЗАПОВНЕННЯ ФОРМИ:\n\n";
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += "📌 ОСНОВНА ІНФОРМАЦІЯ\n";
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += `▪ Виконувана робота: ${workType.value}\n`;
-    copyText += `▪ Табельний номер: ${employeeId.value}\n`;
-    copyText += `▪ Особовий рахунок: ${accountNumber.value}\n\n`;
-    
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += "🔻 ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК\n";
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += `▪ Тип: ${oldMeterType?.selectedOptions[0]?.text || '_____________'}\n`;
-    copyText += `▪ Номер: ${oldMeterNumber?.value || '_____________'}\n`;
-    copyText += `▪ Покази: ${oldMeterReading?.value || '_____________'}\n\n`;
-    
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += "🔻 ДЕМОНТОВАНІ ПЛОМБИ\n";
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += `▪ Пломба кл. кришка: ${oldSealCover?.value || '_____________'}\n`;
-    copyText += `▪ Пломба ВКП: ${oldSealVKP?.value || '_____________'}\n`;
-    copyText += `▪ Пломба ШО (1): ${oldSealSHO1?.value || '_____________'}\n`;
-    copyText += `▪ Пломба ШО (2): ${oldSealSHO2?.value || '_____________'}\n`;
-    copyText += `▪ Пломба оптопорт: ${oldSealOpto?.value || '_____________'}\n`;
-    copyText += `▪ ИМП (1): ${oldIMP1?.value || '_____________'}\n`;
-    copyText += `▪ ИМП (2): ${oldIMP2?.value || '_____________'}\n`;
-    copyText += `▪ ИМП (3): ${oldIMP3?.value || '_____________'}\n\n`;
-    
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += "🔺 ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК\n";
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += `▪ Тип: ${newMeterType?.selectedOptions[0]?.text || '_____________'}\n`;
-    copyText += `▪ Номер: ${newMeterNumber?.value || '_____________'}\n`;
-    copyText += `▪ Покази: ${newMeterReading?.value || '_____________'}\n\n`;
-    
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += "🔺 ВСТАНОВЛЕНІ ПЛОМБИ\n";
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += `▪ Пломба кл. кришка: ${newSealCover?.value || '_____________'}\n`;
-    copyText += `▪ Пломба ВКП: ${newSealVKP?.value || '_____________'}\n`;
-    copyText += `▪ Пломба ШО (1): ${newSealSHO1?.value || '_____________'}\n`;
-    copyText += `▪ Пломба ШО (2): ${newSealSHO2?.value || '_____________'}\n`;
-    copyText += `▪ Пломба оптопорт: ${newSealOpto?.value || '_____________'}\n`;
-    copyText += `▪ ИМП (1): ${newIMP1?.value || '_____________'}\n`;
-    copyText += `▪ ИМП (2): ${newIMP2?.value || '_____________'}\n`;
-    copyText += `▪ ИМП (3): ${newIMP3?.value || '_____________'}\n\n`;
-    
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += "📍 АДРЕСА\n";
-    copyText += "═══════════════════════════════════════════════════\n";
-    copyText += `${address?.value || '_____________'}\n\n`;
-    copyText += `📅 Дата: ${new Date().toLocaleString('uk-UA')}\n`;
+    // Формуємо дані для копіювання (простий текст, кожне значення на окремому рядку)
+    let copyText = "";
+    copyText += workType.value + "\n";
+    copyText += employeeId.value + "\n";
+    copyText += accountNumber.value + "\n";
+    copyText += (oldMeterType?.selectedOptions[0]?.text || "") + "\n";
+    copyText += (oldMeterNumber?.value || "") + "\n";
+    copyText += (oldMeterReading?.value || "") + "\n";
+    copyText += (newMeterType?.selectedOptions[0]?.text || "") + "\n";
+    copyText += (newMeterNumber?.value || "") + "\n";
+    copyText += (newMeterReading?.value || "") + "\n";
+    copyText += (oldSealCover?.value || "") + "\n";
+    copyText += (oldSealVKP?.value || "") + "\n";
+    copyText += (oldSealSHO1?.value || "") + "\n";
+    copyText += (oldSealSHO2?.value || "") + "\n";
+    copyText += (oldSealOpto?.value || "") + "\n";
+    copyText += (oldIMP1?.value || "") + "\n";
+    copyText += (oldIMP2?.value || "") + "\n";
+    copyText += (oldIMP3?.value || "") + "\n";
+    copyText += (newSealCover?.value || "") + "\n";
+    copyText += (newSealVKP?.value || "") + "\n";
+    copyText += (newSealSHO1?.value || "") + "\n";
+    copyText += (newSealSHO2?.value || "") + "\n";
+    copyText += (newSealOpto?.value || "") + "\n";
+    copyText += (newIMP1?.value || "") + "\n";
+    copyText += (newIMP2?.value || "") + "\n";
+    copyText += (newIMP3?.value || "") + "\n";
+    copyText += (address?.value || "");
     
     navigator.clipboard.writeText(copyText).then(() => {
-        alert('✅ Дані скопійовано в буфер обміну!\n\nВідкрийте Google Form і вставте дані (Ctrl+V).');
+        alert('✅ Дані скопійовано в буфер обміну!\n\n' +
+              '1. Відкрийте Google Form\n' +
+              '2. Клікніть у ПЕРШЕ поле форми\n' +
+              '3. Натисніть Ctrl+V (Вставити)\n\n' +
+              'Google Form автоматично розподілить дані по полях!');
         window.open(GOOGLE_FORM_URL, '_blank');
     }).catch(() => {
-        alert('❌ Не вдалося скопіювати. Спробуйте виділити текст вручну.');
+        alert('❌ Не вдалося скопіювати. Спробуйте виділити дані вручну.');
     });
     
     const data = getFormData();
