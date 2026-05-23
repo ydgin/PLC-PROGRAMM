@@ -60,20 +60,19 @@ const cancelSealBtn = document.getElementById('cancelSealBtn');
 // ========== GOOGLE FORM URL ==========
 const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform";
 
-// ========== ПРАВИЛЬНІ ID ПОЛІВ З ВАШОЇ ФОРМИ ==========
+// ========== ПРАВИЛЬНИЙ МАПІНГ ПОЛІВ (на основі вашого порівняння) ==========
 const FORM_FIELDS = {
     // СТОРІНКА 1
-    workType: "entry.1609399626",        // Заміна лічильника
-    employeeId: "entry.1583379400",      // Табельний номер (58388)
-    accountNumber: "entry.244962092",    // Особовий рахунок (1230504567)
+    workType: "entry.1609399626",        // Оберіть виконувану роботу
+    employeeId: "entry.1583379400",      // Введіть табельний номер
+    accountNumber: "entry.244962092",    // Введіть особовий рахунок
     
     // ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК (СТОРІНКА 2)
-    oldMeterType: "entry.1262021573",    // Тип демонтованого лічильника
-    oldMeterNumber: "entry.1666715724",  // Номер демонтованого лічильника (21467890)
-    oldMeterReading: "entry.155422969",  // Покази демонтованого лічильника
+    oldMeterNumber: "entry.1666715724",  // Номер знятого лічильника
+    oldMeterReading: "entry.1779114186107", // Покази знятого лічильника
     
     // ДЕМОНТОВАНІ ПЛОМБИ (СТОРІНКА 2)
-    oldSealCover: "entry.950038743",     // Знята пломба кл. кришка (K34078908)
+    oldSealCover: "entry.950038743",     // Знята пломба кл. кришка
     oldSealVKP: "entry.9515038743",      // Знята пломба ВКП
     oldSealSHO1: "entry.952083469",      // Знята пломба ШО (1)
     oldSealSHO2: "entry.953142835",      // Знята пломба ШО (2)
@@ -528,19 +527,14 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
-    // ВСІ ПОЛЯ (текстові + випадаючі)
+    // Додаємо ВСІ поля з правильними ID
     params.append(FORM_FIELDS.workType, workType.value);
     params.append(FORM_FIELDS.employeeId, employeeId.value);
     params.append(FORM_FIELDS.accountNumber, accountNumber.value);
     params.append(FORM_FIELDS.address, address?.value || '');
     
-    params.append(FORM_FIELDS.oldMeterType, oldMeterType?.value || '');
     params.append(FORM_FIELDS.oldMeterNumber, oldMeterNumber?.value || '');
     params.append(FORM_FIELDS.oldMeterReading, oldMeterReading?.value || '');
-    
-    params.append(FORM_FIELDS.newMeterType, newMeterType?.value || '');
-    params.append(FORM_FIELDS.newMeterNumber, newMeterNumber?.value || '');
-    params.append(FORM_FIELDS.newMeterReading, newMeterReading?.value || '');
     
     params.append(FORM_FIELDS.oldSealCover, oldSealCover?.value || '');
     params.append(FORM_FIELDS.oldSealVKP, oldSealVKP?.value || '');
@@ -550,6 +544,10 @@ function sendToGoogleForm() {
     params.append(FORM_FIELDS.oldIMP1, oldIMP1?.value || '');
     params.append(FORM_FIELDS.oldIMP2, oldIMP2?.value || '');
     params.append(FORM_FIELDS.oldIMP3, oldIMP3?.value || '');
+    
+    params.append(FORM_FIELDS.newMeterType, newMeterType?.value || '');
+    params.append(FORM_FIELDS.newMeterNumber, newMeterNumber?.value || '');
+    params.append(FORM_FIELDS.newMeterReading, newMeterReading?.value || '');
     
     params.append(FORM_FIELDS.newSealCover, newSealCover?.value || '');
     params.append(FORM_FIELDS.newSealVKP, newSealVKP?.value || '');
