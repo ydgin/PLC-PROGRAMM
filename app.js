@@ -482,45 +482,54 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Формуємо параметри для локальної форми
+    // Формуємо параметри для Google Form (тільки текстові поля)
     const params = new URLSearchParams();
-    params.append('workType', workType.value);
-    params.append('employeeId', employeeId.value);
-    params.append('accountNumber', accountNumber.value);
-    params.append('oldMeterType', oldMeterType?.value || '');
-    params.append('oldMeterNumber', oldMeterNumber?.value || '');
-    params.append('oldMeterReading', oldMeterReading?.value || '');
-    params.append('newMeterType', newMeterType?.value || '');
-    params.append('newMeterNumber', newMeterNumber?.value || '');
-    params.append('newMeterReading', newMeterReading?.value || '');
-    params.append('address', address?.value || '');
     
-    // Пломби
-    params.append('oldSealCover', oldSealCover?.value || '');
-    params.append('oldSealVKP', oldSealVKP?.value || '');
-    params.append('oldSealSHO1', oldSealSHO1?.value || '');
-    params.append('oldSealSHO2', oldSealSHO2?.value || '');
-    params.append('oldSealOpto', oldSealOpto?.value || '');
-    params.append('oldIMP1', oldIMP1?.value || '');
-    params.append('oldIMP2', oldIMP2?.value || '');
-    params.append('oldIMP3', oldIMP3?.value || '');
-    params.append('newSealCover', newSealCover?.value || '');
-    params.append('newSealVKP', newSealVKP?.value || '');
-    params.append('newSealSHO1', newSealSHO1?.value || '');
-    params.append('newSealSHO2', newSealSHO2?.value || '');
-    params.append('newSealOpto', newSealOpto?.value || '');
-    params.append('newIMP1', newIMP1?.value || '');
-    params.append('newIMP2', newIMP2?.value || '');
-    params.append('newIMP3', newIMP3?.value || '');
+    // Основні текстові поля
+    params.append('entry.1609399626', workType.value);
+    params.append('entry.1583379400', employeeId.value);
+    params.append('entry.244962092', accountNumber.value);
+    params.append('entry.1666715724', oldMeterNumber?.value || '');
+    params.append('entry.1779114186107', oldMeterReading?.value || '');
+    params.append('entry.959182756', newMeterNumber?.value || '');
+    params.append('entry.960182756', newMeterReading?.value || '');
+    params.append('entry.1458846130', address?.value || '');
     
-    // Відкриваємо локальну форму з даними
-    const formUrl = `form.html?${params.toString()}`;
+    // Пломби (текстові поля)
+    params.append('entry.950038743', oldSealCover?.value || '');
+    params.append('entry.9515038743', oldSealVKP?.value || '');
+    params.append('entry.952083469', oldSealSHO1?.value || '');
+    params.append('entry.953142835', oldSealSHO2?.value || '');
+    params.append('entry.954162369', oldSealOpto?.value || '');
+    params.append('entry.955182756', oldIMP1?.value || '');
+    params.append('entry.956182756', oldIMP2?.value || '');
+    params.append('entry.957182756', oldIMP3?.value || '');
+    params.append('entry.961182756', newSealCover?.value || '');
+    params.append('entry.962182756', newSealVKP?.value || '');
+    params.append('entry.963182756', newSealSHO1?.value || '');
+    params.append('entry.964182756', newSealSHO2?.value || '');
+    params.append('entry.965182756', newSealOpto?.value || '');
+    params.append('entry.966182756', newIMP1?.value || '');
+    params.append('entry.967182756', newIMP2?.value || '');
+    params.append('entry.968182756', newIMP3?.value || '');
+    
+    // Випадаючі списки НЕ передаємо - їх заповнить користувач вручну
+    // oldMeterType (entry.1262021573) - пропускаємо
+    // newMeterType (entry.958182756) - пропускаємо
+    
+    // Відкриваємо Google Form з параметрами
+    const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
     
     // Зберігаємо в локальний журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
+    
+    alert('✅ Google Form відкрито!\n\n' +
+          '✅ Всі текстові поля заповнені автоматично.\n' +
+          '⚠️ Виберіть типи лічильників з випадаючих списків вручну.\n' +
+          '📋 Після перевірки натисніть "Надіслати" у формі.');
 }
 
 function openGoogleForm() {
