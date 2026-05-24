@@ -23,25 +23,25 @@ const newMeterType = document.getElementById('newMeterType');
 const oldMeterReading = document.getElementById('oldMeterReading');
 const newMeterReading = document.getElementById('newMeterReading');
 
-// Демонтовані пломби
-const oldSealCover = document.getElementById('oldSealCover');
-const oldSealVKP = document.getElementById('oldSealVKP');
-const oldSealSHO1 = document.getElementById('oldSealSHO1');
-const oldSealSHO2 = document.getElementById('oldSealSHO2');
-const oldSealOpto = document.getElementById('oldSealOpto');
-const oldIMP1 = document.getElementById('oldIMP1');
-const oldIMP2 = document.getElementById('oldIMP2');
-const oldIMP3 = document.getElementById('oldIMP3');
+// Демонтовані пломби (ЗНЯТІ)
+const oldSealCover = document.getElementById('oldSealCover');      // entry.980914247
+const oldSealVKP = document.getElementById('oldSealVKP');          // entry.1281985427
+const oldSealSHO1 = document.getElementById('oldSealSHO1');        // entry.1571141896
+const oldSealSHO2 = document.getElementById('oldSealSHO2');        // entry.950038743
+const oldSealOpto = document.getElementById('oldSealOpto');        // entry.1825187506
+const oldIMP1 = document.getElementById('oldIMP1');                // entry.851707833
+const oldIMP2 = document.getElementById('oldIMP2');                // entry.1653188291
+const oldIMP3 = document.getElementById('oldIMP3');                // entry.174981808
 
 // Встановлені пломби
-const newSealCover = document.getElementById('newSealCover');
-const newSealVKP = document.getElementById('newSealVKP');
-const newSealSHO1 = document.getElementById('newSealSHO1');
-const newSealSHO2 = document.getElementById('newSealSHO2');
-const newSealOpto = document.getElementById('newSealOpto');
-const newIMP1 = document.getElementById('newIMP1');
-const newIMP2 = document.getElementById('newIMP2');
-const newIMP3 = document.getElementById('newIMP3');
+const newSealCover = document.getElementById('newSealCover');      // entry.1577377109
+const newSealVKP = document.getElementById('newSealVKP');          // entry.1292803469
+const newSealSHO1 = document.getElementById('newSealSHO1');        // entry.1309070612
+const newSealSHO2 = document.getElementById('newSealSHO2');        // entry.1176747559
+const newSealOpto = document.getElementById('newSealOpto');        // entry.67142835
+const newIMP1 = document.getElementById('newIMP1');                // entry.245114888
+const newIMP2 = document.getElementById('newIMP2');                // entry.1581321253
+const newIMP3 = document.getElementById('newIMP3');                // entry.865785872
 
 const sendToFormBtn = document.getElementById('sendToFormBtn');
 const saveBtn = document.getElementById('saveRecordBtn');
@@ -464,8 +464,9 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВИПРАВЛЕНО) ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВИПРАВЛЕНО ЗА СКРІНШОТАМИ) ==========
 function sendToGoogleForm() {
+    // Валідація
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
         workType.focus(); 
@@ -484,49 +485,49 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
-    // ========== ОСНОВНІ ПОЛЯ (скриншот 1-2) ==========
+    // ========== ОСНОВНІ ПОЛЯ ==========
     params.append('entry.1609399626', workType.value);           // Заміна лічильника
-    params.append('entry.244962092', accountNumber.value);       // 1230504567
-    params.append('entry.1583379400', employeeId.value);         // 58388
+    params.append('entry.244962092', accountNumber.value);       // особовий рахунок
+    params.append('entry.1583379400', employeeId.value);         // табельний номер
     
-    // ========== СТАРИЙ ЛІЧИЛЬНИК (скриншот 3-4) ==========
-    params.append('entry.1666715724', oldMeterReading?.value || '');      // покази (21467890)
-    params.append('entry.1262021573', oldMeterType?.value || '');         // тип старого (hh)
+    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК (старий) ==========
+    params.append('entry.1262021573', oldMeterNumber?.value || '');      // номер демонтованого
+    params.append('entry.1666715724', oldMeterReading?.value || '');     // покази демонтованого
     
-    // ========== НОВИЙ ЛІЧИЛЬНИК ==========
-    params.append('entry.1958360409', newMeterType?.value || '');         // тип нового (EMH ED2500)
-    params.append('entry.591456354', newMeterNumber?.value || '');        // номер нового лічильника
+    // ========== ЗНЯТІ ПЛОМБИ ==========
+    params.append('entry.980914247', oldSealCover?.value || '');         // пломба кл. кришка
+    params.append('entry.1281985427', oldSealVKP?.value || '');          // пломба ВКП
+    params.append('entry.1571141896', oldSealSHO1?.value || '');         // пломба ШО (1)
+    params.append('entry.950038743', oldSealSHO2?.value || '');          // пломба ШО (2)
+    params.append('entry.1825187506', oldSealOpto?.value || '');         // пломба оптопорт
+    params.append('entry.851707833', oldIMP1?.value || '');              // ІМП (1)
+    params.append('entry.1653188291', oldIMP2?.value || '');             // ІМП (2)
+    params.append('entry.174981808', oldIMP3?.value || '');              // ІМП (3)
     
-    // ========== ДЕМОНТОВАНІ ПЛОМБИ (скриншот 5-6) ==========
-    params.append('entry.950038743', oldSealSHO2?.value || '');           // K45678908 (ШО2)
-    params.append('entry.1825187506', oldSealCover?.value || '');         // пломба кл. кришка
-    params.append('entry.1571141896', oldSealVKP?.value || '');           // пломба ВКП
-    params.append('entry.1281985427', oldSealSHO1?.value || '');          // пломба ШО (1)
-    params.append('entry.851707833', oldSealOpto?.value || '');           // пломба оптопорт
-    params.append('entry.980914247', oldIMP1?.value || '');               // ІМП (1)
-    params.append('entry.174981808', oldIMP2?.value || '');               // ІМП (2)
-    params.append('entry.1653188291', oldIMP3?.value || '');              // ІМП (3)
+    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК (новий) ==========
+    params.append('entry.591456354', newMeterNumber?.value || '');       // номер встановленого
+    params.append('entry.686446183', newMeterReading?.value || '');      // покази встановленого
     
-    // ========== ВСТАНОВЛЕНІ ПЛОМБИ (скриншот 7-8) ==========
-    params.append('entry.1292803469', newSealVKP?.value || '');           // rrrr (ВКП)
-    params.append('entry.67142835', newSealCover?.value || '');           // пломба кл. кришка
-    params.append('entry.1581321253', newSealSHO1?.value || '');          // пломба ШО (1)
-    params.append('entry.1309070612', newSealSHO2?.value || '');          // пломба ШО (2)
-    params.append('entry.1577377109', newSealOpto?.value || '');          // пломба оптопорт
-    params.append('entry.1176747559', newIMP1?.value || '');              // ІМП (1)
-    params.append('entry.245114888', newIMP2?.value || '');               // ІМП (2)
-    params.append('entry.865785872', newIMP3?.value || '');               // ІМП (3)
+    // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
+    params.append('entry.1577377109', newSealCover?.value || '');        // пломба кл. кришка
+    params.append('entry.1292803469', newSealVKP?.value || '');          // пломба ВКП
+    params.append('entry.1309070612', newSealSHO1?.value || '');         // пломба ШО (1)
+    params.append('entry.1176747559', newSealSHO2?.value || '');         // пломба ШО (2)
+    params.append('entry.67142835', newSealOpto?.value || '');           // пломба оптопорт
+    params.append('entry.245114888', newIMP1?.value || '');              // ІМП (1)
+    params.append('entry.1581321253', newIMP2?.value || '');             // ІМП (2)
+    params.append('entry.865785872', newIMP3?.value || '');              // ІМП (3)
     
-    // Відкриваємо Google Form з параметрами
+    // Відкриваємо Google Form
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
     
-    // Зберігаємо в локальний журнал
+    // Зберігаємо в журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
     
-    alert('✅ Google Form відкрито!\n\nВсі текстові поля заповнені автоматично.\nПеревірте дані та натисніть "Надіслати".');
+    alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
 
 function openGoogleForm() {
