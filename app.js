@@ -464,7 +464,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВИПРАВЛЕНО) ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -482,40 +482,40 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Формуємо параметри для Google Form (тільки текстові поля)
     const params = new URLSearchParams();
     
-    // Основні текстові поля
-    params.append('entry.1609399626', workType.value);
-    params.append('entry.1583379400', employeeId.value);
-    params.append('entry.244962092', accountNumber.value);
-    params.append('entry.1666715724', oldMeterNumber?.value || '');
-    params.append('entry.1779114186107', oldMeterReading?.value || '');
-    params.append('entry.959182756', newMeterNumber?.value || '');
-    params.append('entry.960182756', newMeterReading?.value || '');
-    params.append('entry.1458846130', address?.value || '');
+    // ========== ОСНОВНІ ПОЛЯ (скриншот 1-2) ==========
+    params.append('entry.1609399626', workType.value);           // Заміна лічильника
+    params.append('entry.244962092', accountNumber.value);       // 1230504567
+    params.append('entry.1583379400', employeeId.value);         // 58388
     
-    // Пломби (текстові поля)
-    params.append('entry.950038743', oldSealCover?.value || '');
-    params.append('entry.9515038743', oldSealVKP?.value || '');
-    params.append('entry.952083469', oldSealSHO1?.value || '');
-    params.append('entry.953142835', oldSealSHO2?.value || '');
-    params.append('entry.954162369', oldSealOpto?.value || '');
-    params.append('entry.955182756', oldIMP1?.value || '');
-    params.append('entry.956182756', oldIMP2?.value || '');
-    params.append('entry.957182756', oldIMP3?.value || '');
-    params.append('entry.961182756', newSealCover?.value || '');
-    params.append('entry.962182756', newSealVKP?.value || '');
-    params.append('entry.963182756', newSealSHO1?.value || '');
-    params.append('entry.964182756', newSealSHO2?.value || '');
-    params.append('entry.965182756', newSealOpto?.value || '');
-    params.append('entry.966182756', newIMP1?.value || '');
-    params.append('entry.967182756', newIMP2?.value || '');
-    params.append('entry.968182756', newIMP3?.value || '');
+    // ========== СТАРИЙ ЛІЧИЛЬНИК (скриншот 3-4) ==========
+    params.append('entry.1666715724', oldMeterReading?.value || '');      // покази (21467890)
+    params.append('entry.1262021573', oldMeterType?.value || '');         // тип старого (hh)
     
-    // Випадаючі списки НЕ передаємо - їх заповнить користувач вручну
-    // oldMeterType (entry.1262021573) - пропускаємо
-    // newMeterType (entry.958182756) - пропускаємо
+    // ========== НОВИЙ ЛІЧИЛЬНИК ==========
+    params.append('entry.1958360409', newMeterType?.value || '');         // тип нового (EMH ED2500)
+    params.append('entry.591456354', newMeterNumber?.value || '');        // номер нового лічильника
+    
+    // ========== ДЕМОНТОВАНІ ПЛОМБИ (скриншот 5-6) ==========
+    params.append('entry.950038743', oldSealSHO2?.value || '');           // K45678908 (ШО2)
+    params.append('entry.1825187506', oldSealCover?.value || '');         // пломба кл. кришка
+    params.append('entry.1571141896', oldSealVKP?.value || '');           // пломба ВКП
+    params.append('entry.1281985427', oldSealSHO1?.value || '');          // пломба ШО (1)
+    params.append('entry.851707833', oldSealOpto?.value || '');           // пломба оптопорт
+    params.append('entry.980914247', oldIMP1?.value || '');               // ІМП (1)
+    params.append('entry.174981808', oldIMP2?.value || '');               // ІМП (2)
+    params.append('entry.1653188291', oldIMP3?.value || '');              // ІМП (3)
+    
+    // ========== ВСТАНОВЛЕНІ ПЛОМБИ (скриншот 7-8) ==========
+    params.append('entry.1292803469', newSealVKP?.value || '');           // rrrr (ВКП)
+    params.append('entry.67142835', newSealCover?.value || '');           // пломба кл. кришка
+    params.append('entry.1581321253', newSealSHO1?.value || '');          // пломба ШО (1)
+    params.append('entry.1309070612', newSealSHO2?.value || '');          // пломба ШО (2)
+    params.append('entry.1577377109', newSealOpto?.value || '');          // пломба оптопорт
+    params.append('entry.1176747559', newIMP1?.value || '');              // ІМП (1)
+    params.append('entry.245114888', newIMP2?.value || '');               // ІМП (2)
+    params.append('entry.865785872', newIMP3?.value || '');               // ІМП (3)
     
     // Відкриваємо Google Form з параметрами
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
@@ -526,10 +526,7 @@ function sendToGoogleForm() {
     workLog.unshift(data);
     saveData();
     
-    alert('✅ Google Form відкрито!\n\n' +
-          '✅ Всі текстові поля заповнені автоматично.\n' +
-          '⚠️ Виберіть типи лічильників з випадаючих списків вручну.\n' +
-          '📋 Після перевірки натисніть "Надіслати" у формі.');
+    alert('✅ Google Form відкрито!\n\nВсі текстові поля заповнені автоматично.\nПеревірте дані та натисніть "Надіслати".');
 }
 
 function openGoogleForm() {
@@ -564,16 +561,16 @@ function renderLog() {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
-            <td>${escapeHtml(r.date || '')}<\/td>
-            <td>${escapeHtml(r.workType || '')}<\/td>
-            <td>${escapeHtml(r.employeeId || '')}<\/td>
-            <td>${escapeHtml(r.accountNumber || '')}<\/td>
-            <td>${escapeHtml(r.oldMeterNumber || '')}<\/td>
-            <td>${escapeHtml(r.newMeterNumber || '')}<\/td>
+             <td>${escapeHtml(r.date || '')}<\/td>
+             <td>${escapeHtml(r.workType || '')}<\/td>
+             <td>${escapeHtml(r.employeeId || '')}<\/td>
+             <td>${escapeHtml(r.accountNumber || '')}<\/td>
+             <td>${escapeHtml(r.oldMeterNumber || '')}<\/td>
+             <td>${escapeHtml(r.newMeterNumber || '')}<\/td>
             <td style="min-width:220px;">${escapeHtml(r.address || '')}<\/td>
             <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}<\/div><\/td>
             <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}<\/div><\/td>
-            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️<\/button><\/td>
+             <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️<\/button><\/td>
         <\/tr>`;
     });
     logTable.innerHTML = html;
