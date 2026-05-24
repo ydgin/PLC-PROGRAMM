@@ -23,7 +23,7 @@ const newMeterType = document.getElementById('newMeterType');
 const oldMeterReading = document.getElementById('oldMeterReading');
 const newMeterReading = document.getElementById('newMeterReading');
 
-// Демонтовані пломби (ЗНЯТІ)
+// Демонтовані пломби (ЗНЯТІ) - соответствие по таблице
 const oldSealCover = document.getElementById('oldSealCover');      // entry.980914247
 const oldSealVKP = document.getElementById('oldSealVKP');          // entry.1281985427
 const oldSealSHO1 = document.getElementById('oldSealSHO1');        // entry.1571141896
@@ -33,7 +33,7 @@ const oldIMP1 = document.getElementById('oldIMP1');                // entry.8517
 const oldIMP2 = document.getElementById('oldIMP2');                // entry.1653188291
 const oldIMP3 = document.getElementById('oldIMP3');                // entry.174981808
 
-// Встановлені пломби
+// Встановлені пломби - соответствие по таблице
 const newSealCover = document.getElementById('newSealCover');      // entry.1577377109
 const newSealVKP = document.getElementById('newSealVKP');          // entry.1292803469
 const newSealSHO1 = document.getElementById('newSealSHO1');        // entry.1309070612
@@ -464,7 +464,7 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВИПРАВЛЕНО ЗА СКРІНШОТАМИ) ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВІДПОВІДНО ДО ТАБЛИЦІ) ==========
 function sendToGoogleForm() {
     // Валідація
     if (!workType.value) { 
@@ -486,37 +486,37 @@ function sendToGoogleForm() {
     const params = new URLSearchParams();
     
     // ========== ОСНОВНІ ПОЛЯ ==========
-    params.append('entry.1609399626', workType.value);           // Заміна лічильника
-    params.append('entry.244962092', accountNumber.value);       // особовий рахунок
-    params.append('entry.1583379400', employeeId.value);         // табельний номер
+    params.append('entry.1609399626', workType.value);
+    params.append('entry.244962092', accountNumber.value);
+    params.append('entry.1583379400', employeeId.value);
     
-    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК (старий) ==========
-    params.append('entry.1262021573', oldMeterNumber?.value || '');      // номер демонтованого
-    params.append('entry.1666715724', oldMeterReading?.value || '');     // покази демонтованого
+    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
+    params.append('entry.1262021573', oldMeterNumber?.value || '');
+    params.append('entry.1666715724', oldMeterReading?.value || '');
     
     // ========== ЗНЯТІ ПЛОМБИ ==========
-    params.append('entry.980914247', oldSealCover?.value || '');         // пломба кл. кришка
-    params.append('entry.1281985427', oldSealVKP?.value || '');          // пломба ВКП
-    params.append('entry.1571141896', oldSealSHO1?.value || '');         // пломба ШО (1)
-    params.append('entry.950038743', oldSealSHO2?.value || '');          // пломба ШО (2)
-    params.append('entry.1825187506', oldSealOpto?.value || '');         // пломба оптопорт
-    params.append('entry.851707833', oldIMP1?.value || '');              // ІМП (1)
-    params.append('entry.1653188291', oldIMP2?.value || '');             // ІМП (2)
-    params.append('entry.174981808', oldIMP3?.value || '');              // ІМП (3)
+    params.append('entry.980914247', oldSealCover?.value || '');
+    params.append('entry.1281985427', oldSealVKP?.value || '');
+    params.append('entry.1571141896', oldSealSHO1?.value || '');
+    params.append('entry.950038743', oldSealSHO2?.value || '');
+    params.append('entry.1825187506', oldSealOpto?.value || '');
+    params.append('entry.851707833', oldIMP1?.value || '');
+    params.append('entry.1653188291', oldIMP2?.value || '');
+    params.append('entry.174981808', oldIMP3?.value || '');
     
-    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК (новий) ==========
-    params.append('entry.591456354', newMeterNumber?.value || '');       // номер встановленого
-    params.append('entry.686446183', newMeterReading?.value || '');      // покази встановленого
+    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
+    params.append('entry.591456354', newMeterNumber?.value || '');
+    params.append('entry.686446183', newMeterReading?.value || '');
     
     // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
-    params.append('entry.1577377109', newSealCover?.value || '');        // пломба кл. кришка
-    params.append('entry.1292803469', newSealVKP?.value || '');          // пломба ВКП
-    params.append('entry.1309070612', newSealSHO1?.value || '');         // пломба ШО (1)
-    params.append('entry.1176747559', newSealSHO2?.value || '');         // пломба ШО (2)
-    params.append('entry.67142835', newSealOpto?.value || '');           // пломба оптопорт
-    params.append('entry.245114888', newIMP1?.value || '');              // ІМП (1)
-    params.append('entry.1581321253', newIMP2?.value || '');             // ІМП (2)
-    params.append('entry.865785872', newIMP3?.value || '');              // ІМП (3)
+    params.append('entry.1577377109', newSealCover?.value || '');
+    params.append('entry.1292803469', newSealVKP?.value || '');
+    params.append('entry.1309070612', newSealSHO1?.value || '');
+    params.append('entry.1176747559', newSealSHO2?.value || '');
+    params.append('entry.67142835', newSealOpto?.value || '');
+    params.append('entry.245114888', newIMP1?.value || '');
+    params.append('entry.1581321253', newIMP2?.value || '');
+    params.append('entry.865785872', newIMP3?.value || '');
     
     // Відкриваємо Google Form
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
@@ -554,7 +554,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів<\/td><\/tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів</td></tr>';
         return;
     }
     let html = '';
@@ -562,17 +562,17 @@ function renderLog() {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
-             <td>${escapeHtml(r.date || '')}<\/td>
-             <td>${escapeHtml(r.workType || '')}<\/td>
-             <td>${escapeHtml(r.employeeId || '')}<\/td>
-             <td>${escapeHtml(r.accountNumber || '')}<\/td>
-             <td>${escapeHtml(r.oldMeterNumber || '')}<\/td>
-             <td>${escapeHtml(r.newMeterNumber || '')}<\/td>
-            <td style="min-width:220px;">${escapeHtml(r.address || '')}<\/td>
-            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}<\/div><\/td>
-            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені<\/div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}<\/div><\/td>
-             <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️<\/button><\/td>
-        <\/tr>`;
+            <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.workType || '')}</td>
+            <td>${escapeHtml(r.employeeId || '')}</td>
+            <td>${escapeHtml(r.accountNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+            <td>${escapeHtml(r.newMeterNumber || '')}</td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
+        </tr>`;
     });
     logTable.innerHTML = html;
     document.querySelectorAll('.delete-icon').forEach(btn => {
