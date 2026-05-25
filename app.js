@@ -57,7 +57,6 @@ const addSealBtn = document.getElementById('addSealBtn');
 const sealAddPanel = document.getElementById('sealAddPanel');
 const newSealInput = document.getElementById('newSealInput');
 const confirmSealBtn = document.getElementById('confirmSealBtn');
-const cancelSealBtn = document.getElementById('cancelSealBtn');
 
 // Элементы базы лічильників
 const metersListDiv = document.getElementById('metersList');
@@ -66,7 +65,6 @@ const addMeterBtn = document.getElementById('addMeterBtn');
 const meterAddPanel = document.getElementById('meterAddPanel');
 const newMeterInput = document.getElementById('newMeterInput');
 const confirmMeterBtn = document.getElementById('confirmMeterBtn');
-const cancelMeterBtn = document.getElementById('cancelMeterBtn');
 
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
@@ -206,6 +204,7 @@ function showToast(msg) {
 }
 
 function digitsExtract(text) { return text.replace(/\D/g, '').substring(0, 10); }
+
 function smartMeterExtract(text) {
     const d = text.replace(/\D/g, '');
     if (d.length >= 16) return d.substring(4, 12);
@@ -906,7 +905,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (addSealBtn) {
         addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');
         if (confirmSealBtn) confirmSealBtn.onclick = addNewSeal;
-        if (cancelSealBtn) cancelSealBtn.onclick = () => sealAddPanel.classList.add('hidden');
     }
     if (sealSearch) {
         sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
@@ -915,7 +913,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (addMeterBtn) {
         addMeterBtn.onclick = () => meterAddPanel.classList.toggle('hidden');
         if (confirmMeterBtn) confirmMeterBtn.onclick = addNewMeter;
-        if (cancelMeterBtn) cancelMeterBtn.onclick = () => meterAddPanel.classList.add('hidden');
     }
     if (meterSearch) {
         meterSearch.addEventListener('input', (e) => renderMetersList(e.target.value));
