@@ -306,7 +306,7 @@ select.field-input {
     cursor: pointer;
 }
 
-/* База пломб */
+/* База пломб и лічильників */
 .flex-between {
     display: flex;
     justify-content: space-between;
