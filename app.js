@@ -209,15 +209,10 @@ function digitsExtract(text) {
 
 // Функция для сканера лічильників - убирает первые 4 и последние 4 цифры
 function smartMeterExtract(text) {
-    // Убираем все не цифры
     const digits = text.replace(/\D/g, '');
-    
-    // Если цифр достаточно, убираем первые 4 и последние 4
     if (digits.length > 8) {
         return digits.substring(4, digits.length - 4);
     }
-    
-    // Если цифр 8 или меньше, возвращаем как есть
     return digits;
 }
 
@@ -832,7 +827,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     { facingMode: "environment" },
                     { fps: 10, qrbox: { width: 250, height: 250 } },
                     (decodedText) => {
-                        const result = decodedText.trim();
+                        let result = decodedText.trim();
                         if (newSealInput) newSealInput.value = result;
                         reader.stop().then(() => {
                             tempContainer.classList.add('hidden');
@@ -850,7 +845,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
-    // Сканер для добавления лічильника в базу
+    // Сканер для добавления лічильника в базу (ИСПРАВЛЕН - применяет smartMeterExtract)
     const scanMeterBtn = document.getElementById('scanMeterBtn');
     if (scanMeterBtn) {
         scanMeterBtn.addEventListener('click', async () => {
@@ -892,7 +887,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     { facingMode: "environment" },
                     { fps: 10, qrbox: { width: 250, height: 250 } },
                     (decodedText) => {
-                        const result = decodedText.trim();
+                        // ПРИМЕНЯЕМ smartMeterExtract ДЛЯ УДАЛЕНИЯ ПЕРВЫХ 4 И ПОСЛЕДНИХ 4 ЦИФР
+                        let result = decodedText.trim();
+                        result = smartMeterExtract(result);
                         if (newMeterInput) newMeterInput.value = result;
                         reader.stop().then(() => {
                             tempContainer.classList.add('hidden');
