@@ -2,6 +2,7 @@
 let enteredPin = "";
 let workLog = [];
 let sealsDB = [];
+let metersDB = [];           // НОВАЯ БАЗА ЛІЧИЛЬНИКІВ
 let activeScanners = {};
 
 // DOM елементи
@@ -23,25 +24,25 @@ const newMeterType = document.getElementById('newMeterType');
 const oldMeterReading = document.getElementById('oldMeterReading');
 const newMeterReading = document.getElementById('newMeterReading');
 
-// Демонтовані пломби (ЗНЯТІ) - соответствие по таблице
-const oldSealCover = document.getElementById('oldSealCover');      // entry.980914247
-const oldSealVKP = document.getElementById('oldSealVKP');          // entry.1281985427
-const oldSealSHO1 = document.getElementById('oldSealSHO1');        // entry.1571141896
-const oldSealSHO2 = document.getElementById('oldSealSHO2');        // entry.950038743
-const oldSealOpto = document.getElementById('oldSealOpto');        // entry.1825187506
-const oldIMP1 = document.getElementById('oldIMP1');                // entry.851707833
-const oldIMP2 = document.getElementById('oldIMP2');                // entry.1653188291
-const oldIMP3 = document.getElementById('oldIMP3');                // entry.174981808
+// Демонтовані пломби
+const oldSealCover = document.getElementById('oldSealCover');
+const oldSealVKP = document.getElementById('oldSealVKP');
+const oldSealSHO1 = document.getElementById('oldSealSHO1');
+const oldSealSHO2 = document.getElementById('oldSealSHO2');
+const oldSealOpto = document.getElementById('oldSealOpto');
+const oldIMP1 = document.getElementById('oldIMP1');
+const oldIMP2 = document.getElementById('oldIMP2');
+const oldIMP3 = document.getElementById('oldIMP3');
 
-// Встановлені пломби - соответствие по таблице
-const newSealCover = document.getElementById('newSealCover');      // entry.1577377109
-const newSealVKP = document.getElementById('newSealVKP');          // entry.1292803469
-const newSealSHO1 = document.getElementById('newSealSHO1');        // entry.1309070612
-const newSealSHO2 = document.getElementById('newSealSHO2');        // entry.1176747559
-const newSealOpto = document.getElementById('newSealOpto');        // entry.67142835
-const newIMP1 = document.getElementById('newIMP1');                // entry.245114888
-const newIMP2 = document.getElementById('newIMP2');                // entry.1581321253
-const newIMP3 = document.getElementById('newIMP3');                // entry.865785872
+// Встановлені пломби
+const newSealCover = document.getElementById('newSealCover');
+const newSealVKP = document.getElementById('newSealVKP');
+const newSealSHO1 = document.getElementById('newSealSHO1');
+const newSealSHO2 = document.getElementById('newSealSHO2');
+const newSealOpto = document.getElementById('newSealOpto');
+const newIMP1 = document.getElementById('newIMP1');
+const newIMP2 = document.getElementById('newIMP2');
+const newIMP3 = document.getElementById('newIMP3');
 
 const sendToFormBtn = document.getElementById('sendToFormBtn');
 const saveBtn = document.getElementById('saveRecordBtn');
@@ -49,6 +50,7 @@ const exportBtn = document.getElementById('exportBtn');
 const clearLogBtn = document.getElementById('clearLogBtn');
 const logTable = document.getElementById('logTable');
 
+// Элементы базы пломб
 const sealsListDiv = document.getElementById('sealsList');
 const sealSearch = document.getElementById('sealSearch');
 const addSealBtn = document.getElementById('addSealBtn');
@@ -56,6 +58,15 @@ const sealAddPanel = document.getElementById('sealAddPanel');
 const newSealInput = document.getElementById('newSealInput');
 const confirmSealBtn = document.getElementById('confirmSealBtn');
 const cancelSealBtn = document.getElementById('cancelSealBtn');
+
+// Элементы базы лічильників
+const metersListDiv = document.getElementById('metersList');
+const meterSearch = document.getElementById('meterSearch');
+const addMeterBtn = document.getElementById('addMeterBtn');
+const meterAddPanel = document.getElementById('meterAddPanel');
+const newMeterInput = document.getElementById('newMeterInput');
+const confirmMeterBtn = document.getElementById('confirmMeterBtn');
+const cancelMeterBtn = document.getElementById('cancelMeterBtn');
 
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
@@ -79,6 +90,7 @@ function pinAddNum(num) {
                 mainApp.classList.remove('hidden');
                 loadData();
                 loadSeals();
+                loadMeters();
                 initMeterTypes();
             } else {
                 if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
@@ -105,6 +117,7 @@ function pinCheck() {
         mainApp.classList.remove('hidden');
         loadData();
         loadSeals();
+        loadMeters();
         initMeterTypes();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
@@ -362,7 +375,85 @@ function addNewSeal() {
     }
 }
 
-// ========== ПОШУК ПЛОМБ ==========
+// ========== БАЗА ЛІЧИЛЬНИКІВ ==========
+function loadMeters() {
+    const stored = localStorage.getItem('pls_meters');
+    if (stored) { try { metersDB = JSON.parse(stored); } catch(e) { metersDB = []; } }
+    else { metersDB = []; }
+    renderMetersList();
+}
+
+function saveMeters() { localStorage.setItem('pls_meters', JSON.stringify(metersDB)); renderMetersList(); }
+
+function renderMetersList(filter = '') {
+    if (!metersListDiv) return;
+    let filtered = metersDB;
+    if (filter) filtered = metersDB.filter(m => m.toLowerCase().includes(filter.toLowerCase()));
+    if (!filtered.length) { 
+        metersListDiv.innerHTML = '<div class="empty-seals">🔢 База лічильників порожня. Додайте лічильник ➕</div>'; 
+        return; 
+    }
+    let html = '';
+    filtered.forEach(meter => {
+        html += `<div class="seal-item"><span class="seal-number" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</span><button class="delete-meter" data-meter="${escapeHtml(meter)}">🗑️</button></div>`;
+    });
+    metersListDiv.innerHTML = html;
+    
+    document.querySelectorAll('.seal-number[data-meter]').forEach(el => {
+        el.addEventListener('click', () => {
+            const meter = el.getAttribute('data-meter');
+            const activeField = document.activeElement;
+            if (activeField && activeField.classList && activeField.classList.contains('meter-input')) {
+                activeField.value = meter;
+                showToast(`✅ Лічильник додано: ${meter}`);
+            }
+        });
+    });
+    
+    document.querySelectorAll('.delete-meter').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const meter = el.getAttribute('data-meter');
+            if (confirm(`Видалити лічильник "${meter}"?`)) {
+                metersDB = metersDB.filter(m => m !== meter);
+                saveMeters();
+                renderMetersList(meterSearch?.value || '');
+                showToast(`🗑️ Лічильник видалено: ${meter}`);
+            }
+        });
+    });
+}
+
+function addNewMeter() {
+    const newMeter = newMeterInput.value.trim();
+    if (!newMeter) { alert('Введіть номер лічильника'); return; }
+    
+    const metersToAdd = parseSealRange(newMeter);
+    let addedCount = 0;
+    const addedMeters = [];
+    
+    metersToAdd.forEach(meter => {
+        if (!metersDB.includes(meter)) {
+            metersDB.push(meter);
+            addedCount++;
+            addedMeters.push(meter);
+        }
+    });
+    
+    saveMeters();
+    newMeterInput.value = '';
+    meterAddPanel.classList.add('hidden');
+    if (meterSearch) meterSearch.value = '';
+    renderMetersList('');
+    
+    if (addedCount > 0) {
+        showToast(`✅ Додано лічильників: ${addedCount} (${addedMeters[0]} ... ${addedMeters[addedMeters.length-1]})`);
+    } else {
+        showToast(`⚠️ Всі лічильники вже існують`);
+    }
+}
+
+// ========== ПОШУК ДЛЯ ПЛОМБ ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
@@ -405,17 +496,74 @@ function showSearchResults(fieldId, query) {
     });
 }
 
+// ========== ПОШУК ДЛЯ ЛІЧИЛЬНИКІВ ==========
+function showMeterSearchResults(fieldId, query) {
+    const container = document.getElementById(`${fieldId}Results`);
+    if (!container) return;
+    if (!query || query.length < 1) { 
+        container.classList.add('hidden'); 
+        container.innerHTML = ''; 
+        return; 
+    }
+    const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
+    if (!filtered.length) { 
+        container.classList.add('hidden'); 
+        return; 
+    }
+    container.classList.remove('hidden');
+    let html = '';
+    filtered.forEach(meter => { 
+        html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
+    });
+    container.innerHTML = html;
+    
+    const items = container.querySelectorAll('.search-result-item');
+    items.forEach(item => {
+        const oldHandler = item._clickHandler;
+        if (oldHandler) item.removeEventListener('click', oldHandler);
+        
+        const handler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const meterValue = this.getAttribute('data-meter');
+            const targetInput = document.getElementById(fieldId);
+            if (targetInput) {
+                targetInput.value = meterValue;
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                showToast(`✅ Лічильник додано: ${meterValue}`);
+            }
+        };
+        item._clickHandler = handler;
+        item.addEventListener('click', handler);
+    });
+}
+
 function hideSearchResults(fieldId) {
     const container = document.getElementById(`${fieldId}Results`);
     if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 300);
 }
 
 function setupSearch() {
+    // Поиск для пломб
     const sealInputs = document.querySelectorAll('.seal-input');
     sealInputs.forEach(input => {
         if (input) {
             input.addEventListener('input', function() { 
                 showSearchResults(this.id, this.value); 
+            });
+            input.addEventListener('blur', function() { 
+                setTimeout(() => hideSearchResults(this.id), 300); 
+            });
+        }
+    });
+    
+    // Поиск для лічильників
+    const meterInputs = document.querySelectorAll('.meter-input');
+    meterInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', function() { 
+                showMeterSearchResults(this.id, this.value); 
             });
             input.addEventListener('blur', function() { 
                 setTimeout(() => hideSearchResults(this.id), 300); 
@@ -464,9 +612,8 @@ function saveAllFieldsToLog() {
     alert('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВІДПОВІДНО ДО ТАБЛИЦІ) ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
 function sendToGoogleForm() {
-    // Валідація
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
         workType.focus(); 
@@ -485,16 +632,11 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
-    // ========== ОСНОВНІ ПОЛЯ ==========
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
-    
-    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.1262021573', oldMeterNumber?.value || '');
     params.append('entry.1666715724', oldMeterReading?.value || '');
-    
-    // ========== ЗНЯТІ ПЛОМБИ ==========
     params.append('entry.980914247', oldSealCover?.value || '');
     params.append('entry.1281985427', oldSealVKP?.value || '');
     params.append('entry.1571141896', oldSealSHO1?.value || '');
@@ -503,12 +645,8 @@ function sendToGoogleForm() {
     params.append('entry.851707833', oldIMP1?.value || '');
     params.append('entry.1653188291', oldIMP2?.value || '');
     params.append('entry.174981808', oldIMP3?.value || '');
-    
-    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.591456354', newMeterNumber?.value || '');
     params.append('entry.686446183', newMeterReading?.value || '');
-    
-    // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
     params.append('entry.1577377109', newSealCover?.value || '');
     params.append('entry.1292803469', newSealVKP?.value || '');
     params.append('entry.1309070612', newSealSHO1?.value || '');
@@ -518,11 +656,9 @@ function sendToGoogleForm() {
     params.append('entry.1581321253', newIMP2?.value || '');
     params.append('entry.865785872', newIMP3?.value || '');
     
-    // Відкриваємо Google Form
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
     
-    // Зберігаємо в журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
@@ -715,5 +851,15 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     if (sealSearch) {
         sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
+    }
+    
+    // Инициализация базы лічильників
+    if (addMeterBtn) {
+        addMeterBtn.onclick = () => meterAddPanel.classList.toggle('hidden');
+        if (confirmMeterBtn) confirmMeterBtn.onclick = addNewMeter;
+        if (cancelMeterBtn) cancelMeterBtn.onclick = () => meterAddPanel.classList.add('hidden');
+    }
+    if (meterSearch) {
+        meterSearch.addEventListener('input', (e) => renderMetersList(e.target.value));
     }
 });
