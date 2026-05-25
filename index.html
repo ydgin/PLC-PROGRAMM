@@ -72,8 +72,9 @@
             <label class="field-label">Тип демонтованого лічильника</label>
             <select id="oldMeterType" class="field-input"><option value="">-- Виберіть --</option></select>
             <label class="field-label" style="margin-top: 12px;">Номер демонтованого лічильника</label>
-            <div class="input-scan-row"><input id="oldMeterNumber" class="field-input" type="text" placeholder="Номер лічильника"><button class="btn-scan" data-target="oldMeterNumber" data-mode="smart">📷</button></div>
+            <div class="input-scan-row"><input id="oldMeterNumber" class="field-input meter-input" type="text" placeholder="Номер лічильника"><button class="btn-scan" data-target="oldMeterNumber" data-mode="smart">📷</button></div>
             <div id="oldMeterNumberScanner" class="scanner-container hidden"></div>
+            <div id="oldMeterNumberResults" class="search-results hidden"></div>
             <label class="field-label" style="margin-top: 12px;">Покази демонтованого лічильника</label>
             <div class="input-scan-row"><input id="oldMeterReading" class="field-input" type="number" placeholder="Покази"><button class="btn-scan" data-target="oldMeterReading" data-mode="digits">📷</button></div>
             <div id="oldMeterReadingScanner" class="scanner-container hidden"></div>
@@ -130,8 +131,9 @@
             <label class="field-label">Тип встановленого лічильника</label>
             <select id="newMeterType" class="field-input"><option value="">-- Виберіть --</option></select>
             <label class="field-label" style="margin-top: 12px;">Номер встановленого лічильника</label>
-            <div class="input-scan-row"><input id="newMeterNumber" class="field-input" type="text" placeholder="Номер лічильника"><button class="btn-scan" data-target="newMeterNumber" data-mode="smart">📷</button></div>
+            <div class="input-scan-row"><input id="newMeterNumber" class="field-input meter-input" type="text" placeholder="Номер лічильника"><button class="btn-scan" data-target="newMeterNumber" data-mode="smart">📷</button></div>
             <div id="newMeterNumberScanner" class="scanner-container hidden"></div>
+            <div id="newMeterNumberResults" class="search-results hidden"></div>
             <label class="field-label" style="margin-top: 12px;">Покази встановленого лічильника</label>
             <div class="input-scan-row"><input id="newMeterReading" class="field-input" type="number" placeholder="Покази"><button class="btn-scan" data-target="newMeterReading" data-mode="digits">📷</button></div>
             <div id="newMeterReadingScanner" class="scanner-container hidden"></div>
@@ -211,6 +213,23 @@
             <div id="sealsList" class="seals-list"></div>
         </div>
 
+        <!-- НОВАЯ БАЗА ЛІЧИЛЬНИКІВ -->
+        <div class="card">
+            <div class="flex-between">
+                <label class="field-label">🔢 База лічильників</label>
+                <button id="addMeterBtn" class="btn-small">+ Додати лічильник</button>
+            </div>
+            <div id="meterAddPanel" class="seal-add-panel hidden">
+                <div class="seal-add-row">
+                    <input type="text" id="newMeterInput" class="field-input" placeholder="Номер лічильника (або діапазон: 12345-12350)">
+                    <button id="confirmMeterBtn" class="btn-small-ok">✔ Додати</button>
+                    <button id="cancelMeterBtn" class="btn-small" style="background:#ef4444;">✕ Скасувати</button>
+                </div>
+            </div>
+            <input type="text" id="meterSearch" class="seal-search" placeholder="🔍 Пошук по базі лічильників...">
+            <div id="metersList" class="seals-list"></div>
+        </div>
+
         <!-- ЖУРНАЛ -->
         <div class="card">
             <div class="btn-group"><button id="exportBtn" class="btn-outline">📄 Експорт CSV</button><button id="clearLogBtn" class="btn-danger">🗑 Очистити журнал</button></div>
@@ -219,7 +238,7 @@
                     <thead>
                         <tr><th>Дата</th><th>Робота</th><th>Табельний</th><th>Особовий</th><th>Дем.лічильник</th><th>Нов.лічильник</th><th>Адреса</th><th>🔻 Зняті пломби</th><th>🔺 Встановлені пломби</th><th>🗑</th></tr>
                     </thead>
-                    <tbody id="logTable"><tr class="empty-row"><td colspan="10">Немає записів<\/td><\/tr><\/tbody>
+                    <tbody id="logTable"><tr class="empty-row"><td colspan="10">Немає записів</td></tr></tbody>
                 </table>
             </div>
         </div>
