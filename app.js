@@ -2,7 +2,7 @@
 let enteredPin = "";
 let workLog = [];
 let sealsDB = [];
-let metersDB = [];           // НОВАЯ БАЗА ЛІЧИЛЬНИКІВ
+let metersDB = [];
 let activeScanners = {};
 
 // DOM елементи
@@ -496,6 +496,11 @@ function showSearchResults(fieldId, query) {
     });
 }
 
+function hideSearchResults(fieldId) {
+    const container = document.getElementById(`${fieldId}Results`);
+    if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 300);
+}
+
 // ========== ПОШУК ДЛЯ ЛІЧИЛЬНИКІВ ==========
 function showMeterSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
@@ -539,13 +544,7 @@ function showMeterSearchResults(fieldId, query) {
     });
 }
 
-function hideSearchResults(fieldId) {
-    const container = document.getElementById(`${fieldId}Results`);
-    if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 300);
-}
-
 function setupSearch() {
-    // Поиск для пломб
     const sealInputs = document.querySelectorAll('.seal-input');
     sealInputs.forEach(input => {
         if (input) {
@@ -558,7 +557,6 @@ function setupSearch() {
         }
     });
     
-    // Поиск для лічильників
     const meterInputs = document.querySelectorAll('.meter-input');
     meterInputs.forEach(input => {
         if (input) {
@@ -785,6 +783,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
+    // Сканер для добавления пломбы в базу
     const scanSealBtn = document.getElementById('scanSealBtn');
     if (scanSealBtn) {
         scanSealBtn.addEventListener('click', async () => {
@@ -844,6 +843,66 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
+    // Сканер для добавления лічильника в базу
+    const scanMeterBtn = document.getElementById('scanMeterBtn');
+    if (scanMeterBtn) {
+        scanMeterBtn.addEventListener('click', async () => {
+            const tempContainerId = 'tempMeterScanner';
+            let tempContainer = document.getElementById(tempContainerId);
+            if (!tempContainer) {
+                tempContainer = document.createElement('div');
+                tempContainer.id = tempContainerId;
+                tempContainer.className = 'scanner-container';
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.top = '50%';
+                tempContainer.style.left = '50%';
+                tempContainer.style.transform = 'translate(-50%, -50%)';
+                tempContainer.style.width = '90%';
+                tempContainer.style.maxWidth = '400px';
+                tempContainer.style.zIndex = '10000';
+                tempContainer.style.backgroundColor = '#000';
+                tempContainer.style.borderRadius = '20px';
+                tempContainer.style.overflow = 'hidden';
+                document.body.appendChild(tempContainer);
+            }
+            
+            tempContainer.classList.remove('hidden');
+            tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код лічильника</span><button class="btn-close-scanner" id="closeTempMeterScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
+            
+            document.getElementById('closeTempMeterScanner').onclick = async () => {
+                if (activeScanners[tempContainerId]) {
+                    try { await activeScanners[tempContainerId].stop(); } catch(e) {}
+                    delete activeScanners[tempContainerId];
+                }
+                tempContainer.classList.add('hidden');
+            };
+            
+            const reader = new Html5Qrcode(`${tempContainerId}_reader`);
+            activeScanners[tempContainerId] = reader;
+            
+            try {
+                await reader.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        const result = decodedText.trim();
+                        if (newMeterInput) newMeterInput.value = result;
+                        reader.stop().then(() => {
+                            tempContainer.classList.add('hidden');
+                            delete activeScanners[tempContainerId];
+                        }).catch(e => console.log(e));
+                        showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
+                    },
+                    (error) => { console.log(error); }
+                );
+            } catch(err) {
+                alert('❌ Не вдалося запустити камеру');
+                tempContainer.classList.add('hidden');
+                delete activeScanners[tempContainerId];
+            }
+        });
+    }
+    
     if (addSealBtn) {
         addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');
         if (confirmSealBtn) confirmSealBtn.onclick = addNewSeal;
@@ -853,7 +912,6 @@ document.addEventListener("DOMContentLoaded", function() {
         sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
     }
     
-    // Инициализация базы лічильників
     if (addMeterBtn) {
         addMeterBtn.onclick = () => meterAddPanel.classList.toggle('hidden');
         if (confirmMeterBtn) confirmMeterBtn.onclick = addNewMeter;
