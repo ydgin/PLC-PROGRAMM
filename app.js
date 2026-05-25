@@ -203,14 +203,22 @@ function showToast(msg) {
     setTimeout(() => t.remove(), 2500);
 }
 
-function digitsExtract(text) { return text.replace(/\D/g, '').substring(0, 10); }
+function digitsExtract(text) { 
+    return text.replace(/\D/g, '').substring(0, 10); 
+}
 
+// Функция для сканера лічильників - убирает первые 4 и последние 4 цифры
 function smartMeterExtract(text) {
-    const d = text.replace(/\D/g, '');
-    if (d.length >= 16) return d.substring(4, 12);
-    if (d.length >= 12) return d.substring(4, d.length - 4);
-    if (d.length === 8) return d;
-    return d;
+    // Убираем все не цифры
+    const digits = text.replace(/\D/g, '');
+    
+    // Если цифр достаточно, убираем первые 4 и последние 4
+    if (digits.length > 8) {
+        return digits.substring(4, digits.length - 4);
+    }
+    
+    // Если цифр 8 или меньше, возвращаем как есть
+    return digits;
 }
 
 function parseSealRange(input) {
