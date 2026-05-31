@@ -677,7 +677,7 @@ function renderFilteredLog(filteredLog) {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
-            <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.date || '')}</tr>
             <td>${escapeHtml(r.workType || '')}</td>
             <td>${escapeHtml(r.employeeId || '')}</td>
             <td>${escapeHtml(r.accountNumber || '')}</td>
@@ -725,9 +725,9 @@ function sendToGoogleForm() {
     params.append('entry.1583379400', employeeId.value);
     
     // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
-    params.append('entry.1262021573', oldMeterNumber?.value || '');      // номер
-    params.append('entry.1666715724', oldMeterReading?.value || '');     // покази
-    params.append('entry.155422969', oldMeterType?.value || '');         // ТИП демонтованого
+    params.append('entry.1262021573', oldMeterNumber?.value || '');
+    params.append('entry.1666715724', oldMeterReading?.value || '');
+    params.append('entry.155422969', oldMeterType?.value || '');
     
     // ========== ЗНЯТІ ПЛОМБИ ==========
     params.append('entry.980914247', oldSealCover?.value || '');
@@ -740,9 +740,9 @@ function sendToGoogleForm() {
     params.append('entry.174981808', oldIMP3?.value || '');
     
     // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
-    params.append('entry.591456354', newMeterNumber?.value || '');       // номер
-    params.append('entry.686446183', newMeterReading?.value || '');      // покази
-    params.append('entry.195836049', newMeterType?.value || '');         // ТИП встановленого
+    params.append('entry.591456354', newMeterNumber?.value || '');
+    params.append('entry.686446183', newMeterReading?.value || '');
+    params.append('entry.195836049', newMeterType?.value || '');
     
     // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
     params.append('entry.1577377109', newSealCover?.value || '');
@@ -753,6 +753,13 @@ function sendToGoogleForm() {
     params.append('entry.245114888', newIMP1?.value || '');
     params.append('entry.1581321253', newIMP2?.value || '');
     params.append('entry.865785872', newIMP3?.value || '');
+    
+    // Отладка в консоли
+    console.log('=== ОТПРАВКА В ФОРМУ ===');
+    console.log('Тип демонтованого (entry.155422969):', oldMeterType?.value);
+    console.log('Тип встановленого (entry.195836049):', newMeterType?.value);
+    console.log('Номер демонтованого:', oldMeterNumber?.value);
+    console.log('Номер встановленого:', newMeterNumber?.value);
     
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
