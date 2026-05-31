@@ -205,6 +205,7 @@
         <div class="save-container"><button id="sendToFormBtn" class="btn-send-form">📨 ВІДПРАВИТИ ДАНІ В ФОРМУ</button></div>
         <div class="save-container"><button id="openFormBtn" class="btn-open-form">🔗 ПЕРЕЙТИ В ГУГЛ ФОРМУ</button></div>
         <div class="save-container"><button id="saveRecordBtn" class="btn-save-all">💾 ЗБЕРЕГТИ ВСЕ В ЖУРНАЛ</button></div>
+        <div class="save-container"><button id="clearFieldsBtn" class="btn-clear-fields">🧹 ОЧИСТИТИ ВСІ ПОЛЯ (крім табельного)</button></div>
 
         <!-- БАЗА ПЛОМБ -->
         <div class="card">
@@ -242,7 +243,15 @@
 
         <!-- ЖУРНАЛ -->
         <div class="card">
-            <div class="btn-group"><button id="exportBtn" class="btn-outline">📄 Експорт CSV</button><button id="clearLogBtn" class="btn-danger">🗑 Очистити журнал</button></div>
+            <div class="search-log-row">
+                <input type="text" id="searchAccountInput" class="field-input" placeholder="🔍 Пошук запису за особовим рахунком..." style="flex:1">
+                <button id="searchLogBtn" class="btn-search">🔍 Шукати</button>
+                <button id="resetSearchBtn" class="btn-reset">⟳ Скинути</button>
+            </div>
+            <div class="btn-group">
+                <button id="exportBtn" class="btn-outline">📄 Експорт CSV</button>
+                <button id="clearLogBtn" class="btn-danger">🗑 Очистити журнал</button>
+            </div>
             <div class="table-wrapper">
                 <table class="log-table">
                     <thead>
@@ -258,3 +267,4 @@
 <script src="app.js"></script>
 </body>
 </html>
+
