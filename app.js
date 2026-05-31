@@ -290,10 +290,6 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
                 } else {
                     const targetInput = document.getElementById(inputId);
                     if (targetInput) targetInput.value = result;
-                    // Автоматически выбираем тип счётчика, если номер найден в базе
-                    if (targetInput && (inputId === 'oldMeterNumber' || inputId === 'newMeterNumber')) {
-                        autoSelectMeterType(inputId, result);
-                    }
                 }
                 stopScanner(containerId).then(() => container.classList.add('hidden'));
                 showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
@@ -305,14 +301,6 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
         container.classList.add('hidden'); 
         delete activeScanners[containerId]; 
     }
-}
-
-// ========== АВТОМАТИЧЕСКИЙ ВЫБОР ТИПА ЛІЧИЛЬНИКА ==========
-function autoSelectMeterType(inputId, meterNumber) {
-    // Здесь можно реализовать логику определения типа по номеру
-    // Например, поиск в базе или по маске номера
-    // Пока оставляем заглушку - пользователь выбирает вручную из списка
-    console.log(`Автовыбор типа для ${inputId}: ${meterNumber}`);
 }
 
 // ========== БАЗА ПЛОМБ ==========
@@ -711,7 +699,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ИСПРАВЛЕНА) ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -731,11 +719,17 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
+    // ========== ОСНОВНІ ПОЛЯ ==========
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
-    params.append('entry.1262021573', oldMeterNumber?.value || '');
-    params.append('entry.1666715724', oldMeterReading?.value || '');
+    
+    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
+    params.append('entry.1262021573', oldMeterNumber?.value || '');      // номер
+    params.append('entry.1666715724', oldMeterReading?.value || '');     // покази
+    params.append('entry.155422969', oldMeterType?.value || '');         // ТИП демонтованого
+    
+    // ========== ЗНЯТІ ПЛОМБИ ==========
     params.append('entry.980914247', oldSealCover?.value || '');
     params.append('entry.1281985427', oldSealVKP?.value || '');
     params.append('entry.1571141896', oldSealSHO1?.value || '');
@@ -744,8 +738,13 @@ function sendToGoogleForm() {
     params.append('entry.851707833', oldIMP1?.value || '');
     params.append('entry.1653188291', oldIMP2?.value || '');
     params.append('entry.174981808', oldIMP3?.value || '');
-    params.append('entry.591456354', newMeterNumber?.value || '');
-    params.append('entry.686446183', newMeterReading?.value || '');
+    
+    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
+    params.append('entry.591456354', newMeterNumber?.value || '');       // номер
+    params.append('entry.686446183', newMeterReading?.value || '');      // покази
+    params.append('entry.195836049', newMeterType?.value || '');         // ТИП встановленого
+    
+    // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
     params.append('entry.1577377109', newSealCover?.value || '');
     params.append('entry.1292803469', newSealVKP?.value || '');
     params.append('entry.1309070612', newSealSHO1?.value || '');
@@ -762,7 +761,7 @@ function sendToGoogleForm() {
     workLog.unshift(data);
     saveData();
     
-    alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
+    alert('✅ Google Form відкрито!\n\nВсі поля (включаючи типи лічильників) заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
 
 function openGoogleForm() {
@@ -800,7 +799,7 @@ function renderLog() {
             <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
             <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
             <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
-        </table>`;
+        </tr>`;
     });
     logTable.innerHTML = html;
     
