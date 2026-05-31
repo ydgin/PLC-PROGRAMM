@@ -4,6 +4,7 @@ let workLog = [];
 let sealsDB = [];
 let metersDB = [];
 let activeScanners = {};
+let currentSearchTerm = "";
 
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
@@ -48,6 +49,10 @@ const sendToFormBtn = document.getElementById('sendToFormBtn');
 const saveBtn = document.getElementById('saveRecordBtn');
 const exportBtn = document.getElementById('exportBtn');
 const clearLogBtn = document.getElementById('clearLogBtn');
+const clearFieldsBtn = document.getElementById('clearFieldsBtn');
+const searchLogBtn = document.getElementById('searchLogBtn');
+const resetSearchBtn = document.getElementById('resetSearchBtn');
+const searchAccountInput = document.getElementById('searchAccountInput');
 const logTable = document.getElementById('logTable');
 
 // Элементы базы пломб
@@ -207,7 +212,6 @@ function digitsExtract(text) {
     return text.replace(/\D/g, '').substring(0, 10); 
 }
 
-// Функция для сканера лічильників - убирает первые 4 и последние 4 цифры
 function smartMeterExtract(text) {
     const digits = text.replace(/\D/g, '');
     if (digits.length > 8) {
@@ -286,6 +290,10 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
                 } else {
                     const targetInput = document.getElementById(inputId);
                     if (targetInput) targetInput.value = result;
+                    // Автоматически выбираем тип счётчика, если номер найден в базе
+                    if (targetInput && (inputId === 'oldMeterNumber' || inputId === 'newMeterNumber')) {
+                        autoSelectMeterType(inputId, result);
+                    }
                 }
                 stopScanner(containerId).then(() => container.classList.add('hidden'));
                 showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
@@ -297,6 +305,14 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
         container.classList.add('hidden'); 
         delete activeScanners[containerId]; 
     }
+}
+
+// ========== АВТОМАТИЧЕСКИЙ ВЫБОР ТИПА ЛІЧИЛЬНИКА ==========
+function autoSelectMeterType(inputId, meterNumber) {
+    // Здесь можно реализовать логику определения типа по номеру
+    // Например, поиск в базе или по маске номера
+    // Пока оставляем заглушку - пользователь выбирает вручную из списка
+    console.log(`Автовыбор типа для ${inputId}: ${meterNumber}`);
 }
 
 // ========== БАЗА ПЛОМБ ==========
@@ -609,7 +625,90 @@ function saveAllFieldsToLog() {
     const data = getFormData();
     workLog.unshift(data);
     saveData();
-    alert('✅ Всі дані збережено в локальний журнал!');
+    showToast('✅ Всі дані збережено в локальний журнал!');
+}
+
+// ========== ОЧИСТКА ПОЛЕЙ (кроме табельного номера) ==========
+function clearAllFieldsExceptEmployee() {
+    const fieldsToClear = [
+        workType, accountNumber, address, oldMeterNumber, newMeterNumber,
+        oldMeterType, newMeterType, oldMeterReading, newMeterReading,
+        oldSealCover, oldSealVKP, oldSealSHO1, oldSealSHO2, oldSealOpto,
+        oldIMP1, oldIMP2, oldIMP3, newSealCover, newSealVKP, newSealSHO1,
+        newSealSHO2, newSealOpto, newIMP1, newIMP2, newIMP3
+    ];
+    
+    fieldsToClear.forEach(field => {
+        if (field) {
+            if (field.tagName === 'SELECT') {
+                field.value = '';
+            } else {
+                field.value = '';
+            }
+        }
+    });
+    
+    showToast('✅ Всі поля очищено (табельний номер збережено)');
+}
+
+// ========== ПОИСК ПО ЖУРНАЛУ ==========
+function searchLogByAccount() {
+    const searchTerm = searchAccountInput?.value.trim();
+    if (!searchTerm) {
+        renderLog();
+        currentSearchTerm = "";
+        return;
+    }
+    
+    currentSearchTerm = searchTerm;
+    const filtered = workLog.filter(record => 
+        record.accountNumber && record.accountNumber.includes(searchTerm)
+    );
+    
+    renderFilteredLog(filtered);
+    showToast(`🔍 Знайдено ${filtered.length} запис(ів) за О/Р: ${searchTerm}`);
+}
+
+function resetSearch() {
+    if (searchAccountInput) searchAccountInput.value = '';
+    currentSearchTerm = "";
+    renderLog();
+    showToast('🔍 Пошук скинуто');
+}
+
+function renderFilteredLog(filteredLog) {
+    if (!logTable) return;
+    if (!filteredLog.length) {
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Записи не знайдено</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    filteredLog.forEach((r, idx) => {
+        const originalIdx = workLog.findIndex(original => original.date === r.date && original.accountNumber === r.accountNumber);
+        const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
+        const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
+        html += `<tr>
+            <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.workType || '')}</td>
+            <td>${escapeHtml(r.employeeId || '')}</td>
+            <td>${escapeHtml(r.accountNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+            <td>${escapeHtml(r.newMeterNumber || '')}</td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td><button class="delete-icon" data-idx="${originalIdx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
+        </tr>`;
+    });
+    logTable.innerHTML = html;
+    
+    document.querySelectorAll('.delete-icon').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            if (confirm('Видалити запис?')) { workLog.splice(idx, 1); saveData(); if (currentSearchTerm) searchLogByAccount(); }
+        });
+    });
 }
 
 // ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
@@ -670,13 +769,6 @@ function openGoogleForm() {
     window.open('https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform', '_blank');
 }
 
-function clearAllFields() {
-    document.querySelectorAll('input, select').forEach(input => {
-        if (input.id !== 'employeeId') input.value = '';
-    });
-    showToast('✅ Всі поля очищено');
-}
-
 // ========== ЖУРНАЛ ==========
 function loadData() {
     const stored = localStorage.getItem('pls_log');
@@ -708,9 +800,10 @@ function renderLog() {
             <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
             <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
             <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
-        </tr>`;
+        </table>`;
     });
     logTable.innerHTML = html;
+    
     document.querySelectorAll('.delete-icon').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -761,6 +854,9 @@ document.addEventListener("DOMContentLoaded", function() {
     if (exportBtn) exportBtn.onclick = exportCSV;
     if (clearLogBtn) clearLogBtn.onclick = clearLog;
     if (sendToFormBtn) sendToFormBtn.onclick = sendToGoogleForm;
+    if (clearFieldsBtn) clearFieldsBtn.onclick = clearAllFieldsExceptEmployee;
+    if (searchLogBtn) searchLogBtn.onclick = searchLogByAccount;
+    if (resetSearchBtn) resetSearchBtn.onclick = resetSearch;
     
     const openFormBtn = document.getElementById('openFormBtn');
     if (openFormBtn) {
@@ -785,7 +881,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
-    // Сканер для добавления пломбы в базу
     const scanSealBtn = document.getElementById('scanSealBtn');
     if (scanSealBtn) {
         scanSealBtn.addEventListener('click', async () => {
@@ -845,7 +940,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
-    // Сканер для добавления лічильника в базу (ИСПРАВЛЕН - применяет smartMeterExtract)
     const scanMeterBtn = document.getElementById('scanMeterBtn');
     if (scanMeterBtn) {
         scanMeterBtn.addEventListener('click', async () => {
@@ -887,7 +981,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     { facingMode: "environment" },
                     { fps: 10, qrbox: { width: 250, height: 250 } },
                     (decodedText) => {
-                        // ПРИМЕНЯЕМ smartMeterExtract ДЛЯ УДАЛЕНИЯ ПЕРВЫХ 4 И ПОСЛЕДНИХ 4 ЦИФР
                         let result = decodedText.trim();
                         result = smartMeterExtract(result);
                         if (newMeterInput) newMeterInput.value = result;
