@@ -5,7 +5,6 @@ let sealsDB = [];
 let metersDB = [];
 let activeScanners = {};
 let currentSearchTerm = "";
-let searchTimeout = null;
 
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
@@ -468,49 +467,47 @@ function addNewMeter() {
     }
 }
 
-// ========== ПОШУК ДЛЯ ПЛОМБ ==========
+// ========== ПОШУК ДЛЯ ПЛОМБ (ПОЛНЫЙ ПОИСК) ==========
 function showSearchResults(fieldId, query) {
-    if (searchTimeout) clearTimeout(searchTimeout);
+    const container = document.getElementById(`${fieldId}Results`);
+    if (!container) return;
+    if (!query || query.length < 1) { 
+        container.classList.add('hidden'); 
+        container.innerHTML = ''; 
+        return; 
+    }
+    const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
+    if (!filtered.length) { 
+        container.classList.add('hidden'); 
+        return; 
+    }
+    container.classList.remove('hidden');
+    let html = '';
+    filtered.forEach(seal => { 
+        html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
+    });
+    container.innerHTML = html;
     
-    searchTimeout = setTimeout(() => {
-        const container = document.getElementById(`${fieldId}Results`);
-        if (!container) return;
-        if (!query || query.length < 2) { 
-            container.classList.add('hidden'); 
-            container.innerHTML = ''; 
-            return; 
-        }
-        const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-        if (!filtered.length) { 
-            container.classList.add('hidden'); 
-            return; 
-        }
-        container.classList.remove('hidden');
-        let html = '';
-        filtered.slice(0, 10).forEach(seal => { 
-            html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
-        });
-        container.innerHTML = html;
+    const items = container.querySelectorAll('.search-result-item');
+    items.forEach(item => {
+        const oldHandler = item._clickHandler;
+        if (oldHandler) item.removeEventListener('click', oldHandler);
         
-        const items = container.querySelectorAll('.search-result-item');
-        items.forEach(item => {
-            item.removeEventListener('click', item._clickHandler);
-            const handler = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const sealValue = this.getAttribute('data-seal');
-                const targetInput = document.getElementById(fieldId);
-                if (targetInput) {
-                    targetInput.value = sealValue;
-                    container.classList.add('hidden');
-                    container.innerHTML = '';
-                    showToast(`✅ Пломбу додано: ${sealValue}`);
-                }
-            };
-            item._clickHandler = handler;
-            item.addEventListener('click', handler);
-        });
-    }, 300);
+        const handler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sealValue = this.getAttribute('data-seal');
+            const targetInput = document.getElementById(fieldId);
+            if (targetInput) {
+                targetInput.value = sealValue;
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                showToast(`✅ Пломбу додано: ${sealValue}`);
+            }
+        };
+        item._clickHandler = handler;
+        item.addEventListener('click', handler);
+    });
 }
 
 function hideSearchResults(fieldId) {
@@ -518,49 +515,47 @@ function hideSearchResults(fieldId) {
     if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 300);
 }
 
-// ========== ПОШУК ДЛЯ ЛІЧИЛЬНИКІВ ==========
+// ========== ПОШУК ДЛЯ ЛІЧИЛЬНИКІВ (ПОЛНЫЙ ПОИСК) ==========
 function showMeterSearchResults(fieldId, query) {
-    if (searchTimeout) clearTimeout(searchTimeout);
+    const container = document.getElementById(`${fieldId}Results`);
+    if (!container) return;
+    if (!query || query.length < 1) { 
+        container.classList.add('hidden'); 
+        container.innerHTML = ''; 
+        return; 
+    }
+    const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
+    if (!filtered.length) { 
+        container.classList.add('hidden'); 
+        return; 
+    }
+    container.classList.remove('hidden');
+    let html = '';
+    filtered.forEach(meter => { 
+        html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
+    });
+    container.innerHTML = html;
     
-    searchTimeout = setTimeout(() => {
-        const container = document.getElementById(`${fieldId}Results`);
-        if (!container) return;
-        if (!query || query.length < 2) { 
-            container.classList.add('hidden'); 
-            container.innerHTML = ''; 
-            return; 
-        }
-        const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
-        if (!filtered.length) { 
-            container.classList.add('hidden'); 
-            return; 
-        }
-        container.classList.remove('hidden');
-        let html = '';
-        filtered.slice(0, 10).forEach(meter => { 
-            html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
-        });
-        container.innerHTML = html;
+    const items = container.querySelectorAll('.search-result-item');
+    items.forEach(item => {
+        const oldHandler = item._clickHandler;
+        if (oldHandler) item.removeEventListener('click', oldHandler);
         
-        const items = container.querySelectorAll('.search-result-item');
-        items.forEach(item => {
-            item.removeEventListener('click', item._clickHandler);
-            const handler = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const meterValue = this.getAttribute('data-meter');
-                const targetInput = document.getElementById(fieldId);
-                if (targetInput) {
-                    targetInput.value = meterValue;
-                    container.classList.add('hidden');
-                    container.innerHTML = '';
-                    showToast(`✅ Лічильник додано: ${meterValue}`);
-                }
-            };
-            item._clickHandler = handler;
-            item.addEventListener('click', handler);
-        });
-    }, 300);
+        const handler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const meterValue = this.getAttribute('data-meter');
+            const targetInput = document.getElementById(fieldId);
+            if (targetInput) {
+                targetInput.value = meterValue;
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                showToast(`✅ Лічильник додано: ${meterValue}`);
+            }
+        };
+        item._clickHandler = handler;
+        item.addEventListener('click', handler);
+    });
 }
 
 function setupSearch() {
@@ -714,7 +709,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВИПРАВЛЕНО) ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -734,17 +729,12 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
-    // ========== ОСНОВНІ ПОЛЯ ==========
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
-    
-    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.1262021573', oldMeterNumber?.value || '');
     params.append('entry.1666715724', oldMeterReading?.value || '');
     params.append('entry.155422969', oldMeterType?.value || '');
-    
-    // ========== ЗНЯТІ ПЛОМБИ ==========
     params.append('entry.980914247', oldSealCover?.value || '');
     params.append('entry.1281985427', oldSealVKP?.value || '');
     params.append('entry.1571141896', oldSealSHO1?.value || '');
@@ -753,13 +743,9 @@ function sendToGoogleForm() {
     params.append('entry.851707833', oldIMP1?.value || '');
     params.append('entry.1653188291', oldIMP2?.value || '');
     params.append('entry.174981808', oldIMP3?.value || '');
-    
-    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.591456354', newMeterNumber?.value || '');
     params.append('entry.686446183', newMeterReading?.value || '0000000');
-    params.append('entry.1958360409', newMeterType?.value || '');    // ПРАВИЛЬНИЙ ID!
-    
-    // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
+    params.append('entry.1958360409', newMeterType?.value || '');
     params.append('entry.1577377109', newSealCover?.value || '');
     params.append('entry.1292803469', newSealVKP?.value || '');
     params.append('entry.1309070612', newSealSHO1?.value || '');
@@ -769,13 +755,9 @@ function sendToGoogleForm() {
     params.append('entry.1581321253', newIMP2?.value || '');
     params.append('entry.865785872', newIMP3?.value || '');
     
-    // Отладка в консоли
     console.log('=== ОТПРАВКА В ФОРМУ ===');
-    console.log('Тип демонтованого (entry.155422969):', oldMeterType?.value);
-    console.log('Тип встановленого (entry.1958360409):', newMeterType?.value);
-    console.log('Номер демонтованого:', oldMeterNumber?.value);
-    console.log('Номер встановленого:', newMeterNumber?.value);
-    console.log('Покази встановленого:', newMeterReading?.value);
+    console.log('Тип демонтованого:', oldMeterType?.value);
+    console.log('Тип встановленого:', newMeterType?.value);
     
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
