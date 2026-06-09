@@ -5,6 +5,7 @@ let sealsDB = [];
 let metersDB = [];
 let activeScanners = {};
 let currentSearchTerm = "";
+let searchTimeout = null;
 
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
@@ -95,6 +96,7 @@ function pinAddNum(num) {
                 loadSeals();
                 loadMeters();
                 initMeterTypes();
+                setDefaultValues();
             } else {
                 if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
@@ -122,6 +124,7 @@ function pinCheck() {
         loadSeals();
         loadMeters();
         initMeterTypes();
+        setDefaultValues();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
@@ -134,6 +137,12 @@ function pinReset() {
     updatePinDisplay(); 
     if (pinError) pinError.innerText = '✅ PIN: 3268'; 
     setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
+}
+
+function setDefaultValues() {
+    if (newMeterReading && !newMeterReading.value) {
+        newMeterReading.value = "0000000";
+    }
 }
 
 // ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ ==========
@@ -459,47 +468,49 @@ function addNewMeter() {
     }
 }
 
-// ========== ПОШУК ДЛЯ ПЛОМБ ==========
+// ========== ПОШУК ДЛЯ ПЛОМБ (оптимизирован для быстрой клавиатуры) ==========
 function showSearchResults(fieldId, query) {
-    const container = document.getElementById(`${fieldId}Results`);
-    if (!container) return;
-    if (!query || query.length < 1) { 
-        container.classList.add('hidden'); 
-        container.innerHTML = ''; 
-        return; 
-    }
-    const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { 
-        container.classList.add('hidden'); 
-        return; 
-    }
-    container.classList.remove('hidden');
-    let html = '';
-    filtered.forEach(seal => { 
-        html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
-    });
-    container.innerHTML = html;
+    if (searchTimeout) clearTimeout(searchTimeout);
     
-    const items = container.querySelectorAll('.search-result-item');
-    items.forEach(item => {
-        const oldHandler = item._clickHandler;
-        if (oldHandler) item.removeEventListener('click', oldHandler);
+    searchTimeout = setTimeout(() => {
+        const container = document.getElementById(`${fieldId}Results`);
+        if (!container) return;
+        if (!query || query.length < 2) { 
+            container.classList.add('hidden'); 
+            container.innerHTML = ''; 
+            return; 
+        }
+        const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
+        if (!filtered.length) { 
+            container.classList.add('hidden'); 
+            return; 
+        }
+        container.classList.remove('hidden');
+        let html = '';
+        filtered.slice(0, 10).forEach(seal => { 
+            html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
+        });
+        container.innerHTML = html;
         
-        const handler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const sealValue = this.getAttribute('data-seal');
-            const targetInput = document.getElementById(fieldId);
-            if (targetInput) {
-                targetInput.value = sealValue;
-                container.classList.add('hidden');
-                container.innerHTML = '';
-                showToast(`✅ Пломбу додано: ${sealValue}`);
-            }
-        };
-        item._clickHandler = handler;
-        item.addEventListener('click', handler);
-    });
+        const items = container.querySelectorAll('.search-result-item');
+        items.forEach(item => {
+            item.removeEventListener('click', item._clickHandler);
+            const handler = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const sealValue = this.getAttribute('data-seal');
+                const targetInput = document.getElementById(fieldId);
+                if (targetInput) {
+                    targetInput.value = sealValue;
+                    container.classList.add('hidden');
+                    container.innerHTML = '';
+                    showToast(`✅ Пломбу додано: ${sealValue}`);
+                }
+            };
+            item._clickHandler = handler;
+            item.addEventListener('click', handler);
+        });
+    }, 300);
 }
 
 function hideSearchResults(fieldId) {
@@ -509,45 +520,47 @@ function hideSearchResults(fieldId) {
 
 // ========== ПОШУК ДЛЯ ЛІЧИЛЬНИКІВ ==========
 function showMeterSearchResults(fieldId, query) {
-    const container = document.getElementById(`${fieldId}Results`);
-    if (!container) return;
-    if (!query || query.length < 1) { 
-        container.classList.add('hidden'); 
-        container.innerHTML = ''; 
-        return; 
-    }
-    const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { 
-        container.classList.add('hidden'); 
-        return; 
-    }
-    container.classList.remove('hidden');
-    let html = '';
-    filtered.forEach(meter => { 
-        html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
-    });
-    container.innerHTML = html;
+    if (searchTimeout) clearTimeout(searchTimeout);
     
-    const items = container.querySelectorAll('.search-result-item');
-    items.forEach(item => {
-        const oldHandler = item._clickHandler;
-        if (oldHandler) item.removeEventListener('click', oldHandler);
+    searchTimeout = setTimeout(() => {
+        const container = document.getElementById(`${fieldId}Results`);
+        if (!container) return;
+        if (!query || query.length < 2) { 
+            container.classList.add('hidden'); 
+            container.innerHTML = ''; 
+            return; 
+        }
+        const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
+        if (!filtered.length) { 
+            container.classList.add('hidden'); 
+            return; 
+        }
+        container.classList.remove('hidden');
+        let html = '';
+        filtered.slice(0, 10).forEach(meter => { 
+            html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
+        });
+        container.innerHTML = html;
         
-        const handler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const meterValue = this.getAttribute('data-meter');
-            const targetInput = document.getElementById(fieldId);
-            if (targetInput) {
-                targetInput.value = meterValue;
-                container.classList.add('hidden');
-                container.innerHTML = '';
-                showToast(`✅ Лічильник додано: ${meterValue}`);
-            }
-        };
-        item._clickHandler = handler;
-        item.addEventListener('click', handler);
-    });
+        const items = container.querySelectorAll('.search-result-item');
+        items.forEach(item => {
+            item.removeEventListener('click', item._clickHandler);
+            const handler = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const meterValue = this.getAttribute('data-meter');
+                const targetInput = document.getElementById(fieldId);
+                if (targetInput) {
+                    targetInput.value = meterValue;
+                    container.classList.add('hidden');
+                    container.innerHTML = '';
+                    showToast(`✅ Лічильник додано: ${meterValue}`);
+                }
+            };
+            item._clickHandler = handler;
+            item.addEventListener('click', handler);
+        });
+    }, 300);
 }
 
 function setupSearch() {
@@ -588,7 +601,7 @@ function getFormData() {
         oldMeterType: oldMeterType?.value || '',
         newMeterType: newMeterType?.value || '',
         oldMeterReading: oldMeterReading?.value || '',
-        newMeterReading: newMeterReading?.value || '',
+        newMeterReading: newMeterReading?.value || '0000000',
         address: address?.value || '',
         oldSealCover: oldSealCover?.value || '',
         oldSealVKP: oldSealVKP?.value || '',
@@ -616,7 +629,7 @@ function saveAllFieldsToLog() {
     showToast('✅ Всі дані збережено в локальний журнал!');
 }
 
-// ========== ОЧИСТКА ПОЛЕЙ (кроме табельного номера) ==========
+// ========== ОЧИСТКА ПОЛЕЙ ==========
 function clearAllFieldsExceptEmployee() {
     const fieldsToClear = [
         workType, accountNumber, address, oldMeterNumber, newMeterNumber,
@@ -635,6 +648,8 @@ function clearAllFieldsExceptEmployee() {
             }
         }
     });
+    
+    if (newMeterReading) newMeterReading.value = '0000000';
     
     showToast('✅ Всі поля очищено (табельний номер збережено)');
 }
@@ -699,7 +714,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВИПРАВЛЕНО) ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -719,17 +734,13 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
-    // ========== ОСНОВНІ ПОЛЯ ==========
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
-    
-    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.1262021573', oldMeterNumber?.value || '');
     params.append('entry.1666715724', oldMeterReading?.value || '');
     params.append('entry.155422969', oldMeterType?.value || '');
     
-    // ========== ЗНЯТІ ПЛОМБИ ==========
     params.append('entry.980914247', oldSealCover?.value || '');
     params.append('entry.1281985427', oldSealVKP?.value || '');
     params.append('entry.1571141896', oldSealSHO1?.value || '');
@@ -739,12 +750,10 @@ function sendToGoogleForm() {
     params.append('entry.1653188291', oldIMP2?.value || '');
     params.append('entry.174981808', oldIMP3?.value || '');
     
-    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.591456354', newMeterNumber?.value || '');
-    params.append('entry.686446183', newMeterReading?.value || '');
-    params.append('entry.1958360409', newMeterType?.value || '');    // ПРАВИЛЬНИЙ ID!
+    params.append('entry.686446183', newMeterReading?.value || '0000000');
+    params.append('entry.1958360409', newMeterType?.value || '');
     
-    // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
     params.append('entry.1577377109', newSealCover?.value || '');
     params.append('entry.1292803469', newSealVKP?.value || '');
     params.append('entry.1309070612', newSealSHO1?.value || '');
@@ -754,11 +763,6 @@ function sendToGoogleForm() {
     params.append('entry.1581321253', newIMP2?.value || '');
     params.append('entry.865785872', newIMP3?.value || '');
     
-    // Отладка в консоли
-    console.log('=== ОТПРАВКА В ФОРМУ ===');
-    console.log('Тип демонтованого (entry.155422969):', oldMeterType?.value);
-    console.log('Тип встановленого (entry.1958360409):', newMeterType?.value);
-    
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
     
@@ -766,7 +770,7 @@ function sendToGoogleForm() {
     workLog.unshift(data);
     saveData();
     
-    alert('✅ Google Form відкрито!\n\nВсі поля (включаючи типи лічильників) заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
+    alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
 
 function openGoogleForm() {
@@ -1019,4 +1023,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (meterSearch) {
         meterSearch.addEventListener('input', (e) => renderMetersList(e.target.value));
     }
+    
+    setDefaultValues();
 });
