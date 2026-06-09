@@ -714,7 +714,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ ==========
+// ========== ГОЛОВНА ФУНКЦІЯ ВІДПРАВКИ (ВИПРАВЛЕНО) ==========
 function sendToGoogleForm() {
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
@@ -734,13 +734,17 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
+    // ========== ОСНОВНІ ПОЛЯ ==========
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
+    
+    // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.1262021573', oldMeterNumber?.value || '');
     params.append('entry.1666715724', oldMeterReading?.value || '');
-    params.append('entry.155422969', oldMeterType?.value || '');
+    params.append('entry.155422969', oldMeterType?.value || '');     // ТИП демонтованого
     
+    // ========== ЗНЯТІ ПЛОМБИ ==========
     params.append('entry.980914247', oldSealCover?.value || '');
     params.append('entry.1281985427', oldSealVKP?.value || '');
     params.append('entry.1571141896', oldSealSHO1?.value || '');
@@ -750,10 +754,12 @@ function sendToGoogleForm() {
     params.append('entry.1653188291', oldIMP2?.value || '');
     params.append('entry.174981808', oldIMP3?.value || '');
     
+    // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.591456354', newMeterNumber?.value || '');
     params.append('entry.686446183', newMeterReading?.value || '0000000');
-    params.append('entry.1958360409', newMeterType?.value || '');
+    params.append('entry.195836049', newMeterType?.value || '');     // ТИП встановленого (правильный ID!)
     
+    // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
     params.append('entry.1577377109', newSealCover?.value || '');
     params.append('entry.1292803469', newSealVKP?.value || '');
     params.append('entry.1309070612', newSealSHO1?.value || '');
@@ -762,6 +768,13 @@ function sendToGoogleForm() {
     params.append('entry.245114888', newIMP1?.value || '');
     params.append('entry.1581321253', newIMP2?.value || '');
     params.append('entry.865785872', newIMP3?.value || '');
+    
+    // Отладка в консоли
+    console.log('=== ОТПРАВКА В ФОРМУ ===');
+    console.log('Тип демонтованого (entry.155422969):', oldMeterType?.value);
+    console.log('Тип встановленого (entry.195836049):', newMeterType?.value);
+    console.log('Номер демонтованого:', oldMeterNumber?.value);
+    console.log('Номер встановленого:', newMeterNumber?.value);
     
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
