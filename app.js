@@ -468,7 +468,7 @@ function addNewMeter() {
     }
 }
 
-// ========== ПОШУК ДЛЯ ПЛОМБ (оптимизирован для быстрой клавиатуры) ==========
+// ========== ПОШУК ДЛЯ ПЛОМБ ==========
 function showSearchResults(fieldId, query) {
     if (searchTimeout) clearTimeout(searchTimeout);
     
@@ -742,7 +742,7 @@ function sendToGoogleForm() {
     // ========== ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.1262021573', oldMeterNumber?.value || '');
     params.append('entry.1666715724', oldMeterReading?.value || '');
-    params.append('entry.155422969', oldMeterType?.value || '');     // ТИП демонтованого
+    params.append('entry.155422969', oldMeterType?.value || '');
     
     // ========== ЗНЯТІ ПЛОМБИ ==========
     params.append('entry.980914247', oldSealCover?.value || '');
@@ -757,7 +757,7 @@ function sendToGoogleForm() {
     // ========== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК ==========
     params.append('entry.591456354', newMeterNumber?.value || '');
     params.append('entry.686446183', newMeterReading?.value || '0000000');
-    params.append('entry.195836049', newMeterType?.value || '');     // ТИП встановленого (правильный ID!)
+    params.append('entry.1958360409', newMeterType?.value || '');    // ПРАВИЛЬНИЙ ID!
     
     // ========== ВСТАНОВЛЕНІ ПЛОМБИ ==========
     params.append('entry.1577377109', newSealCover?.value || '');
@@ -772,9 +772,10 @@ function sendToGoogleForm() {
     // Отладка в консоли
     console.log('=== ОТПРАВКА В ФОРМУ ===');
     console.log('Тип демонтованого (entry.155422969):', oldMeterType?.value);
-    console.log('Тип встановленого (entry.195836049):', newMeterType?.value);
+    console.log('Тип встановленого (entry.1958360409):', newMeterType?.value);
     console.log('Номер демонтованого:', oldMeterNumber?.value);
     console.log('Номер встановленого:', newMeterNumber?.value);
+    console.log('Покази встановленого:', newMeterReading?.value);
     
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     window.open(formUrl, '_blank');
