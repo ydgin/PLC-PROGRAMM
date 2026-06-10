@@ -467,7 +467,7 @@ function addNewMeter() {
     }
 }
 
-// ========== ПОШУК ДЛЯ ПЛОМБ (ПОЛНЫЙ ПОИСК) ==========
+// ========== ПОШУК ДЛЯ ПЛОМБ ==========
 function showSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
@@ -515,7 +515,7 @@ function hideSearchResults(fieldId) {
     if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 300);
 }
 
-// ========== ПОШУК ДЛЯ ЛІЧИЛЬНИКІВ (ПОЛНЫЙ ПОИСК) ==========
+// ========== ПОШУК ДЛЯ ЛІЧИЛЬНИКІВ ==========
 function showMeterSearchResults(fieldId, query) {
     const container = document.getElementById(`${fieldId}Results`);
     if (!container) return;
@@ -649,9 +649,9 @@ function clearAllFieldsExceptEmployee() {
     showToast('✅ Всі поля очищено (табельний номер збережено)');
 }
 
-// ========== ПОИСК ПО ЖУРНАЛУ ==========
+// ========== РОЗШИРЕНИЙ ПОИСК ПО ЖУРНАЛУ ==========
 function searchLogByAccount() {
-    const searchTerm = searchAccountInput?.value.trim();
+    const searchTerm = searchAccountInput?.value.trim().toLowerCase();
     if (!searchTerm) {
         renderLog();
         currentSearchTerm = "";
@@ -659,12 +659,43 @@ function searchLogByAccount() {
     }
     
     currentSearchTerm = searchTerm;
-    const filtered = workLog.filter(record => 
-        record.accountNumber && record.accountNumber.includes(searchTerm)
-    );
     
+    function recordMatches(record, term) {
+        const fieldsToCheck = [
+            record.date, record.workType, record.employeeId, record.accountNumber,
+            record.oldMeterNumber, record.newMeterNumber, record.oldMeterType, record.newMeterType,
+            record.oldMeterReading, record.newMeterReading, record.address,
+            record.oldSealCover, record.oldSealVKP, record.oldSealSHO1, record.oldSealSHO2,
+            record.oldSealOpto, record.oldIMP1, record.oldIMP2, record.oldIMP3,
+            record.newSealCover, record.newSealVKP, record.newSealSHO1, record.newSealSHO2,
+            record.newSealOpto, record.newIMP1, record.newIMP2, record.newIMP3
+        ];
+        
+        const removedSealsCombined = [
+            record.oldSealCover, record.oldSealVKP, record.oldSealSHO1, 
+            record.oldSealSHO2, record.oldSealOpto, record.oldIMP1, 
+            record.oldIMP2, record.oldIMP3
+        ].filter(v => v && v.trim() !== '').join(' ');
+        
+        const installedSealsCombined = [
+            record.newSealCover, record.newSealVKP, record.newSealSHO1,
+            record.newSealSHO2, record.newSealOpto, record.newIMP1,
+            record.newIMP2, record.newIMP3
+        ].filter(v => v && v.trim() !== '').join(' ');
+        
+        fieldsToCheck.push(removedSealsCombined, installedSealsCombined);
+        
+        for (let field of fieldsToCheck) {
+            if (field && field.toString().toLowerCase().includes(term)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    const filtered = workLog.filter(record => recordMatches(record, searchTerm));
     renderFilteredLog(filtered);
-    showToast(`🔍 Знайдено ${filtered.length} запис(ів) за О/Р: ${searchTerm}`);
+    showToast(`🔍 Знайдено ${filtered.length} запис(ів) за запитом: "${searchTerm}"`);
 }
 
 function resetSearch() {
@@ -677,7 +708,7 @@ function resetSearch() {
 function renderFilteredLog(filteredLog) {
     if (!logTable) return;
     if (!filteredLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Записи не знайдено</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Записи не знайдено</td></tr>';
         return;
     }
     
@@ -692,7 +723,9 @@ function renderFilteredLog(filteredLog) {
             <td>${escapeHtml(r.employeeId || '')}</td>
             <td>${escapeHtml(r.accountNumber || '')}</td>
             <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterReading || '')}</td>
             <td>${escapeHtml(r.newMeterNumber || '')}</td>
+            <td>${escapeHtml(r.newMeterReading || '')}</td>
             <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
             <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
             <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
@@ -786,7 +819,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="10">Немає записів</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Немає записів</td></tr>';
         return;
     }
     let html = '';
@@ -799,7 +832,9 @@ function renderLog() {
             <td>${escapeHtml(r.employeeId || '')}</td>
             <td>${escapeHtml(r.accountNumber || '')}</td>
             <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterReading || '')}</td>
             <td>${escapeHtml(r.newMeterNumber || '')}</td>
+            <td>${escapeHtml(r.newMeterReading || '')}</td>
             <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
             <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
             <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
@@ -818,11 +853,11 @@ function renderLog() {
 
 function exportCSV() {
     if (!workLog.length) { alert('Немає даних для експорту'); return; }
-    const headers = ['Дата','Робота','Табельний','Особовий','Дем.лічильник','Нов.лічильник','Адреса','Зняті пломби','Встановлені пломби'];
+    const headers = ['Дата','Робота','Табельний','Особовий','Дем.лічильник','Покази демонт.','Нов.лічильник','Покази встан.','Адреса','Зняті пломби','Встановлені пломби'];
     const rows = workLog.map(r => {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(' ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(' ');
-        return [`"${r.date}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeterNumber || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.address || ''}"`,`"${removedSeals}"`,`"${installedSeals}"`];
+        return [`"${r.date}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeterNumber || ''}"`,`"${r.oldMeterReading || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.newMeterReading || ''}"`,`"${r.address || ''}"`,`"${removedSeals}"`,`"${installedSeals}"`];
     });
     const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
