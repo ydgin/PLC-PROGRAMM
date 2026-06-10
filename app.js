@@ -649,7 +649,7 @@ function clearAllFieldsExceptEmployee() {
     showToast('✅ Всі поля очищено (табельний номер збережено)');
 }
 
-// ========== РОЗШИРЕНИЙ ПОИСК ПО ЖУРНАЛУ (по всем полям) ==========
+// ========== РОЗШИРЕНИЙ ПОИСК ПО ЖУРНАЛУ ==========
 function searchLogByAccount() {
     const searchTerm = searchAccountInput?.value.trim().toLowerCase();
     if (!searchTerm) {
