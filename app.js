@@ -801,7 +801,7 @@ function sendToGoogleForm() {
     
     alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
-<!-- re-deploy -->
+
 function openGoogleForm() {
     window.open('https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform', '_blank');
 }
