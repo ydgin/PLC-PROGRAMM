@@ -71,7 +71,7 @@ const meterAddPanel = document.getElementById('meterAddPanel');
 const newMeterInput = document.getElementById('newMeterInput');
 const confirmMeterBtn = document.getElementById('confirmMeterBtn');
 
-// ========== ГОЛОСОВЕ ВВЕДЕННЯ (виправлена) ==========
+// ========== ГОЛОСОВЕ ВВЕДЕННЯ (повністю виправлена) ==========
 function setupVoiceInput() {
     const micButtons = document.querySelectorAll('.btn-mic');
     
@@ -129,7 +129,54 @@ function setupVoiceInput() {
             
             recognition.onresult = function(event) {
                 try {
-                    const transcript = event.results[0][0].transcript;
+                    let transcript = event.results[0][0].transcript;
+                    
+                    // ===== ВИДАЛЯЄМО ВСІ ПРОБІЛИ =====
+                    transcript = transcript.replace(/\s/g, '');
+                    
+                    // ===== ВИЗНАЧАЄМО ТИП ПОЛЯ ТА ОБРОБЛЯЄМО =====
+                    const fieldId = input.id;
+                    const isNumeric = input.type === 'number' || input.type === 'tel' || 
+                                      input.getAttribute('inputmode') === 'numeric';
+                    
+                    // Для числових полів (покази, особовий рахунок)
+                    if (isNumeric || fieldId === 'accountNumber' || 
+                        fieldId === 'oldMeterReading' || fieldId === 'newMeterReading' ||
+                        fieldId === 'employeeId') {
+                        transcript = transcript.replace(/\D/g, '');
+                        
+                        // Особовий рахунок - тільки 10 цифр
+                        if (fieldId === 'accountNumber') {
+                            transcript = transcript.substring(0, 10);
+                        }
+                        // Табельний номер - тільки цифри
+                        if (fieldId === 'employeeId') {
+                            transcript = transcript.replace(/\D/g, '');
+                        }
+                        // Покази лічильників - тільки цифри
+                        if (fieldId === 'oldMeterReading' || fieldId === 'newMeterReading') {
+                            transcript = transcript.replace(/\D/g, '');
+                        }
+                    }
+                    
+                    // Для пломб - залишаємо літери та цифри
+                    if (input.classList.contains('seal-input')) {
+                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
+                    }
+                    
+                    // Для лічильників - залишаємо літери, цифри, крапки, дефіси
+                    if (input.classList.contains('meter-input')) {
+                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.\-]/g, '');
+                    }
+                    
+                    // Для адреси - залишаємо літери, цифри, пробіли, крапки, коми, дефіси
+                    if (fieldId === 'address') {
+                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.,\- ]/g, '');
+                        // Повертаємо пробіли для адреси, але прибираємо зайві
+                        transcript = transcript.replace(/\s+/g, ' ').trim();
+                    }
+                    
+                    // Встановлюємо значення
                     input.value = transcript;
                     
                     // Тригер події input для валідації
@@ -147,6 +194,7 @@ function setupVoiceInput() {
                     showToast(`✅ Розпізнано: ${transcript.substring(0, 30)}`);
                 } catch(err) {
                     console.error('Result error:', err);
+                    showToast('❌ Помилка обробки результату');
                 }
             };
             
