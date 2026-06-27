@@ -71,6 +71,72 @@ const meterAddPanel = document.getElementById('meterAddPanel');
 const newMeterInput = document.getElementById('newMeterInput');
 const confirmMeterBtn = document.getElementById('confirmMeterBtn');
 
+// ========== ГОЛОСОВЕ ВВЕДЕННЯ ==========
+function setupVoiceInput() {
+    const micButtons = document.querySelectorAll('.btn-mic');
+    
+    micButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            
+            if (!input) return;
+            
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('❌ Ваш браузер не підтримує голосове введення.\nВикористовуйте Google Chrome або Safari.');
+                return;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.lang = 'uk-UA';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            
+            this.classList.add('listening');
+            
+            recognition.start();
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                input.value = transcript;
+                
+                const inputEvent = new Event('input', { bubbles: true });
+                input.dispatchEvent(inputEvent);
+                
+                input.style.borderColor = '#22c55e';
+                input.style.backgroundColor = '#f0fdf4';
+                setTimeout(() => {
+                    input.style.borderColor = '#e2e8f0';
+                    input.style.backgroundColor = '#f8fafc';
+                }, 1000);
+                
+                showToast(`🎤 Розпізнано: ${transcript}`);
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Помилка розпізнавання:', event.error);
+                if (event.error === 'not-allowed') {
+                    alert('❌ Дозвольте доступ до мікрофона в налаштуваннях браузера.');
+                } else if (event.error === 'no-speech') {
+                    showToast('⚠️ Не почуто голосу. Спробуйте ще раз.');
+                } else {
+                    showToast(`❌ Помилка: ${event.error}`);
+                }
+            };
+            
+            recognition.onend = function() {
+                micButtons.forEach(b => {
+                    b.classList.remove('listening');
+                });
+            };
+        });
+    });
+}
+
 // ========== PIN ФУНКЦІЇ ==========
 const CORRECT_PIN = "3268";
 
@@ -96,6 +162,7 @@ function pinAddNum(num) {
                 loadMeters();
                 initMeterTypes();
                 setDefaultValues();
+                setupVoiceInput();
             } else {
                 if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
@@ -124,6 +191,7 @@ function pinCheck() {
         loadMeters();
         initMeterTypes();
         setDefaultValues();
+        setupVoiceInput();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
@@ -1056,4 +1124,5 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     setDefaultValues();
+    setupVoiceInput();
 });
