@@ -71,20 +71,33 @@ const meterAddPanel = document.getElementById('meterAddPanel');
 const newMeterInput = document.getElementById('newMeterInput');
 const confirmMeterBtn = document.getElementById('confirmMeterBtn');
 
-// ========== ГОЛОСОВЕ ВВЕДЕННЯ ==========
+// ========== ГОЛОСОВЕ ВВЕДЕННЯ (виправлена) ==========
 function setupVoiceInput() {
     const micButtons = document.querySelectorAll('.btn-mic');
     
     micButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
+            
             const targetId = this.getAttribute('data-target');
             const input = document.getElementById(targetId);
             
-            if (!input) return;
+            if (!input) {
+                showToast('❌ Поле не знайдено');
+                return;
+            }
             
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            // Перевірка підтримки
+            const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+            if (!hasSpeech) {
+                showToast('❌ Голосове введення не підтримується');
                 alert('❌ Ваш браузер не підтримує голосове введення.\nВикористовуйте Google Chrome або Safari.');
+                return;
+            }
+            
+            // Якщо вже слухаємо - ігноруємо
+            if (this.classList.contains('listening')) {
                 return;
             }
             
@@ -96,41 +109,77 @@ function setupVoiceInput() {
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
             
+            // Візуальний зворотній зв'язок
             this.classList.add('listening');
+            this.textContent = '⏺';
             
-            recognition.start();
+            try {
+                recognition.start();
+            } catch(err) {
+                this.classList.remove('listening');
+                this.textContent = '🎤';
+                showToast('❌ Помилка запуску мікрофона');
+                console.error('Speech start error:', err);
+                return;
+            }
+            
+            recognition.onstart = function() {
+                showToast('🎤 Скажіть щось...');
+            };
             
             recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                input.value = transcript;
-                
-                const inputEvent = new Event('input', { bubbles: true });
-                input.dispatchEvent(inputEvent);
-                
-                input.style.borderColor = '#22c55e';
-                input.style.backgroundColor = '#f0fdf4';
-                setTimeout(() => {
-                    input.style.borderColor = '#e2e8f0';
-                    input.style.backgroundColor = '#f8fafc';
-                }, 1000);
-                
-                showToast(`🎤 Розпізнано: ${transcript}`);
+                try {
+                    const transcript = event.results[0][0].transcript;
+                    input.value = transcript;
+                    
+                    // Тригер події input для валідації
+                    const inputEvent = new Event('input', { bubbles: true });
+                    input.dispatchEvent(inputEvent);
+                    
+                    // Візуальний зворотній зв'язок
+                    input.style.borderColor = '#22c55e';
+                    input.style.backgroundColor = '#f0fdf4';
+                    setTimeout(() => {
+                        input.style.borderColor = '#e2e8f0';
+                        input.style.backgroundColor = '#f8fafc';
+                    }, 1000);
+                    
+                    showToast(`✅ Розпізнано: ${transcript.substring(0, 30)}`);
+                } catch(err) {
+                    console.error('Result error:', err);
+                }
             };
             
             recognition.onerror = function(event) {
-                console.error('Помилка розпізнавання:', event.error);
-                if (event.error === 'not-allowed') {
-                    alert('❌ Дозвольте доступ до мікрофона в налаштуваннях браузера.');
-                } else if (event.error === 'no-speech') {
-                    showToast('⚠️ Не почуто голосу. Спробуйте ще раз.');
-                } else {
-                    showToast(`❌ Помилка: ${event.error}`);
+                console.error('Speech recognition error:', event.error);
+                
+                let msg = '';
+                switch(event.error) {
+                    case 'not-allowed':
+                        msg = '❌ Дозвольте доступ до мікрофона';
+                        break;
+                    case 'no-speech':
+                        msg = '⚠️ Не почуто голосу. Спробуйте ще раз';
+                        break;
+                    case 'audio-capture':
+                        msg = '❌ Не вдалося отримати доступ до мікрофона';
+                        break;
+                    case 'network':
+                        msg = '❌ Помилка мережі. Перевірте інтернет';
+                        break;
+                    case 'aborted':
+                        msg = '⚠️ Розпізнавання перервано. Спробуйте ще раз';
+                        break;
+                    default:
+                        msg = `❌ Помилка: ${event.error}`;
                 }
+                showToast(msg);
             };
             
             recognition.onend = function() {
                 micButtons.forEach(b => {
                     b.classList.remove('listening');
+                    b.textContent = '🎤';
                 });
             };
         });
@@ -279,9 +328,9 @@ function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m =
 function showToast(msg) {
     const t = document.createElement('div');
     t.textContent = msg;
-    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 18px;border-radius:40px;z-index:9999;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,0.2)';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 18px;border-radius:40px;z-index:9999;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,0.2);max-width:90%;text-align:center;';
     document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2500);
+    setTimeout(() => t.remove(), 3000);
 }
 
 function digitsExtract(text) { 
