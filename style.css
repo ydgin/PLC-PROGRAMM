@@ -81,6 +81,41 @@ select.field-input {
     flex: 1;
 }
 
+/* ===== КНОПКА МІКРОФОНА ===== */
+.btn-mic {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    font-size: 1.3rem;
+    background: #e0f2fe;
+    color: #0284c7;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-mic:active {
+    transform: scale(0.95);
+    background: #bae6fd;
+}
+
+.btn-mic.listening {
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
 .btn-scan {
     width: 52px;
     height: 52px;
@@ -533,5 +568,17 @@ select.field-input {
     
     .btn-search, .btn-reset {
         flex: 1;
+    }
+    
+    .btn-mic {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
+    
+    .btn-scan {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
     }
 }
