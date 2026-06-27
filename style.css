@@ -96,23 +96,24 @@ select.field-input {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-mic:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
     background: #bae6fd;
 }
 
 .btn-mic.listening {
-    background: #dc2626;
-    color: white;
-    border-color: #dc2626;
+    background: #dc2626 !important;
+    color: white !important;
+    border-color: #dc2626 !important;
     animation: pulse 1s infinite;
 }
 
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    50% { transform: scale(1.08); }
     100% { transform: scale(1); }
 }
 
@@ -128,11 +129,12 @@ select.field-input {
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.btn-scan:hover {
+.btn-scan:active {
+    transform: scale(0.92);
     background: #e2e8f0;
-    transform: scale(0.98);
 }
 
 .scanner-container {
@@ -216,9 +218,8 @@ select.field-input {
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
-.btn-send-form:hover {
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
-    transform: translateY(-1px);
+.btn-send-form:active {
+    transform: scale(0.97);
 }
 
 .btn-open-form {
@@ -227,9 +228,8 @@ select.field-input {
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.btn-open-form:hover {
-    background: linear-gradient(135deg, #059669, #047857);
-    transform: translateY(-1px);
+.btn-open-form:active {
+    transform: scale(0.97);
 }
 
 .btn-save-all {
@@ -238,9 +238,8 @@ select.field-input {
     box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
-.btn-save-all:hover {
-    background: linear-gradient(135deg, #d97706, #b45309);
-    transform: translateY(-1px);
+.btn-save-all:active {
+    transform: scale(0.97);
 }
 
 .btn-clear-fields {
@@ -249,9 +248,8 @@ select.field-input {
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-.btn-clear-fields:hover {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    transform: translateY(-1px);
+.btn-clear-fields:active {
+    transform: scale(0.97);
 }
 
 /* PIN-экран */
@@ -333,10 +331,11 @@ select.field-input {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.1s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pin-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
     background: #e2e8f0;
 }
 
@@ -369,6 +368,7 @@ select.field-input {
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-small-ok {
@@ -380,6 +380,7 @@ select.field-input {
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .seal-add-panel {
@@ -463,6 +464,11 @@ select.field-input {
     cursor: pointer;
     font-weight: 600;
     font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-search:active {
+    transform: scale(0.95);
 }
 
 .btn-reset {
@@ -474,6 +480,11 @@ select.field-input {
     cursor: pointer;
     font-weight: 600;
     font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-reset:active {
+    transform: scale(0.95);
 }
 
 .btn-group {
@@ -491,6 +502,11 @@ select.field-input {
     cursor: pointer;
     font-weight: 600;
     flex: 1;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-outline:active {
+    transform: scale(0.95);
 }
 
 .btn-danger {
@@ -502,6 +518,11 @@ select.field-input {
     cursor: pointer;
     font-weight: 600;
     flex: 1;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-danger:active {
+    transform: scale(0.95);
 }
 
 .table-wrapper {
@@ -541,7 +562,7 @@ select.field-input {
     cursor: pointer;
 }
 
-/* Адаптивность */
+/* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
 @media (max-width: 600px) {
     body {
         padding: 12px;
@@ -571,14 +592,32 @@ select.field-input {
     }
     
     .btn-mic {
-        width: 44px;
-        height: 44px;
-        font-size: 1rem;
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        font-size: 1.1rem !important;
+        border-radius: 14px !important;
     }
     
     .btn-scan {
-        width: 44px;
-        height: 44px;
-        font-size: 1rem;
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+        border-radius: 14px;
+    }
+    
+    .field-input {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+    }
+    
+    .header-card h1 {
+        font-size: 1.4rem;
+    }
+    
+    .btn-small, .btn-small-ok {
+        padding: 6px 12px;
+        font-size: 12px;
     }
 }
