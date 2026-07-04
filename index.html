@@ -31,6 +31,18 @@
 <div id="mainApp" class="hidden">
     <div class="container">
         <div class="card header-card">
+            <div class="header-icons">
+                <span class="header-icon">⚡</span>
+                <span class="header-icon">🔌</span>
+                <span class="header-icon">📟</span>
+                <span class="header-icon">🔒</span>
+                <span class="header-icon">⚡</span>
+                <span class="header-icon">📊</span>
+                <span class="header-icon">🔌</span>
+                <span class="header-icon">📟</span>
+                <span class="header-icon">🔒</span>
+                <span class="header-icon">⚡</span>
+            </div>
             <h1>🏦 PLC Assistant</h1>
             <div class="sub">Облік лічильників та пломб</div>
         </div>
@@ -210,6 +222,7 @@
         <!-- КНОПКИ -->
         <div class="save-container"><button id="sendToFormBtn" class="btn-send-form">📨 ВІДПРАВИТИ ДАНІ В ФОРМУ</button></div>
         <div class="save-container"><button id="openFormBtn" class="btn-open-form">🔗 ПЕРЕЙТИ В ГУГЛ ФОРМУ</button></div>
+        <div class="save-container"><button id="sendAllBtn" class="btn-send-all">📨 НАДІСЛАТИ ВСІ ДАНІ ВЛАСНИКУ</button></div>
         <div class="save-container"><button id="saveRecordBtn" class="btn-save-all">💾 ЗБЕРЕГТИ ВСЕ В ЖУРНАЛ</button></div>
         <div class="save-container"><button id="clearFieldsBtn" class="btn-clear-fields">🧹 ОЧИСТИТИ ВСІ ПОЛЯ</button></div>
 
@@ -227,7 +240,10 @@
                     <button id="confirmSealBtn" class="btn-small-ok">✔ Додати</button>
                 </div>
             </div>
-            <input type="text" id="sealSearch" class="seal-search" placeholder="🔍 Пошук по базі пломб..." speech>
+            <div class="search-mic-row">
+                <input type="text" id="sealSearch" class="seal-search" placeholder="🔍 Пошук по базі пломб..." speech>
+                <button class="btn-mic-search" data-target="sealSearch">🎤</button>
+            </div>
             <div id="sealsList" class="seals-list"></div>
         </div>
 
@@ -245,7 +261,10 @@
                     <button id="confirmMeterBtn" class="btn-small-ok">✔ Додати</button>
                 </div>
             </div>
-            <input type="text" id="meterSearch" class="seal-search" placeholder="🔍 Пошук по базі лічильників..." speech>
+            <div class="search-mic-row">
+                <input type="text" id="meterSearch" class="seal-search" placeholder="🔍 Пошук по базі лічильників..." speech>
+                <button class="btn-mic-search" data-target="meterSearch">🎤</button>
+            </div>
             <div id="metersList" class="seals-list"></div>
         </div>
 
@@ -253,12 +272,13 @@
         <div class="card">
             <div class="search-log-row">
                 <input type="text" id="searchAccountInput" class="field-input" placeholder="🔍 Пошук запису за особовим рахунком..." style="flex:1" speech>
-                <button id="searchLogBtn" class="btn-search">🔍 Шукати</button>
-                <button id="resetSearchBtn" class="btn-reset">⟳ Скинути</button>
+                <button class="btn-mic-search" data-target="searchAccountInput">🎤</button>
+                <button id="searchLogBtn" class="btn-search">🔍</button>
+                <button id="resetSearchBtn" class="btn-reset">⟳</button>
             </div>
             <div class="btn-group">
                 <button id="exportBtn" class="btn-outline">📄 Експорт CSV</button>
-                <button id="clearLogBtn" class="btn-danger">🗑 Очистити журнал</button>
+                <button id="clearLogBtn" class="btn-danger">🗑 Очистити</button>
             </div>
             <div class="table-wrapper">
                 <table class="log-table">
