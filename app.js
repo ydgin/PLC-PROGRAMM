@@ -144,6 +144,177 @@ function pinReset() {
     setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
 }
 
+function setDefaultValues() {
+    if (newMeterReading && !newMeterReading.value) {
+        newMeterReading.value = "0000000";
+    }
+}
+
+// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (БЕЗ ДУБЛІКАТІВ) ==========
+const meterTypesList = [
+    "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
+    "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis ZCG110ATt", "Landis310",
+    "MCS301-CE51B 30MIS-004 000", "MTX 1A10.DF.2LO-C04", "MTX 1A10.DF.2LO-Y04",
+    "MTX 1A10.DF.2ZO-CD4", "MTX 1A10.DF.2ZO-C04", "MTX 3A 10.DF.4Z1-C4",
+    "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", "NIK 2100 AP2.0000.0.11",
+    "NIK 2100 AP2T.1000.C.11", "NIK 2100 AP2T.1002.MC.11", "NIK 2100 AP2T.1002.C.11",
+    "NIK 2100 AP6T.1002.MC.11", "NIK 2100 AP6T.2000.MC.11", "NIK 2100 AP6T.2002.MC.11",
+    "NIK 2100 AP2T.2802.MC.11", "NIK 2100 AP6T.2802.MC.11", "NIK 2100 AP6T.2902.MC.11",
+    "NIK 2104 AP2T.1000.M.11", "NIK 2104 AP2T.1000.C.11", "NIK 2104 AP2T.1002.MC.11",
+    "NIK 2104 AP2T.1802.MC.11", "NIK 2104 AP2TB.1802.M.11", "NIK 2104 AP6T.2602.MC.21",
+    "NIK 2300 AP6T.1000.C.11", "NIK 2300 ARP3T.2900 MC 21", "NIK 2300 ATT.2900 MC 21",
+    "NIK 2300 ARTT.2902.MC.11", "NIK 2300 AP3.2000.MC.11", "NIK 2300 AP3T.2000.MC.11",
+    "NIK 2300 AP6T.2002.MC.11", "NIK 2300 AP6T.2802.MC.11", "NIK 2300 AP6T.2902.MC.11",
+    "NIK 2301 AP3.0 0000.0.11", "NIK 2303 ARP3T.1202.MC.11", "NIK 2303 ARP3T.1802.MC.11",
+    "NIK 2303 ARP6T.1002.MC.11", "NIK 2303 ARP6T.1800.MC.11", "NIK 2303 ART T.1800.MC.11",
+    "NIK 2303 AT T.1800.MC.21", "NIK 2303 ARP3T.1802.MC.11", "NIK 2303 ARP3T.1802.MC.21",
+    "NIK 2303 ARP6T.1802.MC.11", "NIK 2303 AP3T.1000.MC.11", "NIK 2303 AP3T.1002.MC.11",
+    "NIK 2303 AP3T.1802.MC.11", "NIK 2303 AP3T.2000.MC.11", "NIK 2303 AP6T.1000.MC.11",
+    "NIK 2303 AP6T.1000.C.11", "NIK 2303 AP6T.1002.MC.11", "NIK 2303 AP6T.1802.MC.11",
+    "NIK 2303 AP6T.1802MC.21", "NIK 2303 AP6T.2000.MC.11", "NIK 2307 0.5s ARTT.1600.MC.21",
+    "NIK 2307 ARP3T.1602.M.21", "NIK 2307 ARP3T.1602.MC.21", "NP-06 TD MME 1F 2S-U",
+    "NP-06 TD MME 1F 3S-U", "ACE-3000", "ЛЭО", "ЛЭО-М1.4", "МЕРИДИАН ЛТЕ-1.03",
+    "МЕРИДИАН ЛТЕ-1.03Т", "МЕРИДИАН ЛТЕ-1.03ТУ", "Меркурій 200", "Меркурій 200.02",
+    "Меркурій 201", "Меркурій 206", "МЕРКУРІЙ 231 АТ-01", "НИК 2102-01.E2МСТ",
+    "НИК 2102-01.E2МТ", "НИК 2102-01.E2МТ1", "НИК 2102-01.E2Р1", "НИК 2102-01.E2СТ",
+    "НИК 2102-01.E2Т", "НИК 2102-01.E2ТР1", "НИК 2102-02.M1", "НИК 2102-02.M1В",
+    "НИК 2102-02.M2", "НИК 2102-02.M2В", "НИК 2301 АП1", "НИК 2303 АП2",
+    "НИК 2301 АП2В", "HIK 2102-01.E2T", "HIK 2102-01.E2TP1", "HIK 2102-02.M1",
+    "HIK 2102-02.M1B", "HIK 2102-02.M2", "HIK 2102-02.M2B", "HIK 2301 AP1",
+    "HIK 2303 AP2", "HIK 2301 AP2B", "HIK 2301 AP3", "HIK 2301 AP3B",
+    "HIK 2303 AP2T", "HIK 2303 AP3T", "HIK 2303L AP1T", "HIK 2303L AP6",
+    "HIK 2303L AP6T", "CA4-195", "CA4-И672п", "CO-193", "CO-197", "CO-197М",
+    "CO-2", "CO-2М", "COEA09М", "CO-И446", "CO-И446М", "CO-И449",
+    "CO-И449М1", "CO-И449М1-1", "CO-И449М1-2", "CO9-1.02/2", "CO9-1.02/2KPT",
+    "CO9-1.02/2KT", "CO9-1.02/2T", "CO9-1.02/5KPTД", "CO-ЭА10Д",
+    "CO-Э96705", "CO-Э96706", "СТ-ЭА05", "ЦЭ6807Бк", "ЭНЕРГОМЕРА СЕ 102М"
+];
+
+function initMeterTypes() {
+    if (oldMeterType && oldMeterType.children.length <= 1) {
+        meterTypesList.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            oldMeterType.appendChild(option);
+        });
+    }
+    if (newMeterType && newMeterType.children.length <= 1) {
+        meterTypesList.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            newMeterType.appendChild(option);
+        });
+    }
+}
+
+// ========== ДОПОМІЖНІ ФУНКЦІЇ ==========
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 18px;border-radius:40px;z-index:9999;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,0.2);max-width:90%;text-align:center;';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+function digitsExtract(text) { 
+    return text.replace(/\D/g, '').substring(0, 10); 
+}
+
+function smartMeterExtract(text) {
+    const digits = text.replace(/\D/g, '');
+    if (digits.length > 8) {
+        return digits.substring(4, digits.length - 4);
+    }
+    return digits;
+}
+
+function parseSealRange(input) {
+    input = input.trim();
+    const rangePattern = /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/i;
+    const match = input.match(rangePattern);
+    
+    if (match) {
+        const prefix = match[1];
+        const startNum = parseInt(match[2], 10);
+        let endNum = parseInt(match[3], 10);
+        const startNumStr = match[2];
+        const endNumStr = match[3];
+        
+        if (endNumStr.length < startNumStr.length) {
+            const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
+            const diff = endNum - startEndPart;
+            endNum = startNum + diff;
+        }
+        
+        if (startNum <= endNum) {
+            const seals = [];
+            for (let i = startNum; i <= endNum; i++) {
+                seals.push(prefix + i);
+            }
+            return seals;
+        }
+    }
+    return [input];
+}
+
+// ========== QR СКАНЕР ==========
+async function stopScanner(id) { 
+    if (activeScanners[id]) { 
+        try { await activeScanners[id].stop(); } catch(e) {} 
+        delete activeScanners[id]; 
+    } 
+}
+
+async function startQrScanner(containerId, inputId, mode, callback = null) {
+    if (activeScanners[containerId]) { 
+        await stopScanner(containerId); 
+        document.getElementById(containerId).classList.add('hidden'); 
+        return; 
+    }
+    for (let s in activeScanners) { 
+        await stopScanner(s); 
+        const c = document.getElementById(s); 
+        if (c) c.classList.add('hidden'); 
+    }
+    const container = document.getElementById(containerId);
+    if (!container) { alert('❌ Контейнер сканера не знайдено: ' + containerId); return; }
+    container.classList.remove('hidden');
+    container.innerHTML = `<div class="scanner-header"><span>📷 Наведіть камеру на QR-код</span><button class="btn-close-scanner">✕</button></div><div id="${containerId}_reader" style="width:100%"></div>`;
+    const closeBtn = container.querySelector('.btn-close-scanner');
+    if (closeBtn) closeBtn.onclick = async () => { await stopScanner(containerId); container.classList.add('hidden'); };
+    const reader = new Html5Qrcode(`${containerId}_reader`);
+    activeScanners[containerId] = reader;
+    try {
+        await reader.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: { width: 280, height: 280 } }, 
+            (decodedText) => {
+                let result = decodedText.trim();
+                if (mode === 'digits') result = digitsExtract(result);
+                else if (mode === 'smart') result = smartMeterExtract(result);
+                
+                if (callback) {
+                    callback(result);
+                } else {
+                    const targetInput = document.getElementById(inputId);
+                    if (targetInput) targetInput.value = result;
+                }
+                stopScanner(containerId).then(() => container.classList.add('hidden'));
+                showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
+            },
+            (error) => { console.log(error); }
+        );
+    } catch(err) { 
+        alert('❌ Не вдалося запустити камеру. Перевірте дозволи.'); 
+        container.classList.add('hidden'); 
+        delete activeScanners[containerId]; 
+    }
+}
+
 // ========== ГОЛОСОВЕ ВВЕДЕННЯ ==========
 function setupVoiceInput() {
     const micButtons = document.querySelectorAll('.btn-mic');
@@ -203,17 +374,14 @@ function setupVoiceInput() {
                     
                     const fieldId = input.id;
                     
-                    // Для адреси - зберігаємо пробіли
                     if (fieldId === 'address') {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.,\- ]/g, '');
                         transcript = transcript.replace(/\s+/g, ' ').trim();
                     } else {
-                        // Для всіх інших - видаляємо пробіли
                         transcript = transcript.replace(/\s/g, '');
                         transcript = transcript.replace(/[ \t\n\r\f\v\u00A0\u2028\u2029]/g, '');
                     }
                     
-                    // Числові поля
                     const numericFields = ['accountNumber', 'employeeId', 'oldMeterReading', 'newMeterReading'];
                     const isNumeric = input.type === 'number' || input.type === 'tel' || 
                                       input.getAttribute('inputmode') === 'numeric' ||
@@ -226,13 +394,11 @@ function setupVoiceInput() {
                         }
                     }
                     
-                    // Пломби
                     if (input.classList.contains('seal-input')) {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
                         transcript = transcript.toUpperCase();
                     }
                     
-                    // Лічильники
                     if (input.classList.contains('meter-input')) {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.\-]/g, '');
                     }
@@ -401,171 +567,6 @@ function setupAutoClean() {
             }
         });
     });
-}
-
-// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (БЕЗ ДУБЛІКАТІВ) ==========
-const meterTypesList = [
-    "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
-    "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis ZCG110ATt", "Landis310",
-    "MCS301-CE51B 30MIS-004 000", "MTX 1A10.DF.2LO-C04", "MTX 1A10.DF.2LO-Y04",
-    "MTX 1A10.DF.2ZO-CD4", "MTX 1A10.DF.2ZO-C04", "MTX 3A 10.DF.4Z1-C4",
-    "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", "NIK 2100 AP2.0000.0.11",
-    "NIK 2100 AP2T.1000.C.11", "NIK 2100 AP2T.1002.MC.11", "NIK 2100 AP2T.1002.C.11",
-    "NIK 2100 AP6T.1002.MC.11", "NIK 2100 AP6T.2000.MC.11", "NIK 2100 AP6T.2002.MC.11",
-    "NIK 2100 AP2T.2802.MC.11", "NIK 2100 AP6T.2802.MC.11", "NIK 2100 AP6T.2902.MC.11",
-    "NIK 2104 AP2T.1000.M.11", "NIK 2104 AP2T.1000.C.11", "NIK 2104 AP2T.1002.MC.11",
-    "NIK 2104 AP2T.1802.MC.11", "NIK 2104 AP2TB.1802.M.11", "NIK 2104 AP6T.2602.MC.21",
-    "NIK 2300 AP6T.1000.C.11", "NIK 2300 ARP3T.2900 MC 21", "NIK 2300 ATT.2900 MC 21",
-    "NIK 2300 ARTT.2902.MC.11", "NIK 2300 AP3.2000.MC.11", "NIK 2300 AP3T.2000.MC.11",
-    "NIK 2300 AP6T.2002.MC.11", "NIK 2300 AP6T.2802.MC.11", "NIK 2300 AP6T.2902.MC.11",
-    "NIK 2301 AP3.0 0000.0.11", "NIK 2303 ARP3T.1202.MC.11", "NIK 2303 ARP3T.1802.MC.11",
-    "NIK 2303 ARP6T.1002.MC.11", "NIK 2303 ARP6T.1800.MC.11", "NIK 2303 ART T.1800.MC.11",
-    "NIK 2303 AT T.1800.MC.21", "NIK 2303 ARP3T.1802.MC.11", "NIK 2303 ARP3T.1802.MC.21",
-    "NIK 2303 ARP6T.1802.MC.11", "NIK 2303 AP3T.1000.MC.11", "NIK 2303 AP3T.1002.MC.11",
-    "NIK 2303 AP3T.1802.MC.11", "NIK 2303 AP3T.2000.MC.11", "NIK 2303 AP6T.1000.MC.11",
-    "NIK 2303 AP6T.1000.C.11", "NIK 2303 AP6T.1002.MC.11", "NIK 2303 AP6T.1802.MC.11",
-    "NIK 2303 AP6T.1802MC.21", "NIK 2303 AP6T.2000.MC.11", "NIK 2307 0.5s ARTT.1600.MC.21",
-    "NIK 2307 ARP3T.1602.M.21", "NIK 2307 ARP3T.1602.MC.21", "NP-06 TD MME 1F 2S-U",
-    "NP-06 TD MME 1F 3S-U", "ACE-3000", "ЛЭО", "ЛЭО-М1.4", "МЕРИДИАН ЛТЕ-1.03",
-    "МЕРИДИАН ЛТЕ-1.03Т", "МЕРИДИАН ЛТЕ-1.03ТУ", "Меркурій 200", "Меркурій 200.02",
-    "Меркурій 201", "Меркурій 206", "МЕРКУРІЙ 231 АТ-01", "НИК 2102-01.E2МСТ",
-    "НИК 2102-01.E2МТ", "НИК 2102-01.E2МТ1", "НИК 2102-01.E2Р1", "НИК 2102-01.E2СТ",
-    "НИК 2102-01.E2Т", "НИК 2102-01.E2ТР1", "НИК 2102-02.M1", "НИК 2102-02.M1В",
-    "НИК 2102-02.M2", "НИК 2102-02.M2В", "НИК 2301 АП1", "НИК 2303 АП2",
-    "НИК 2301 АП2В", "HIK 2102-01.E2T", "HIK 2102-01.E2TP1", "HIK 2102-02.M1",
-    "HIK 2102-02.M1B", "HIK 2102-02.M2", "HIK 2102-02.M2B", "HIK 2301 AP1",
-    "HIK 2303 AP2", "HIK 2301 AP2B", "HIK 2301 AP3", "HIK 2301 AP3B",
-    "HIK 2303 AP2T", "HIK 2303 AP3T", "HIK 2303L AP1T", "HIK 2303L AP6",
-    "HIK 2303L AP6T", "CA4-195", "CA4-И672п", "CO-193", "CO-197", "CO-197М",
-    "CO-2", "CO-2М", "COEA09М", "CO-И446", "CO-И446М", "CO-И449",
-    "CO-И449М1", "CO-И449М1-1", "CO-И449М1-2", "CO9-1.02/2", "CO9-1.02/2KPT",
-    "CO9-1.02/2KT", "CO9-1.02/2T", "CO9-1.02/5KPTД", "CO-ЭА10Д",
-    "CO-Э96705", "CO-Э96706", "СТ-ЭА05", "ЦЭ6807Бк", "ЭНЕРГОМЕРА СЕ 102М"
-];
-
-function initMeterTypes() {
-    if (oldMeterType && oldMeterType.children.length <= 1) {
-        meterTypesList.forEach(type => {
-            const option = document.createElement('option');
-            option.value = type;
-            option.textContent = type;
-            oldMeterType.appendChild(option);
-        });
-    }
-    if (newMeterType && newMeterType.children.length <= 1) {
-        meterTypesList.forEach(type => {
-            const option = document.createElement('option');
-            option.value = type;
-            option.textContent = type;
-            newMeterType.appendChild(option);
-        });
-    }
-}
-
-// ========== ДОПОМІЖНІ ФУНКЦІЇ ==========
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
-
-function showToast(msg) {
-    const t = document.createElement('div');
-    t.textContent = msg;
-    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:10px 18px;border-radius:40px;z-index:9999;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,0.2);max-width:90%;text-align:center;';
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
-
-function digitsExtract(text) { 
-    return text.replace(/\D/g, '').substring(0, 10); 
-}
-
-function smartMeterExtract(text) {
-    const digits = text.replace(/\D/g, '');
-    if (digits.length > 8) {
-        return digits.substring(4, digits.length - 4);
-    }
-    return digits;
-}
-
-function parseSealRange(input) {
-    input = input.trim();
-    const rangePattern = /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/i;
-    const match = input.match(rangePattern);
-    
-    if (match) {
-        const prefix = match[1];
-        const startNum = parseInt(match[2], 10);
-        let endNum = parseInt(match[3], 10);
-        const startNumStr = match[2];
-        const endNumStr = match[3];
-        
-        if (endNumStr.length < startNumStr.length) {
-            const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
-            const diff = endNum - startEndPart;
-            endNum = startNum + diff;
-        }
-        
-        if (startNum <= endNum) {
-            const seals = [];
-            for (let i = startNum; i <= endNum; i++) {
-                seals.push(prefix + i);
-            }
-            return seals;
-        }
-    }
-    return [input];
-}
-
-// ========== QR СКАНЕР ==========
-async function stopScanner(id) { 
-    if (activeScanners[id]) { 
-        try { await activeScanners[id].stop(); } catch(e) {} 
-        delete activeScanners[id]; 
-    } 
-}
-
-async function startQrScanner(containerId, inputId, mode, callback = null) {
-    if (activeScanners[containerId]) { 
-        await stopScanner(containerId); 
-        document.getElementById(containerId).classList.add('hidden'); 
-        return; 
-    }
-    for (let s in activeScanners) { 
-        await stopScanner(s); 
-        const c = document.getElementById(s); 
-        if (c) c.classList.add('hidden'); 
-    }
-    const container = document.getElementById(containerId);
-    if (!container) { alert('❌ Контейнер сканера не знайдено: ' + containerId); return; }
-    container.classList.remove('hidden');
-    container.innerHTML = `<div class="scanner-header"><span>📷 Наведіть камеру на QR-код</span><button class="btn-close-scanner">✕</button></div><div id="${containerId}_reader" style="width:100%"></div>`;
-    const closeBtn = container.querySelector('.btn-close-scanner');
-    if (closeBtn) closeBtn.onclick = async () => { await stopScanner(containerId); container.classList.add('hidden'); };
-    const reader = new Html5Qrcode(`${containerId}_reader`);
-    activeScanners[containerId] = reader;
-    try {
-        await reader.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: { width: 280, height: 280 } }, 
-            (decodedText) => {
-                let result = decodedText.trim();
-                if (mode === 'digits') result = digitsExtract(result);
-                else if (mode === 'smart') result = smartMeterExtract(result);
-                
-                if (callback) {
-                    callback(result);
-                } else {
-                    const targetInput = document.getElementById(inputId);
-                    if (targetInput) targetInput.value = result;
-                }
-                stopScanner(containerId).then(() => container.classList.add('hidden'));
-                showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
-            },
-            (error) => { console.log(error); }
-        );
-    } catch(err) { 
-        alert('❌ Не вдалося запустити камеру. Перевірте дозволи.'); 
-        container.classList.add('hidden'); 
-        delete activeScanners[containerId]; 
-    }
 }
 
 // ========== БАЗА ПЛОМБ ==========
@@ -998,8 +999,9 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ ==========
+// ========== ВІДПРАВКА В ФОРМУ (виправлена) ==========
 function sendToGoogleForm() {
+    // Перевірка обов'язкових полів
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
         workType.focus(); 
@@ -1016,14 +1018,41 @@ function sendToGoogleForm() {
         return; 
     }
     
+    // Отримуємо значення типів лічильників
+    const oldMeterTypeVal = oldMeterType?.value || '';
+    const newMeterTypeVal = newMeterType?.value || '';
+    
+    // Логування для відстеження
+    console.log('=== ВІДПРАВКА В ФОРМУ ===');
+    console.log('Тип демонтованого:', oldMeterTypeVal);
+    console.log('Тип встановленого:', newMeterTypeVal);
+    console.log('Номер демонтованого:', oldMeterNumber?.value || '');
+    console.log('Номер встановленого:', newMeterNumber?.value || '');
+    console.log('Покази демонтованого:', oldMeterReading?.value || '');
+    console.log('Покази встановленого:', newMeterReading?.value || '');
+    
+    // Формуємо параметри для Google Form
     const params = new URLSearchParams();
     
+    // Робота
     params.append('entry.1609399626', workType.value);
+    
+    // Особовий рахунок
     params.append('entry.244962092', accountNumber.value);
+    
+    // Табельний номер
     params.append('entry.1583379400', employeeId.value);
+    
+    // Демонтований лічильник - ТИП (ВАЖЛИВО!)
+    params.append('entry.155422969', oldMeterTypeVal);
+    
+    // Демонтований лічильник - НОМЕР
     params.append('entry.1262021573', oldMeterNumber?.value || '');
+    
+    // Демонтований лічильник - ПОКАЗИ
     params.append('entry.1666715724', oldMeterReading?.value || '');
-    params.append('entry.155422969', oldMeterType?.value || '');
+    
+    // Зняті пломби
     params.append('entry.980914247', oldSealCover?.value || '');
     params.append('entry.1281985427', oldSealVKP?.value || '');
     params.append('entry.1571141896', oldSealSHO1?.value || '');
@@ -1032,9 +1061,17 @@ function sendToGoogleForm() {
     params.append('entry.851707833', oldIMP1?.value || '');
     params.append('entry.1653188291', oldIMP2?.value || '');
     params.append('entry.174981808', oldIMP3?.value || '');
+    
+    // Встановлений лічильник - ТИП (ВАЖЛИВО!)
+    params.append('entry.1958360409', newMeterTypeVal);
+    
+    // Встановлений лічильник - НОМЕР
     params.append('entry.591456354', newMeterNumber?.value || '');
+    
+    // Встановлений лічильник - ПОКАЗИ
     params.append('entry.686446183', newMeterReading?.value || '0000000');
-    params.append('entry.1958360409', newMeterType?.value || '');
+    
+    // Встановлені пломби
     params.append('entry.1577377109', newSealCover?.value || '');
     params.append('entry.1292803469', newSealVKP?.value || '');
     params.append('entry.1309070612', newSealSHO1?.value || '');
@@ -1044,9 +1081,21 @@ function sendToGoogleForm() {
     params.append('entry.1581321253', newIMP2?.value || '');
     params.append('entry.865785872', newIMP3?.value || '');
     
+    // Адреса
+    if (address?.value) {
+        params.append('entry.1234567890', address.value);
+    }
+    
+    // Формуємо URL
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
+    
+    console.log('URL форми:', formUrl);
+    console.log('Параметри:', params.toString());
+    
+    // Відкриваємо форму
     window.open(formUrl, '_blank');
     
+    // Зберігаємо в журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
@@ -1198,12 +1247,6 @@ function exportCSV() {
 
 function clearLog() {
     if (confirm('⚠️ Видалити ВСІ записи? Це не можна скасувати.')) { workLog = []; saveData(); alert('✅ Журнал очищено'); }
-}
-
-function setDefaultValues() {
-    if (newMeterReading && !newMeterReading.value) {
-        newMeterReading.value = "0000000";
-    }
 }
 
 // ========== ІНІЦІАЛІЗАЦІЯ ==========
