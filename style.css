@@ -10,82 +10,102 @@ body {
     min-height: 100vh;
     padding: 20px;
     color: #1e293b;
+    position: relative;
 }
 
 .container {
     max-width: 1300px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
+/* ===== КАРТКИ ===== */
 .card {
-    background: white;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 28px;
     padding: 20px 24px;
     margin-bottom: 24px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     overflow: hidden;
 }
 
-/* ===== ФОН З КОЛАЖЕМ ПІКТОГРАМ ===== */
-.card::before {
+.card:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== ФОН З ПІКТОГРАМАМИ (ТІЛЬКИ НА КАРТКАХ, КРІМ ЗАГОЛОВНОЇ) ===== */
+.card:not(.header-card)::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    opacity: 0.04;
+    opacity: 0.05;
     pointer-events: none;
-    background-image: 
-        /* Лічильники */
-        radial-gradient(circle at 5% 10%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 15% 30%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 25% 50%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 35% 70%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 45% 90%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 55% 10%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 65% 30%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 75% 50%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 85% 70%, #3b82f6 2px, transparent 2px),
-        radial-gradient(circle at 95% 90%, #3b82f6 2px, transparent 2px),
-        /* Знаки напруги */
-        radial-gradient(circle at 8% 20%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 18% 40%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 28% 60%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 38% 80%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 48% 20%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 58% 40%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 68% 60%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 78% 80%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 88% 20%, #f59e0b 2px, transparent 2px),
-        radial-gradient(circle at 98% 40%, #f59e0b 2px, transparent 2px),
-        /* Пломби */
-        radial-gradient(circle at 12% 15%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 22% 35%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 32% 55%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 42% 75%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 52% 15%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 62% 35%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 72% 55%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 82% 75%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 92% 15%, #dc2626 2px, transparent 2px),
-        radial-gradient(circle at 100% 35%, #dc2626 2px, transparent 2px),
-        /* Додаткові значки */
-        radial-gradient(circle at 6% 45%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 16% 65%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 26% 85%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 36% 5%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 46% 45%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 56% 65%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 66% 85%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 76% 5%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 86% 45%, #10b981 2px, transparent 2px),
-        radial-gradient(circle at 96% 65%, #10b981 2px, transparent 2px);
-    background-size: 60px 60px;
-    background-repeat: repeat;
     z-index: 0;
+    background-image: 
+        /* Лічильники 📟 - сині */
+        radial-gradient(circle at 5% 10%, #3b82f6 5px, transparent 5px),
+        radial-gradient(circle at 18% 55%, #3b82f6 5px, transparent 5px),
+        radial-gradient(circle at 30% 85%, #3b82f6 5px, transparent 5px),
+        radial-gradient(circle at 45% 20%, #3b82f6 5px, transparent 5px),
+        radial-gradient(circle at 58% 70%, #3b82f6 5px, transparent 5px),
+        radial-gradient(circle at 72% 35%, #3b82f6 5px, transparent 5px),
+        radial-gradient(circle at 85% 60%, #3b82f6 5px, transparent 5px),
+        radial-gradient(circle at 95% 15%, #3b82f6 5px, transparent 5px),
+        /* Знаки напруги ⚡ - жовті */
+        radial-gradient(circle at 8% 30%, #f59e0b 5px, transparent 5px),
+        radial-gradient(circle at 22% 75%, #f59e0b 5px, transparent 5px),
+        radial-gradient(circle at 38% 45%, #f59e0b 5px, transparent 5px),
+        radial-gradient(circle at 52% 90%, #f59e0b 5px, transparent 5px),
+        radial-gradient(circle at 65% 15%, #f59e0b 5px, transparent 5px),
+        radial-gradient(circle at 78% 50%, #f59e0b 5px, transparent 5px),
+        radial-gradient(circle at 92% 80%, #f59e0b 5px, transparent 5px),
+        /* Пломби 🔒 - червоні */
+        radial-gradient(circle at 12% 60%, #dc2626 5px, transparent 5px),
+        radial-gradient(circle at 25% 25%, #dc2626 5px, transparent 5px),
+        radial-gradient(circle at 40% 80%, #dc2626 5px, transparent 5px),
+        radial-gradient(circle at 55% 40%, #dc2626 5px, transparent 5px),
+        radial-gradient(circle at 68% 70%, #dc2626 5px, transparent 5px),
+        radial-gradient(circle at 82% 25%, #dc2626 5px, transparent 5px),
+        radial-gradient(circle at 95% 55%, #dc2626 5px, transparent 5px),
+        /* Провід/кабель 🔌 - зелені */
+        radial-gradient(circle at 3% 45%, #10b981 5px, transparent 5px),
+        radial-gradient(circle at 15% 15%, #10b981 5px, transparent 5px),
+        radial-gradient(circle at 28% 65%, #10b981 5px, transparent 5px),
+        radial-gradient(circle at 42% 35%, #10b981 5px, transparent 5px),
+        radial-gradient(circle at 60% 55%, #10b981 5px, transparent 5px),
+        radial-gradient(circle at 75% 80%, #10b981 5px, transparent 5px),
+        radial-gradient(circle at 90% 40%, #10b981 5px, transparent 5px),
+        /* Додаткові знаки - фіолетові */
+        radial-gradient(circle at 7% 70%, #8b5cf6 5px, transparent 5px),
+        radial-gradient(circle at 20% 40%, #8b5cf6 5px, transparent 5px),
+        radial-gradient(circle at 35% 10%, #8b5cf6 5px, transparent 5px),
+        radial-gradient(circle at 48% 60%, #8b5cf6 5px, transparent 5px),
+        radial-gradient(circle at 62% 85%, #8b5cf6 5px, transparent 5px),
+        radial-gradient(circle at 80% 30%, #8b5cf6 5px, transparent 5px),
+        radial-gradient(circle at 93% 70%, #8b5cf6 5px, transparent 5px),
+        /* Стрілки - рожеві */
+        radial-gradient(circle at 10% 50%, #ec4899 5px, transparent 5px),
+        radial-gradient(circle at 32% 30%, #ec4899 5px, transparent 5px),
+        radial-gradient(circle at 50% 75%, #ec4899 5px, transparent 5px),
+        radial-gradient(circle at 70% 20%, #ec4899 5px, transparent 5px),
+        radial-gradient(circle at 88% 65%, #ec4899 5px, transparent 5px),
+        /* Батарейки - зелені */
+        radial-gradient(circle at 16% 80%, #22c55e 5px, transparent 5px),
+        radial-gradient(circle at 36% 55%, #22c55e 5px, transparent 5px),
+        radial-gradient(circle at 56% 20%, #22c55e 5px, transparent 5px),
+        radial-gradient(circle at 76% 45%, #22c55e 5px, transparent 5px),
+        radial-gradient(circle at 96% 30%, #22c55e 5px, transparent 5px);
+    background-size: 100px 100px;
+    background-repeat: repeat;
 }
 
 /* Контент поверх фону */
@@ -94,42 +114,30 @@ body {
     z-index: 1;
 }
 
-/* ===== ШАПКА З ІКОНАМИ ===== */
+/* ===== ЗАГОЛОВНА КАРТКА (БЕЗ ФОНОВИХ ЗНАЧКІВ) ===== */
 .header-card {
     background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
     color: white;
     text-align: center;
-    position: relative;
-    overflow: hidden;
+    border: none;
+    backdrop-filter: none;
 }
 
 .header-card::before {
-    opacity: 0.06;
-    background-image: 
-        radial-gradient(circle at 5% 10%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 15% 30%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 25% 50%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 35% 70%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 45% 90%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 55% 10%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 65% 30%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 75% 50%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 85% 70%, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 95% 90%, #ffffff 3px, transparent 3px);
-    background-size: 40px 40px;
+    display: none !important;
 }
 
 .header-card .header-icons {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: wrap;
     margin-bottom: 8px;
 }
 
 .header-card .header-icon {
-    font-size: 16px;
-    opacity: 0.5;
+    font-size: 18px;
+    opacity: 0.6;
     animation: floatIcons 3s ease-in-out infinite;
 }
 
@@ -144,8 +152,8 @@ body {
 }
 
 @keyframes floatIcons {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4px) rotate(5deg); }
 }
 
 .header-card h1 {
@@ -739,6 +747,11 @@ select.field-input {
     
     .card {
         padding: 16px;
+        background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .card:not(.header-card)::before {
+        background-size: 60px 60px;
     }
     
     .pin-btn {
