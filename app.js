@@ -191,12 +191,11 @@ const meterTypesList = [
 ];
 
 function initMeterTypes() {
-    // Очищаємо списки перед додаванням
     if (oldMeterType) {
         oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
             const option = document.createElement('option');
-            option.value = type; // ВАЖЛИВО: встановлюємо value
+            option.value = type;
             option.textContent = type;
             oldMeterType.appendChild(option);
         });
@@ -205,7 +204,7 @@ function initMeterTypes() {
         newMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
             const option = document.createElement('option');
-            option.value = type; // ВАЖЛИВО: встановлюємо value
+            option.value = type;
             option.textContent = type;
             newMeterType.appendChild(option);
         });
@@ -1002,7 +1001,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (виправлена) ==========
+// ========== ВІДПРАВКА В ФОРМУ (через POST, без обмеження довжини) ==========
 function sendToGoogleForm() {
     // Перевірка обов'язкових полів
     if (!workType.value) { 
@@ -1021,15 +1020,13 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // ===== ОТРИМУЄМО ЗНАЧЕННЯ БЕЗПОСЕРЕДНЬО З SELECT =====
+    // ===== ОТРИМУЄМО ЗНАЧЕННЯ =====
     const oldMeterTypeSelect = document.getElementById('oldMeterType');
     const newMeterTypeSelect = document.getElementById('newMeterType');
     
-    // Отримуємо вибране значення (value)
     const oldMeterTypeVal = oldMeterTypeSelect ? oldMeterTypeSelect.value : '';
     const newMeterTypeVal = newMeterTypeSelect ? newMeterTypeSelect.value : '';
     
-    // Отримуємо ТЕКСТ вибраного варіанту (на випадок, якщо value порожнє)
     const oldMeterTypeText = oldMeterTypeSelect && oldMeterTypeSelect.selectedIndex >= 0 
         ? oldMeterTypeSelect.options[oldMeterTypeSelect.selectedIndex]?.text || '' 
         : '';
@@ -1037,105 +1034,80 @@ function sendToGoogleForm() {
         ? newMeterTypeSelect.options[newMeterTypeSelect.selectedIndex]?.text || '' 
         : '';
     
-    // Використовуємо value, якщо воно є, інакше текст
     const finalOldMeterType = oldMeterTypeVal || oldMeterTypeText;
     const finalNewMeterType = newMeterTypeVal || newMeterTypeText;
     
-    // Логування для відстеження
-    console.log('=== ВІДПРАВКА В ФОРМУ ===');
-    console.log('Тип знятого (value):', oldMeterTypeVal);
-    console.log('Тип знятого (text):', oldMeterTypeText);
-    console.log('Тип знятого (final):', finalOldMeterType);
-    console.log('Тип встановленого (value):', newMeterTypeVal);
-    console.log('Тип встановленого (text):', newMeterTypeText);
-    console.log('Тип встановленого (final):', finalNewMeterType);
+    console.log('=== ВІДПРАВКА В ФОРМУ (POST) ===');
+    console.log('Тип знятого:', finalOldMeterType);
+    console.log('Тип встановленого:', finalNewMeterType);
     console.log('Номер знятого:', oldMeterNumber?.value || '');
     console.log('Номер встановленого:', newMeterNumber?.value || '');
     console.log('Покази знятого:', oldMeterReading?.value || '');
     console.log('Покази встановленого:', newMeterReading?.value || '');
     
-    // Формуємо параметри для Google Form
-    const params = new URLSearchParams();
+    // ===== ФОРМУЄМО ДАНІ ДЛЯ ВІДПРАВКИ =====
+    const formData = new FormData();
     
-    // Робота
-    params.append('entry.1609399626', workType.value);
+    // Додаємо всі поля
+    formData.append('entry.1609399626', workType.value);
+    formData.append('entry.244962092', accountNumber.value);
+    formData.append('entry.1583379400', employeeId.value);
     
-    // Особовий рахунок
-    params.append('entry.244962092', accountNumber.value);
+    if (finalOldMeterType) formData.append('entry.155422969', finalOldMeterType);
+    if (oldMeterNumber && oldMeterNumber.value) formData.append('entry.1262021573', oldMeterNumber.value);
+    if (oldMeterReading && oldMeterReading.value) formData.append('entry.1666715724', oldMeterReading.value);
     
-    // Табельний номер
-    params.append('entry.1583379400', employeeId.value);
+    if (oldSealCover && oldSealCover.value) formData.append('entry.980914247', oldSealCover.value);
+    if (oldSealVKP && oldSealVKP.value) formData.append('entry.1281985427', oldSealVKP.value);
+    if (oldSealSHO1 && oldSealSHO1.value) formData.append('entry.1571141896', oldSealSHO1.value);
+    if (oldSealSHO2 && oldSealSHO2.value) formData.append('entry.950038743', oldSealSHO2.value);
+    if (oldSealOpto && oldSealOpto.value) formData.append('entry.1825187506', oldSealOpto.value);
+    if (oldIMP1 && oldIMP1.value) formData.append('entry.851707833', oldIMP1.value);
+    if (oldIMP2 && oldIMP2.value) formData.append('entry.1653188291', oldIMP2.value);
+    if (oldIMP3 && oldIMP3.value) formData.append('entry.174981808', oldIMP3.value);
     
-    // Знятий лічильник - ТИП (використовуємо final значення)
-    if (finalOldMeterType) {
-        params.append('entry.155422969', finalOldMeterType);
-    }
+    if (finalNewMeterType) formData.append('entry.1958360409', finalNewMeterType);
+    if (newMeterNumber && newMeterNumber.value) formData.append('entry.591456354', newMeterNumber.value);
+    if (newMeterReading && newMeterReading.value) formData.append('entry.686446183', newMeterReading.value);
     
-    // Знятий лічильник - НОМЕР
-    if (oldMeterNumber && oldMeterNumber.value) {
-        params.append('entry.1262021573', oldMeterNumber.value);
-    }
+    if (newSealCover && newSealCover.value) formData.append('entry.1577377109', newSealCover.value);
+    if (newSealVKP && newSealVKP.value) formData.append('entry.1292803469', newSealVKP.value);
+    if (newSealSHO1 && newSealSHO1.value) formData.append('entry.1309070612', newSealSHO1.value);
+    if (newSealSHO2 && newSealSHO2.value) formData.append('entry.1176747559', newSealSHO2.value);
+    if (newSealOpto && newSealOpto.value) formData.append('entry.67142835', newSealOpto.value);
+    if (newIMP1 && newIMP1.value) formData.append('entry.245114888', newIMP1.value);
+    if (newIMP2 && newIMP2.value) formData.append('entry.1581321253', newIMP2.value);
+    if (newIMP3 && newIMP3.value) formData.append('entry.865785872', newIMP3.value);
     
-    // Знятий лічильник - ПОКАЗИ
-    if (oldMeterReading && oldMeterReading.value) {
-        params.append('entry.1666715724', oldMeterReading.value);
-    }
+    if (address && address.value) formData.append('entry.1234567890', address.value);
     
-    // Зняті пломби
-    if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
-    if (oldSealVKP && oldSealVKP.value) params.append('entry.1281985427', oldSealVKP.value);
-    if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.1571141896', oldSealSHO1.value);
-    if (oldSealSHO2 && oldSealSHO2.value) params.append('entry.950038743', oldSealSHO2.value);
-    if (oldSealOpto && oldSealOpto.value) params.append('entry.1825187506', oldSealOpto.value);
-    if (oldIMP1 && oldIMP1.value) params.append('entry.851707833', oldIMP1.value);
-    if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
-    if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
-    
-    // Встановлений лічильник - ТИП (використовуємо final значення)
-    if (finalNewMeterType) {
-        params.append('entry.1958360409', finalNewMeterType);
-    }
-    
-    // Встановлений лічильник - НОМЕР
-    if (newMeterNumber && newMeterNumber.value) {
-        params.append('entry.591456354', newMeterNumber.value);
-    }
-    
-    // Встановлений лічильник - ПОКАЗИ
-    if (newMeterReading && newMeterReading.value) {
-        params.append('entry.686446183', newMeterReading.value);
-    }
-    
-    // Встановлені пломби
-    if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
-    if (newSealVKP && newSealVKP.value) params.append('entry.1292803469', newSealVKP.value);
-    if (newSealSHO1 && newSealSHO1.value) params.append('entry.1309070612', newSealSHO1.value);
-    if (newSealSHO2 && newSealSHO2.value) params.append('entry.1176747559', newSealSHO2.value);
-    if (newSealOpto && newSealOpto.value) params.append('entry.67142835', newSealOpto.value);
-    if (newIMP1 && newIMP1.value) params.append('entry.245114888', newIMP1.value);
-    if (newIMP2 && newIMP2.value) params.append('entry.1581321253', newIMP2.value);
-    if (newIMP3 && newIMP3.value) params.append('entry.865785872', newIMP3.value);
-    
-    // Адреса
-    if (address && address.value) {
-        params.append('entry.1234567890', address.value);
-    }
-    
-    // Формуємо URL
-    const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
-    
-    console.log('URL форми:', formUrl);
-    console.log('Параметри:', params.toString());
-    
-    // Відкриваємо форму
-    window.open(formUrl, '_blank');
-    
-    // Зберігаємо в журнал
-    const data = getFormData();
-    workLog.unshift(data);
-    saveData();
-    
-    alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
+    // ===== ВІДПРАВЛЯЄМО ЧЕРЕЗ POST =====
+    fetch('https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+    })
+    .then(() => {
+        console.log('✅ Дані відправлено успішно!');
+        showToast('✅ Дані успішно відправлено!');
+        
+        // Відкриваємо форму для перевірки
+        const params = new URLSearchParams();
+        for (let [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
+        window.open(formUrl, '_blank');
+        
+        // Зберігаємо в журнал
+        const data = getFormData();
+        workLog.unshift(data);
+        saveData();
+    })
+    .catch((error) => {
+        console.error('❌ Помилка відправки:', error);
+        alert('❌ Помилка відправки даних. Спробуйте ще раз.');
+    });
 }
 
 function openGoogleForm() {
