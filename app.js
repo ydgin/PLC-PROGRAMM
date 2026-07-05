@@ -196,7 +196,7 @@ function initMeterTypes() {
         oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
             const option = document.createElement('option');
-            option.value = type;
+            option.value = type; // ВАЖЛИВО: встановлюємо value
             option.textContent = type;
             oldMeterType.appendChild(option);
         });
@@ -205,7 +205,7 @@ function initMeterTypes() {
         newMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
             const option = document.createElement('option');
-            option.value = type;
+            option.value = type; // ВАЖЛИВО: встановлюємо value
             option.textContent = type;
             newMeterType.appendChild(option);
         });
@@ -1021,22 +1021,38 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Отримуємо значення з полів (ВАЖЛИВО: перевіряємо, що значення є)
-    const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
-    const newMeterTypeVal = newMeterType ? newMeterType.value : '';
-    const oldMeterNumberVal = oldMeterNumber ? oldMeterNumber.value : '';
-    const newMeterNumberVal = newMeterNumber ? newMeterNumber.value : '';
-    const oldMeterReadingVal = oldMeterReading ? oldMeterReading.value : '';
-    const newMeterReadingVal = newMeterReading ? newMeterReading.value : '0000000';
+    // ===== ОТРИМУЄМО ЗНАЧЕННЯ БЕЗПОСЕРЕДНЬО З SELECT =====
+    const oldMeterTypeSelect = document.getElementById('oldMeterType');
+    const newMeterTypeSelect = document.getElementById('newMeterType');
+    
+    // Отримуємо вибране значення (value)
+    const oldMeterTypeVal = oldMeterTypeSelect ? oldMeterTypeSelect.value : '';
+    const newMeterTypeVal = newMeterTypeSelect ? newMeterTypeSelect.value : '';
+    
+    // Отримуємо ТЕКСТ вибраного варіанту (на випадок, якщо value порожнє)
+    const oldMeterTypeText = oldMeterTypeSelect && oldMeterTypeSelect.selectedIndex >= 0 
+        ? oldMeterTypeSelect.options[oldMeterTypeSelect.selectedIndex]?.text || '' 
+        : '';
+    const newMeterTypeText = newMeterTypeSelect && newMeterTypeSelect.selectedIndex >= 0 
+        ? newMeterTypeSelect.options[newMeterTypeSelect.selectedIndex]?.text || '' 
+        : '';
+    
+    // Використовуємо value, якщо воно є, інакше текст
+    const finalOldMeterType = oldMeterTypeVal || oldMeterTypeText;
+    const finalNewMeterType = newMeterTypeVal || newMeterTypeText;
     
     // Логування для відстеження
     console.log('=== ВІДПРАВКА В ФОРМУ ===');
-    console.log('Тип знятого (oldMeterType):', oldMeterTypeVal);
-    console.log('Тип встановленого (newMeterType):', newMeterTypeVal);
-    console.log('Номер знятого:', oldMeterNumberVal);
-    console.log('Номер встановленого:', newMeterNumberVal);
-    console.log('Покази знятого:', oldMeterReadingVal);
-    console.log('Покази встановленого:', newMeterReadingVal);
+    console.log('Тип знятого (value):', oldMeterTypeVal);
+    console.log('Тип знятого (text):', oldMeterTypeText);
+    console.log('Тип знятого (final):', finalOldMeterType);
+    console.log('Тип встановленого (value):', newMeterTypeVal);
+    console.log('Тип встановленого (text):', newMeterTypeText);
+    console.log('Тип встановленого (final):', finalNewMeterType);
+    console.log('Номер знятого:', oldMeterNumber?.value || '');
+    console.log('Номер встановленого:', newMeterNumber?.value || '');
+    console.log('Покази знятого:', oldMeterReading?.value || '');
+    console.log('Покази встановленого:', newMeterReading?.value || '');
     
     // Формуємо параметри для Google Form
     const params = new URLSearchParams();
@@ -1050,19 +1066,19 @@ function sendToGoogleForm() {
     // Табельний номер
     params.append('entry.1583379400', employeeId.value);
     
-    // Знятий лічильник - ТИП (ВАЖЛИВО!)
-    if (oldMeterTypeVal) {
-        params.append('entry.155422969', oldMeterTypeVal);
+    // Знятий лічильник - ТИП (використовуємо final значення)
+    if (finalOldMeterType) {
+        params.append('entry.155422969', finalOldMeterType);
     }
     
     // Знятий лічильник - НОМЕР
-    if (oldMeterNumberVal) {
-        params.append('entry.1262021573', oldMeterNumberVal);
+    if (oldMeterNumber && oldMeterNumber.value) {
+        params.append('entry.1262021573', oldMeterNumber.value);
     }
     
     // Знятий лічильник - ПОКАЗИ
-    if (oldMeterReadingVal) {
-        params.append('entry.1666715724', oldMeterReadingVal);
+    if (oldMeterReading && oldMeterReading.value) {
+        params.append('entry.1666715724', oldMeterReading.value);
     }
     
     // Зняті пломби
@@ -1075,19 +1091,19 @@ function sendToGoogleForm() {
     if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
     if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
     
-    // Встановлений лічильник - ТИП (ВАЖЛИВО!)
-    if (newMeterTypeVal) {
-        params.append('entry.1958360409', newMeterTypeVal);
+    // Встановлений лічильник - ТИП (використовуємо final значення)
+    if (finalNewMeterType) {
+        params.append('entry.1958360409', finalNewMeterType);
     }
     
     // Встановлений лічильник - НОМЕР
-    if (newMeterNumberVal) {
-        params.append('entry.591456354', newMeterNumberVal);
+    if (newMeterNumber && newMeterNumber.value) {
+        params.append('entry.591456354', newMeterNumber.value);
     }
     
     // Встановлений лічильник - ПОКАЗИ
-    if (newMeterReadingVal) {
-        params.append('entry.686446183', newMeterReadingVal);
+    if (newMeterReading && newMeterReading.value) {
+        params.append('entry.686446183', newMeterReading.value);
     }
     
     // Встановлені пломби
