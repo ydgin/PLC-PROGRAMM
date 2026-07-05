@@ -81,10 +81,10 @@
 
         <!-- ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК -->
         <div class="card">
-            <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Демонтований лічильник</h3>
-            <label class="field-label">Тип демонтованого лічильника</label>
+            <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Знятий лічильник</h3>
+            <label class="field-label">Тип знятого лічильника</label>
             <select id="oldMeterType" class="field-input"><option value="">-- Виберіть --</option></select>
-            <label class="field-label" style="margin-top: 12px;">Номер демонтованого лічильника</label>
+            <label class="field-label" style="margin-top: 12px;">Номер знятого лічильника</label>
             <div class="input-scan-row">
                 <input id="oldMeterNumber" class="field-input meter-input" type="text" placeholder="Номер лічильника" speech>
                 <button class="btn-scan" data-target="oldMeterNumber" data-mode="smart">📷</button>
@@ -92,7 +92,7 @@
             </div>
             <div id="oldMeterNumberScanner" class="scanner-container hidden"></div>
             <div id="oldMeterNumberResults" class="search-results hidden"></div>
-            <label class="field-label" style="margin-top: 12px;">Покази демонтованого лічильника</label>
+            <label class="field-label" style="margin-top: 12px;">Покази знятого лічильника</label>
             <div class="input-scan-row">
                 <input id="oldMeterReading" class="field-input" type="number" placeholder="Покази" speech>
                 <button class="btn-scan" data-target="oldMeterReading" data-mode="digits">📷</button>
@@ -103,7 +103,7 @@
 
         <!-- ДЕМОНТОВАНІ ПЛОМБИ -->
         <div class="card">
-            <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Демонтовані пломби</h3>
+            <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Зняті пломби</h3>
             
             <div class="input-scan-row"><label class="field-label" style="flex:1">Знята пломба кл. кришка</label><button class="btn-scan" data-target="oldSealCover" data-mode="text">📷</button><button class="btn-mic" data-target="oldSealCover">🎤</button></div>
             <input id="oldSealCover" class="field-input seal-input" type="text" placeholder="Номер пломби" speech>
@@ -283,7 +283,7 @@
             <div class="table-wrapper">
                 <table class="log-table">
                     <thead>
-                        <tr><th>Дата</th><th>Робота</th><th>Табельний</th><th>Особовий</th><th>Дем.лічильник</th><th>Покази дем.ліч</th><th>Нов.лічильник</th><th>Покази нов.ліч</th><th>Адреса</th><th>🔻 Зняті пломби</th><th>🔺 Встановлені пломби</th><th>🗑</th></tr>
+                        <tr><th>Дата</th><th>Робота</th><th>Табельний</th><th>Особовий</th><th>Знятий лічильник</th><th>Покази знятого</th><th>Встановлений лічильник</th><th>Покази встановленого</th><th>Адреса</th><th>🔻 Зняті пломби</th><th>🔺 Встановлені пломби</th><th>🗑</th></tr>
                     </thead>
                     <tbody id="logTable"><tr class="empty-row"><td colspan="12">Немає записів</td></tr></tbody>
                 </table>
