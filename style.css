@@ -146,13 +146,14 @@ body::before {
     z-index: 1;
 }
 
-/* ===== ЗАГОЛОВНА КАРТКА ===== */
+/* ===== ЗАГОЛОВНА КАРТКА (СИНІЙ ФОН) ===== */
 .header-card {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #1a56db 0%, #2563eb 50%, #3b82f6 100%);
     color: white;
     text-align: center;
     border: none;
     backdrop-filter: none;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 }
 
 .header-card::before {
@@ -191,11 +192,14 @@ body::before {
 .header-card h1 {
     font-size: 1.8rem;
     margin-bottom: 4px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .header-card .sub {
-    opacity: 0.9;
+    opacity: 0.85;
     font-size: 0.9rem;
+    font-weight: 400;
 }
 
 /* ===== ПОЛЯ ВВОДУ ===== */
