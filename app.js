@@ -191,7 +191,9 @@ const meterTypesList = [
 ];
 
 function initMeterTypes() {
-    if (oldMeterType && oldMeterType.children.length <= 1) {
+    // Очищаємо списки перед додаванням
+    if (oldMeterType) {
+        oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
             const option = document.createElement('option');
             option.value = type;
@@ -199,7 +201,8 @@ function initMeterTypes() {
             oldMeterType.appendChild(option);
         });
     }
-    if (newMeterType && newMeterType.children.length <= 1) {
+    if (newMeterType) {
+        newMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
             const option = document.createElement('option');
             option.value = type;
@@ -1018,18 +1021,22 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Отримуємо значення типів лічильників
-    const oldMeterTypeVal = oldMeterType?.value || '';
-    const newMeterTypeVal = newMeterType?.value || '';
+    // Отримуємо значення з полів (ВАЖЛИВО: перевіряємо, що значення є)
+    const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
+    const newMeterTypeVal = newMeterType ? newMeterType.value : '';
+    const oldMeterNumberVal = oldMeterNumber ? oldMeterNumber.value : '';
+    const newMeterNumberVal = newMeterNumber ? newMeterNumber.value : '';
+    const oldMeterReadingVal = oldMeterReading ? oldMeterReading.value : '';
+    const newMeterReadingVal = newMeterReading ? newMeterReading.value : '0000000';
     
     // Логування для відстеження
     console.log('=== ВІДПРАВКА В ФОРМУ ===');
-    console.log('Тип демонтованого:', oldMeterTypeVal);
-    console.log('Тип встановленого:', newMeterTypeVal);
-    console.log('Номер демонтованого:', oldMeterNumber?.value || '');
-    console.log('Номер встановленого:', newMeterNumber?.value || '');
-    console.log('Покази демонтованого:', oldMeterReading?.value || '');
-    console.log('Покази встановленого:', newMeterReading?.value || '');
+    console.log('Тип знятого (oldMeterType):', oldMeterTypeVal);
+    console.log('Тип встановленого (newMeterType):', newMeterTypeVal);
+    console.log('Номер знятого:', oldMeterNumberVal);
+    console.log('Номер встановленого:', newMeterNumberVal);
+    console.log('Покази знятого:', oldMeterReadingVal);
+    console.log('Покази встановленого:', newMeterReadingVal);
     
     // Формуємо параметри для Google Form
     const params = new URLSearchParams();
@@ -1043,46 +1050,58 @@ function sendToGoogleForm() {
     // Табельний номер
     params.append('entry.1583379400', employeeId.value);
     
-    // Демонтований лічильник - ТИП (ВАЖЛИВО!)
-    params.append('entry.155422969', oldMeterTypeVal);
+    // Знятий лічильник - ТИП (ВАЖЛИВО!)
+    if (oldMeterTypeVal) {
+        params.append('entry.155422969', oldMeterTypeVal);
+    }
     
-    // Демонтований лічильник - НОМЕР
-    params.append('entry.1262021573', oldMeterNumber?.value || '');
+    // Знятий лічильник - НОМЕР
+    if (oldMeterNumberVal) {
+        params.append('entry.1262021573', oldMeterNumberVal);
+    }
     
-    // Демонтований лічильник - ПОКАЗИ
-    params.append('entry.1666715724', oldMeterReading?.value || '');
+    // Знятий лічильник - ПОКАЗИ
+    if (oldMeterReadingVal) {
+        params.append('entry.1666715724', oldMeterReadingVal);
+    }
     
     // Зняті пломби
-    params.append('entry.980914247', oldSealCover?.value || '');
-    params.append('entry.1281985427', oldSealVKP?.value || '');
-    params.append('entry.1571141896', oldSealSHO1?.value || '');
-    params.append('entry.950038743', oldSealSHO2?.value || '');
-    params.append('entry.1825187506', oldSealOpto?.value || '');
-    params.append('entry.851707833', oldIMP1?.value || '');
-    params.append('entry.1653188291', oldIMP2?.value || '');
-    params.append('entry.174981808', oldIMP3?.value || '');
+    if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
+    if (oldSealVKP && oldSealVKP.value) params.append('entry.1281985427', oldSealVKP.value);
+    if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.1571141896', oldSealSHO1.value);
+    if (oldSealSHO2 && oldSealSHO2.value) params.append('entry.950038743', oldSealSHO2.value);
+    if (oldSealOpto && oldSealOpto.value) params.append('entry.1825187506', oldSealOpto.value);
+    if (oldIMP1 && oldIMP1.value) params.append('entry.851707833', oldIMP1.value);
+    if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
+    if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
     
     // Встановлений лічильник - ТИП (ВАЖЛИВО!)
-    params.append('entry.1958360409', newMeterTypeVal);
+    if (newMeterTypeVal) {
+        params.append('entry.1958360409', newMeterTypeVal);
+    }
     
     // Встановлений лічильник - НОМЕР
-    params.append('entry.591456354', newMeterNumber?.value || '');
+    if (newMeterNumberVal) {
+        params.append('entry.591456354', newMeterNumberVal);
+    }
     
     // Встановлений лічильник - ПОКАЗИ
-    params.append('entry.686446183', newMeterReading?.value || '0000000');
+    if (newMeterReadingVal) {
+        params.append('entry.686446183', newMeterReadingVal);
+    }
     
     // Встановлені пломби
-    params.append('entry.1577377109', newSealCover?.value || '');
-    params.append('entry.1292803469', newSealVKP?.value || '');
-    params.append('entry.1309070612', newSealSHO1?.value || '');
-    params.append('entry.1176747559', newSealSHO2?.value || '');
-    params.append('entry.67142835', newSealOpto?.value || '');
-    params.append('entry.245114888', newIMP1?.value || '');
-    params.append('entry.1581321253', newIMP2?.value || '');
-    params.append('entry.865785872', newIMP3?.value || '');
+    if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
+    if (newSealVKP && newSealVKP.value) params.append('entry.1292803469', newSealVKP.value);
+    if (newSealSHO1 && newSealSHO1.value) params.append('entry.1309070612', newSealSHO1.value);
+    if (newSealSHO2 && newSealSHO2.value) params.append('entry.1176747559', newSealSHO2.value);
+    if (newSealOpto && newSealOpto.value) params.append('entry.67142835', newSealOpto.value);
+    if (newIMP1 && newIMP1.value) params.append('entry.245114888', newIMP1.value);
+    if (newIMP2 && newIMP2.value) params.append('entry.1581321253', newIMP2.value);
+    if (newIMP3 && newIMP3.value) params.append('entry.865785872', newIMP3.value);
     
     // Адреса
-    if (address?.value) {
+    if (address && address.value) {
         params.append('entry.1234567890', address.value);
     }
     
@@ -1133,7 +1152,7 @@ function sendAllDataToOwner() {
     message += `👤 Табельний: ${data.employeeId}\n`;
     message += `📋 Особовий: ${data.accountNumber}\n\n`;
     
-    message += '🔻 **Демонтований лічильник**\n';
+    message += '🔻 **Знятий лічильник**\n';
     message += `Тип: ${data.oldMeterType || '—'}\n`;
     message += `Номер: ${data.oldMeterNumber || '—'}\n`;
     message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
@@ -1230,7 +1249,7 @@ function renderLog() {
 
 function exportCSV() {
     if (!workLog.length) { alert('Немає даних для експорту'); return; }
-    const headers = ['Дата','Робота','Табельний','Особовий','Дем.лічильник','Покази дем.ліч','Нов.лічильник','Покази нов.ліч','Адреса','Зняті пломби','Встановлені пломби'];
+    const headers = ['Дата','Робота','Табельний','Особовий','Знятий лічильник','Покази знятого','Встановлений лічильник','Покази встановленого','Адреса','Зняті пломби','Встановлені пломби'];
     const rows = workLog.map(r => {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(' ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(' ');
