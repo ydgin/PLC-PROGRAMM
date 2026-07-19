@@ -99,6 +99,7 @@ function pinAddNum(num) {
                 setupVoiceInput();
                 setupAutoClean();
                 setupVoiceSearch();
+                setupVoiceSelect();
             } else {
                 if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
@@ -130,6 +131,7 @@ function pinCheck() {
         setupVoiceInput();
         setupAutoClean();
         setupVoiceSearch();
+        setupVoiceSelect();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
@@ -263,6 +265,34 @@ function parseSealRange(input) {
     return [input];
 }
 
+// ========== ФУНКЦІЯ ДЛЯ ВИЗНАЧЕННЯ МОВИ КЛАВІАТУРИ ==========
+function detectKeyboardLanguage(text) {
+    // Перевіряємо, яких букв більше в тексті
+    const cyrillicPattern = /[А-Яа-яЇїЄєІі]/g;
+    const latinPattern = /[A-Za-z]/g;
+    
+    const cyrillicMatches = text.match(cyrillicPattern) || [];
+    const latinMatches = text.match(latinPattern) || [];
+    
+    if (cyrillicMatches.length > latinMatches.length) {
+        return 'cyrillic';
+    } else if (latinMatches.length > cyrillicMatches.length) {
+        return 'latin';
+    }
+    return 'unknown';
+}
+
+// ========== ФУНКЦІЯ ДЛЯ ПЕРЕТВОРЕННЯ БУКВ У ВЕРХНІЙ РЕГІСТР З УРАХУВАННЯМ МОВИ ==========
+function toUpperCaseByLanguage(text) {
+    const lang = detectKeyboardLanguage(text);
+    if (lang === 'cyrillic') {
+        return text.toLocaleUpperCase('uk-UA');
+    } else if (lang === 'latin') {
+        return text.toLocaleUpperCase('en-US');
+    }
+    return text.toUpperCase();
+}
+
 // ========== QR СКАНЕР ==========
 async function stopScanner(id) { 
     if (activeScanners[id]) { 
@@ -317,7 +347,7 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
     }
 }
 
-// ========== ГОЛОСОВЕ ВВЕДЕННЯ ==========
+// ========== ГОЛОСОВЕ ВВЕДЕННЯ (з визначенням мови для пломб) ==========
 function setupVoiceInput() {
     const micButtons = document.querySelectorAll('.btn-mic');
     
@@ -376,14 +406,29 @@ function setupVoiceInput() {
                     
                     const fieldId = input.id;
                     
+                    // ===== ДЛЯ АДРЕСИ - ЗБЕРІГАЄМО ПРОБІЛИ =====
                     if (fieldId === 'address') {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.,\- ]/g, '');
                         transcript = transcript.replace(/\s+/g, ' ').trim();
                     } else {
+                        // Для ВСІХ ІНШИХ полів - ВИДАЛЯЄМО ВСІ ПРОБІЛИ
                         transcript = transcript.replace(/\s/g, '');
                         transcript = transcript.replace(/[ \t\n\r\f\v\u00A0\u2028\u2029]/g, '');
                     }
                     
+                    // ===== ДЛЯ ПЛОМБ - ВИЗНАЧАЄМО МОВУ ТА ПЕРЕТВОРЮЄМО У ВЕРХНІЙ РЕГІСТР =====
+                    if (input.classList.contains('seal-input')) {
+                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
+                        // Перетворюємо у верхній регістр з урахуванням мови
+                        transcript = toUpperCaseByLanguage(transcript);
+                    }
+                    
+                    // ===== ДЛЯ ЛІЧИЛЬНИКІВ =====
+                    if (input.classList.contains('meter-input')) {
+                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.\-]/g, '');
+                    }
+                    
+                    // ===== ЧИСЛОВІ ПОЛЯ =====
                     const numericFields = ['accountNumber', 'employeeId', 'oldMeterReading', 'newMeterReading'];
                     const isNumeric = input.type === 'number' || input.type === 'tel' || 
                                       input.getAttribute('inputmode') === 'numeric' ||
@@ -394,15 +439,6 @@ function setupVoiceInput() {
                         if (fieldId === 'accountNumber') {
                             transcript = transcript.substring(0, 10);
                         }
-                    }
-                    
-                    if (input.classList.contains('seal-input')) {
-                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
-                        transcript = transcript.toUpperCase();
-                    }
-                    
-                    if (input.classList.contains('meter-input')) {
-                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.\-]/g, '');
                     }
                     
                     input.value = transcript;
@@ -651,7 +687,6 @@ function setupVoiceSelect() {
                         
                         showToast(`✅ Вибрано: ${foundText}`);
                         
-                        // Додатково зберігаємо вибране значення в data-атрибут
                         select.dataset.selectedValue = foundValue;
                         select.dataset.selectedText = foundText;
                         
@@ -705,7 +740,11 @@ function setupAutoClean() {
             
             if (isNumeric) {
                 this.value = this.value.replace(/\s/g, '').replace(/\D/g, '');
-            } else if (this.classList.contains('seal-input') || this.classList.contains('meter-input')) {
+            } else if (this.classList.contains('seal-input')) {
+                // Для пломб - видаляємо пробіли і перетворюємо у верхній регістр
+                this.value = this.value.replace(/\s/g, '');
+                this.value = toUpperCaseByLanguage(this.value);
+            } else if (this.classList.contains('meter-input')) {
                 this.value = this.value.replace(/\s/g, '');
             } else {
                 this.value = this.value.replace(/\s/g, '');
@@ -764,8 +803,12 @@ function renderSealsList(filter = '') {
 }
 
 function addNewSeal() {
-    const newSeal = newSealInput.value.trim();
+    let newSeal = newSealInput.value.trim();
     if (!newSeal) { alert('Введіть номер пломби'); return; }
+    
+    // Перетворюємо у верхній регістр з урахуванням мови
+    newSeal = toUpperCaseByLanguage(newSeal);
+    newSealInput.value = newSeal;
     
     const sealsToAdd = parseSealRange(newSeal);
     let addedCount = 0;
@@ -1179,9 +1222,9 @@ function sendToGoogleForm() {
         ? newMeterTypeSelect.options[newMeterTypeSelect.selectedIndex]?.text || '' 
         : '';
     
-    // ВАЖЛИВО: використовуємо value, якщо воно є, інакше текст
-    const finalOldMeterType = oldMeterTypeVal || oldMeterTypeText;
-    const finalNewMeterType = newMeterTypeVal || newMeterTypeText;
+    // ВАЖЛИВО: використовуємо ТІЛЬКИ value, без тексту (щоб уникнути дублювання)
+    const finalOldMeterType = oldMeterTypeVal;
+    const finalNewMeterType = newMeterTypeVal;
     
     console.log('=== ВІДПРАВКА В ФОРМУ ===');
     console.log('Тип знятого (value):', oldMeterTypeVal);
@@ -1199,7 +1242,7 @@ function sendToGoogleForm() {
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
     
-    // Знятий лічильник - ТИП (обов'язково передаємо)
+    // Знятий лічильник - ТИП (використовуємо value)
     if (finalOldMeterType) {
         params.append('entry.155422969', finalOldMeterType);
     }
@@ -1220,7 +1263,7 @@ function sendToGoogleForm() {
     if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
     if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
     
-    // Встановлений лічильник - ТИП (обов'язково передаємо)
+    // Встановлений лічильник - ТИП (використовуємо value)
     if (finalNewMeterType) {
         params.append('entry.1958360409', finalNewMeterType);
     }
