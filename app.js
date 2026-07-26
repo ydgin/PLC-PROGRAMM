@@ -154,7 +154,6 @@ function setDefaultValues() {
     if (newMeterReading && !newMeterReading.value) {
         newMeterReading.value = "0000000";
     }
-    // Встановлюємо сьогоднішню дату за замовчуванням
     if (workDate && !workDate.value) {
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
@@ -164,7 +163,7 @@ function setDefaultValues() {
     }
 }
 
-// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (БЕЗ ДУБЛІКАТІВ) ==========
+// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ ==========
 const meterTypesList = [
     "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
     "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis ZCG110ATt", "Landis310",
@@ -277,29 +276,20 @@ function parseSealRange(input) {
     return [input];
 }
 
-// ========== ФУНКЦІЯ ДЛЯ ВИЗНАЧЕННЯ МОВИ КЛАВІАТУРИ ==========
 function detectKeyboardLanguage(text) {
     const cyrillicPattern = /[А-Яа-яЇїЄєІі]/g;
     const latinPattern = /[A-Za-z]/g;
-    
     const cyrillicMatches = text.match(cyrillicPattern) || [];
     const latinMatches = text.match(latinPattern) || [];
-    
-    if (cyrillicMatches.length > latinMatches.length) {
-        return 'cyrillic';
-    } else if (latinMatches.length > cyrillicMatches.length) {
-        return 'latin';
-    }
+    if (cyrillicMatches.length > latinMatches.length) return 'cyrillic';
+    else if (latinMatches.length > cyrillicMatches.length) return 'latin';
     return 'unknown';
 }
 
 function toUpperCaseByLanguage(text) {
     const lang = detectKeyboardLanguage(text);
-    if (lang === 'cyrillic') {
-        return text.toLocaleUpperCase('uk-UA');
-    } else if (lang === 'latin') {
-        return text.toLocaleUpperCase('en-US');
-    }
+    if (lang === 'cyrillic') return text.toLocaleUpperCase('uk-UA');
+    else if (lang === 'latin') return text.toLocaleUpperCase('en-US');
     return text.toUpperCase();
 }
 
@@ -338,10 +328,8 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
                 let result = decodedText.trim();
                 if (mode === 'digits') result = digitsExtract(result);
                 else if (mode === 'smart') result = smartMeterExtract(result);
-                
-                if (callback) {
-                    callback(result);
-                } else {
+                if (callback) callback(result);
+                else {
                     const targetInput = document.getElementById(inputId);
                     if (targetInput) targetInput.value = result;
                 }
@@ -360,115 +348,77 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
 // ========== ГОЛОСОВЕ ВВЕДЕННЯ ==========
 function setupVoiceInput() {
     const micButtons = document.querySelectorAll('.btn-mic');
-    
     micButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             const targetId = this.getAttribute('data-target');
             const input = document.getElementById(targetId);
-            
-            if (!input) {
-                showToast('❌ Поле не знайдено');
-                return;
-            }
-            
+            if (!input) { showToast('❌ Поле не знайдено'); return; }
             const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
             if (!hasSpeech) {
                 showToast('❌ Голосове введення не підтримується');
                 alert('❌ Ваш браузер не підтримує голосове введення.\nВикористовуйте Google Chrome або Safari.');
                 return;
             }
-            
-            if (this.classList.contains('listening')) {
-                return;
-            }
-            
+            if (this.classList.contains('listening')) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
-            
             recognition.lang = 'uk-UA';
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-            
             this.classList.add('listening');
             this.textContent = '⏺';
-            
-            try {
-                recognition.start();
-            } catch(err) {
+            try { recognition.start(); } catch(err) {
                 this.classList.remove('listening');
                 this.textContent = '🎤';
                 showToast('❌ Помилка запуску мікрофона');
                 console.error('Speech start error:', err);
                 return;
             }
-            
-            recognition.onstart = function() {
-                showToast('🎤 Скажіть щось...');
-            };
-            
+            recognition.onstart = function() { showToast('🎤 Скажіть щось...'); };
             recognition.onresult = function(event) {
                 try {
                     let transcript = event.results[0][0].transcript;
-                    
                     const fieldId = input.id;
-                    
-                    // ===== ДЛЯ АДРЕСИ - ЗБЕРІГАЄМО ПРОБІЛИ =====
                     if (fieldId === 'address') {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.,\- ]/g, '');
                         transcript = transcript.replace(/\s+/g, ' ').trim();
                     } else {
-                        // Для ВСІХ ІНШИХ полів - ВИДАЛЯЄМО ВСІ ПРОБІЛИ
                         transcript = transcript.replace(/\s/g, '');
                         transcript = transcript.replace(/[ \t\n\r\f\v\u00A0\u2028\u2029]/g, '');
                     }
-                    
-                    // ===== ДЛЯ ПЛОМБ - ВИЗНАЧАЄМО МОВУ ТА ПЕРЕТВОРЮЄМО У ВЕРХНІЙ РЕГІСТР =====
                     if (input.classList.contains('seal-input')) {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
                         transcript = toUpperCaseByLanguage(transcript);
                     }
-                    
-                    // ===== ДЛЯ ЛІЧИЛЬНИКІВ =====
                     if (input.classList.contains('meter-input')) {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.\-]/g, '');
                     }
-                    
-                    // ===== ЧИСЛОВІ ПОЛЯ =====
                     const numericFields = ['accountNumber', 'employeeId', 'oldMeterReading', 'newMeterReading'];
                     const isNumeric = input.type === 'number' || input.type === 'tel' || 
                                       input.getAttribute('inputmode') === 'numeric' ||
                                       numericFields.includes(fieldId);
-                    
                     if (isNumeric && fieldId !== 'address') {
                         transcript = transcript.replace(/\D/g, '');
-                        if (fieldId === 'accountNumber') {
-                            transcript = transcript.substring(0, 10);
-                        }
+                        if (fieldId === 'accountNumber') transcript = transcript.substring(0, 10);
                     }
-                    
                     input.value = transcript;
-                    
                     const inputEvent = new Event('input', { bubbles: true });
                     input.dispatchEvent(inputEvent);
-                    
                     input.style.borderColor = '#22c55e';
                     input.style.backgroundColor = '#f0fdf4';
                     setTimeout(() => {
                         input.style.borderColor = '#e2e8f0';
                         input.style.backgroundColor = '#f8fafc';
                     }, 1000);
-                    
                     showToast(`✅ Розпізнано: ${transcript.substring(0, 30)}`);
                 } catch(err) {
                     console.error('Result error:', err);
                     showToast('❌ Помилка обробки результату');
                 }
             };
-            
             recognition.onerror = function(event) {
                 console.error('Speech recognition error:', event.error);
                 let msg = '';
@@ -482,7 +432,6 @@ function setupVoiceInput() {
                 }
                 showToast(msg);
             };
-            
             recognition.onend = function() {
                 micButtons.forEach(b => {
                     b.classList.remove('listening');
@@ -496,76 +445,47 @@ function setupVoiceInput() {
 // ========== ГОЛОСОВИЙ ПОШУК ==========
 function setupVoiceSearch() {
     const micSearchButtons = document.querySelectorAll('.btn-mic-search');
-    
     micSearchButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             const targetId = this.getAttribute('data-target');
             const input = document.getElementById(targetId);
-            
-            if (!input) {
-                showToast('❌ Поле не знайдено');
-                return;
-            }
-            
+            if (!input) { showToast('❌ Поле не знайдено'); return; }
             const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-            if (!hasSpeech) {
-                showToast('❌ Голосове введення не підтримується');
-                return;
-            }
-            
-            if (this.classList.contains('listening')) {
-                return;
-            }
-            
+            if (!hasSpeech) { showToast('❌ Голосове введення не підтримується'); return; }
+            if (this.classList.contains('listening')) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
-            
             recognition.lang = 'uk-UA';
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-            
             this.classList.add('listening');
             this.textContent = '⏺';
-            
-            try {
-                recognition.start();
-            } catch(err) {
+            try { recognition.start(); } catch(err) {
                 this.classList.remove('listening');
                 this.textContent = '🎤';
                 showToast('❌ Помилка запуску мікрофона');
                 return;
             }
-            
-            recognition.onstart = function() {
-                showToast('🎤 Скажіть запит для пошуку...');
-            };
-            
+            recognition.onstart = function() { showToast('🎤 Скажіть запит для пошуку...'); };
             recognition.onresult = function(event) {
                 try {
                     let transcript = event.results[0][0].transcript;
                     transcript = transcript.replace(/\s/g, '');
                     input.value = transcript;
-                    
                     const inputEvent = new Event('input', { bubbles: true });
                     input.dispatchEvent(inputEvent);
-                    
                     input.style.borderColor = '#22c55e';
                     input.style.backgroundColor = '#f0fdf4';
                     setTimeout(() => {
                         input.style.borderColor = '#e2e8f0';
                         input.style.backgroundColor = '#f8fafc';
                     }, 1000);
-                    
                     showToast(`✅ Розпізнано: ${transcript.substring(0, 30)}`);
-                } catch(err) {
-                    console.error('Result error:', err);
-                }
+                } catch(err) { console.error('Result error:', err); }
             };
-            
             recognition.onerror = function(event) {
                 console.error('Speech recognition error:', event.error);
                 let msg = '';
@@ -577,7 +497,6 @@ function setupVoiceSearch() {
                 }
                 showToast(msg);
             };
-            
             recognition.onend = function() {
                 micSearchButtons.forEach(b => {
                     b.classList.remove('listening');
@@ -591,75 +510,43 @@ function setupVoiceSearch() {
 // ========== ГОЛОСОВИЙ ВИБІР ЗІ СПИСКУ ==========
 function setupVoiceSelect() {
     const selectMicButtons = document.querySelectorAll('.btn-mic-select');
-    
     selectMicButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             const targetId = this.getAttribute('data-target');
             const select = document.getElementById(targetId);
-            
-            if (!select) {
-                showToast('❌ Список не знайдено');
-                return;
-            }
-            
+            if (!select) { showToast('❌ Список не знайдено'); return; }
             const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-            if (!hasSpeech) {
-                showToast('❌ Голосове введення не підтримується');
-                return;
-            }
-            
-            if (this.classList.contains('listening')) {
-                return;
-            }
-            
+            if (!hasSpeech) { showToast('❌ Голосове введення не підтримується'); return; }
+            if (this.classList.contains('listening')) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
-            
             recognition.lang = 'uk-UA';
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-            
             this.classList.add('listening');
             this.textContent = '⏺';
-            
-            try {
-                recognition.start();
-            } catch(err) {
+            try { recognition.start(); } catch(err) {
                 this.classList.remove('listening');
                 this.textContent = '🎤';
                 showToast('❌ Помилка запуску мікрофона');
                 return;
             }
-            
-            recognition.onstart = function() {
-                showToast('🎤 Назвіть тип лічильника...');
-            };
-            
+            recognition.onstart = function() { showToast('🎤 Назвіть тип лічильника...'); };
             recognition.onresult = function(event) {
                 try {
                     let transcript = event.results[0][0].transcript;
                     transcript = transcript.replace(/\s/g, '').toLowerCase();
-                    
-                    let found = false;
-                    let foundIndex = -1;
-                    let foundValue = '';
-                    let foundText = '';
-                    
+                    let found = false, foundIndex = -1, foundValue = '', foundText = '';
                     for (let i = 0; i < select.options.length; i++) {
                         const optionText = select.options[i].text.replace(/\s/g, '').toLowerCase();
                         if (optionText === transcript || transcript === optionText) {
-                            found = true;
-                            foundIndex = i;
-                            foundValue = select.options[i].value;
-                            foundText = select.options[i].text;
+                            found = true; foundIndex = i; foundValue = select.options[i].value; foundText = select.options[i].text;
                             break;
                         }
                     }
-                    
                     if (!found) {
                         let bestMatch = 0;
                         for (let i = 1; i < select.options.length; i++) {
@@ -670,33 +557,24 @@ function setupVoiceSelect() {
                             }
                             if (matchCount > bestMatch && matchCount >= 3) {
                                 bestMatch = matchCount;
-                                found = true;
-                                foundIndex = i;
-                                foundValue = select.options[i].value;
-                                foundText = select.options[i].text;
+                                found = true; foundIndex = i; foundValue = select.options[i].value; foundText = select.options[i].text;
                             }
                         }
                     }
-                    
                     if (found && foundIndex > 0) {
                         select.selectedIndex = foundIndex;
                         select.value = foundValue;
-                        
                         const changeEvent = new Event('change', { bubbles: true });
                         select.dispatchEvent(changeEvent);
-                        
                         select.style.borderColor = '#22c55e';
                         select.style.backgroundColor = '#f0fdf4';
                         setTimeout(() => {
                             select.style.borderColor = '#e2e8f0';
                             select.style.backgroundColor = '#f8fafc';
                         }, 1000);
-                        
                         showToast(`✅ Вибрано: ${foundText}`);
-                        
                         select.dataset.selectedValue = foundValue;
                         select.dataset.selectedText = foundText;
-                        
                     } else {
                         showToast(`⚠️ Не знайдено: "${transcript}"`);
                     }
@@ -705,7 +583,6 @@ function setupVoiceSelect() {
                     showToast('❌ Помилка обробки');
                 }
             };
-            
             recognition.onerror = function(event) {
                 console.error('Speech recognition error:', event.error);
                 let msg = '';
@@ -717,7 +594,6 @@ function setupVoiceSelect() {
                 }
                 showToast(msg);
             };
-            
             recognition.onend = function() {
                 selectMicButtons.forEach(b => {
                     b.classList.remove('listening');
@@ -728,23 +604,20 @@ function setupVoiceSelect() {
     });
 }
 
-// ========== АВТОМАТИЧНЕ ОЧИЩЕННЯ ВІД ПРОБІЛІВ ==========
+// ========== АВТОМАТИЧНЕ ОЧИЩЕННЯ ==========
 function setupAutoClean() {
     const allInputs = document.querySelectorAll('input:not([type="hidden"])');
     allInputs.forEach(input => {
         input.addEventListener('input', function() {
             const fieldId = this.id;
-            
             if (fieldId === 'address') {
                 this.value = this.value.replace(/\s+/g, ' ').trim();
                 return;
             }
-            
             const numericFields = ['accountNumber', 'employeeId', 'oldMeterReading', 'newMeterReading'];
             const isNumeric = this.type === 'number' || this.type === 'tel' || 
                               this.getAttribute('inputmode') === 'numeric' ||
                               numericFields.includes(fieldId);
-            
             if (isNumeric) {
                 this.value = this.value.replace(/\s/g, '').replace(/\D/g, '');
             } else if (this.classList.contains('seal-input')) {
@@ -782,7 +655,6 @@ function renderSealsList(filter = '') {
         html += `<div class="seal-item"><span class="seal-number" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</span><button class="delete-seal" data-seal="${escapeHtml(seal)}">🗑️</button></div>`;
     });
     sealsListDiv.innerHTML = html;
-    
     document.querySelectorAll('.seal-number').forEach(el => {
         el.addEventListener('click', () => {
             const seal = el.getAttribute('data-seal');
@@ -793,7 +665,6 @@ function renderSealsList(filter = '') {
             }
         });
     });
-    
     document.querySelectorAll('.delete-seal').forEach(el => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -811,14 +682,10 @@ function renderSealsList(filter = '') {
 function addNewSeal() {
     let newSeal = newSealInput.value.trim();
     if (!newSeal) { alert('Введіть номер пломби'); return; }
-    
     newSeal = toUpperCaseByLanguage(newSeal);
     newSealInput.value = newSeal;
-    
     const sealsToAdd = parseSealRange(newSeal);
-    let addedCount = 0;
-    const addedSeals = [];
-    
+    let addedCount = 0, addedSeals = [];
     sealsToAdd.forEach(seal => {
         if (!sealsDB.includes(seal)) {
             sealsDB.push(seal);
@@ -826,13 +693,11 @@ function addNewSeal() {
             addedSeals.push(seal);
         }
     });
-    
     saveSeals();
     newSealInput.value = '';
     sealAddPanel.classList.add('hidden');
     if (sealSearch) sealSearch.value = '';
     renderSealsList('');
-    
     if (addedCount > 0) {
         showToast(`✅ Додано пломб: ${addedCount} (${addedSeals[0]} ... ${addedSeals[addedSeals.length-1]})`);
     } else {
@@ -863,7 +728,6 @@ function renderMetersList(filter = '') {
         html += `<div class="seal-item"><span class="seal-number" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</span><button class="delete-meter" data-meter="${escapeHtml(meter)}">🗑️</button></div>`;
     });
     metersListDiv.innerHTML = html;
-    
     document.querySelectorAll('.seal-number[data-meter]').forEach(el => {
         el.addEventListener('click', () => {
             const meter = el.getAttribute('data-meter');
@@ -874,7 +738,6 @@ function renderMetersList(filter = '') {
             }
         });
     });
-    
     document.querySelectorAll('.delete-meter').forEach(el => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -892,11 +755,8 @@ function renderMetersList(filter = '') {
 function addNewMeter() {
     const newMeter = newMeterInput.value.trim();
     if (!newMeter) { alert('Введіть номер лічильника'); return; }
-    
     const metersToAdd = parseSealRange(newMeter);
-    let addedCount = 0;
-    const addedMeters = [];
-    
+    let addedCount = 0, addedMeters = [];
     metersToAdd.forEach(meter => {
         if (!metersDB.includes(meter)) {
             metersDB.push(meter);
@@ -904,13 +764,11 @@ function addNewMeter() {
             addedMeters.push(meter);
         }
     });
-    
     saveMeters();
     newMeterInput.value = '';
     meterAddPanel.classList.add('hidden');
     if (meterSearch) meterSearch.value = '';
     renderMetersList('');
-    
     if (addedCount > 0) {
         showToast(`✅ Додано лічильників: ${addedCount} (${addedMeters[0]} ... ${addedMeters[addedMeters.length-1]})`);
     } else {
@@ -928,22 +786,17 @@ function showSearchResults(fieldId, query) {
         return; 
     }
     const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { 
-        container.classList.add('hidden'); 
-        return; 
-    }
+    if (!filtered.length) { container.classList.add('hidden'); return; }
     container.classList.remove('hidden');
     let html = '';
     filtered.forEach(seal => { 
         html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
     });
     container.innerHTML = html;
-    
     const items = container.querySelectorAll('.search-result-item');
     items.forEach(item => {
         const oldHandler = item._clickHandler;
         if (oldHandler) item.removeEventListener('click', oldHandler);
-        
         const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -975,22 +828,17 @@ function showMeterSearchResults(fieldId, query) {
         return; 
     }
     const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { 
-        container.classList.add('hidden'); 
-        return; 
-    }
+    if (!filtered.length) { container.classList.add('hidden'); return; }
     container.classList.remove('hidden');
     let html = '';
     filtered.forEach(meter => { 
         html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
     });
     container.innerHTML = html;
-    
     const items = container.querySelectorAll('.search-result-item');
     items.forEach(item => {
         const oldHandler = item._clickHandler;
         if (oldHandler) item.removeEventListener('click', oldHandler);
-        
         const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1012,34 +860,23 @@ function setupSearch() {
     const sealInputs = document.querySelectorAll('.seal-input');
     sealInputs.forEach(input => {
         if (input) {
-            input.addEventListener('input', function() { 
-                showSearchResults(this.id, this.value); 
-            });
-            input.addEventListener('blur', function() { 
-                setTimeout(() => hideSearchResults(this.id), 300); 
-            });
+            input.addEventListener('input', function() { showSearchResults(this.id, this.value); });
+            input.addEventListener('blur', function() { setTimeout(() => hideSearchResults(this.id), 300); });
         }
     });
-    
     const meterInputs = document.querySelectorAll('.meter-input');
     meterInputs.forEach(input => {
         if (input) {
-            input.addEventListener('input', function() { 
-                showMeterSearchResults(this.id, this.value); 
-            });
-            input.addEventListener('blur', function() { 
-                setTimeout(() => hideSearchResults(this.id), 300); 
-            });
+            input.addEventListener('input', function() { showMeterSearchResults(this.id, this.value); });
+            input.addEventListener('blur', function() { setTimeout(() => hideSearchResults(this.id), 300); });
         }
     });
 }
 
-// ========== ДАНІ ДЛЯ ЖУРНАЛУ ==========
+// ========== ДАНІ ДЛЯ ЖУРНАЛУ (БЕЗ НОВИХ ПОЛІВ) ==========
 function getFormData() {
     return {
         date: new Date().toLocaleString('uk-UA'),
-        workDate: workDate?.value || '',
-        replacementReason: replacementReason?.value || '',
         workType: workType?.value || '',
         employeeId: employeeId?.value || '',
         accountNumber: accountNumber?.value || '',
@@ -1086,20 +923,14 @@ function clearAllFieldsExceptEmployee() {
         oldIMP1, oldIMP2, oldIMP3, newSealCover, newSealVKP, newSealSHO1,
         newSealSHO2, newSealOpto, newIMP1, newIMP2, newIMP3
     ];
-    
     fieldsToClear.forEach(field => {
         if (field) {
-            if (field.tagName === 'SELECT') {
-                field.value = '';
-            } else {
-                field.value = '';
-            }
+            if (field.tagName === 'SELECT') field.value = '';
+            else field.value = '';
         }
     });
-    
     if (newMeterReading) newMeterReading.value = '0000000';
     setDefaultValues();
-    
     showToast('✅ Всі поля очищено (табельний номер збережено)');
 }
 
@@ -1111,13 +942,10 @@ function searchLogByAccount() {
         currentSearchTerm = "";
         return;
     }
-    
     currentSearchTerm = searchTerm;
-    
     function recordMatches(record, term) {
         const fieldsToCheck = [
-            record.date, record.workDate, record.replacementReason, record.workType, 
-            record.employeeId, record.accountNumber,
+            record.date, record.workType, record.employeeId, record.accountNumber,
             record.oldMeterNumber, record.newMeterNumber, record.oldMeterType, record.newMeterType,
             record.oldMeterReading, record.newMeterReading, record.address,
             record.oldSealCover, record.oldSealVKP, record.oldSealSHO1, record.oldSealSHO2,
@@ -1125,29 +953,22 @@ function searchLogByAccount() {
             record.newSealCover, record.newSealVKP, record.newSealSHO1, record.newSealSHO2,
             record.newSealOpto, record.newIMP1, record.newIMP2, record.newIMP3
         ];
-        
         const removedSealsCombined = [
             record.oldSealCover, record.oldSealVKP, record.oldSealSHO1, 
             record.oldSealSHO2, record.oldSealOpto, record.oldIMP1, 
             record.oldIMP2, record.oldIMP3
         ].filter(v => v && v.trim() !== '').join(' ');
-        
         const installedSealsCombined = [
             record.newSealCover, record.newSealVKP, record.newSealSHO1,
             record.newSealSHO2, record.newSealOpto, record.newIMP1,
             record.newIMP2, record.newIMP3
         ].filter(v => v && v.trim() !== '').join(' ');
-        
         fieldsToCheck.push(removedSealsCombined, installedSealsCombined);
-        
         for (let field of fieldsToCheck) {
-            if (field && field.toString().toLowerCase().includes(term)) {
-                return true;
-            }
+            if (field && field.toString().toLowerCase().includes(term)) return true;
         }
         return false;
     }
-    
     const filtered = workLog.filter(record => recordMatches(record, searchTerm));
     renderFilteredLog(filtered);
     showToast(`🔍 Знайдено ${filtered.length} запис(ів) за запитом: "${searchTerm}"`);
@@ -1163,10 +984,9 @@ function resetSearch() {
 function renderFilteredLog(filteredLog) {
     if (!logTable) return;
     if (!filteredLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="14">Записи не знайдено</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Записи не знайдено</td></tr>';
         return;
     }
-    
     let html = '';
     filteredLog.forEach((r, idx) => {
         const originalIdx = workLog.findIndex(original => original.date === r.date && original.accountNumber === r.accountNumber);
@@ -1174,8 +994,6 @@ function renderFilteredLog(filteredLog) {
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
             <td>${escapeHtml(r.date || '')}</td>
-            <td>${escapeHtml(r.workDate || '')}</td>
-            <td>${escapeHtml(r.replacementReason || '')}</td>
             <td>${escapeHtml(r.workType || '')}</td>
             <td>${escapeHtml(r.employeeId || '')}</td>
             <td>${escapeHtml(r.accountNumber || '')}</td>
@@ -1183,14 +1001,13 @@ function renderFilteredLog(filteredLog) {
             <td>${escapeHtml(r.oldMeterReading || '')}</td>
             <td>${escapeHtml(r.newMeterNumber || '')}</td>
             <td>${escapeHtml(r.newMeterReading || '')}</td>
-            <td style="min-width:180px;">${escapeHtml(r.address || '')}</td>
-            <td style="min-width:200px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
-            <td style="min-width:200px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
             <td><button class="delete-icon" data-idx="${originalIdx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
         </tr>`;
     });
     logTable.innerHTML = html;
-    
     document.querySelectorAll('.delete-icon').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -1201,7 +1018,6 @@ function renderFilteredLog(filteredLog) {
 
 // ========== ВІДПРАВКА В ФОРМУ ==========
 function sendToGoogleForm() {
-    // Перевірка обов'язкових полів
     if (!workType.value) { 
         alert('❌ Виберіть виконувану роботу'); 
         workType.focus(); 
@@ -1218,7 +1034,6 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Отримуємо значення
     const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
     const newMeterTypeVal = newMeterType ? newMeterType.value : '';
     const workDateVal = workDate ? workDate.value : '';
@@ -1232,21 +1047,18 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
-    // ===== НОВІ ПОЛЯ =====
+    // Нові поля
     if (workDateVal) params.append('entry.814427514', workDateVal);
     if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
     
-    // Робота
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
     
-    // Знятий лічильник
     if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
     if (oldMeterNumber && oldMeterNumber.value) params.append('entry.1262021573', oldMeterNumber.value);
     if (oldMeterReading && oldMeterReading.value) params.append('entry.1666715724', oldMeterReading.value);
     
-    // Зняті пломби
     if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
     if (oldSealVKP && oldSealVKP.value) params.append('entry.1281985427', oldSealVKP.value);
     if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.1571141896', oldSealSHO1.value);
@@ -1256,12 +1068,10 @@ function sendToGoogleForm() {
     if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
     if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
     
-    // Встановлений лічильник
     if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
     if (newMeterNumber && newMeterNumber.value) params.append('entry.591456354', newMeterNumber.value);
     if (newMeterReading && newMeterReading.value) params.append('entry.686446183', newMeterReading.value);
     
-    // Встановлені пломби
     if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
     if (newSealVKP && newSealVKP.value) params.append('entry.1292803469', newSealVKP.value);
     if (newSealSHO1 && newSealSHO1.value) params.append('entry.1309070612', newSealSHO1.value);
@@ -1274,15 +1084,12 @@ function sendToGoogleForm() {
     if (address && address.value) params.append('entry.1234567890', address.value);
     
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
-    
     console.log('URL форми:', formUrl);
-    
     window.open(formUrl, '_blank');
     
     const data = getFormData();
     workLog.unshift(data);
     saveData();
-    
     alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
 
@@ -1309,19 +1116,16 @@ function sendAllDataToOwner() {
     }
     
     const data = getFormData();
-    
     let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
-    message += `📅 Дата виконання: ${data.workDate || '—'}\n`;
-    message += `📋 Підстава: ${data.replacementReason || '—'}\n`;
+    message += `📅 Дата виконання: ${workDate?.value || '—'}\n`;
+    message += `📋 Підстава: ${replacementReason?.value || '—'}\n`;
     message += `📋 Робота: ${data.workType}\n`;
     message += `👤 Табельний: ${data.employeeId}\n`;
     message += `📋 Особовий: ${data.accountNumber}\n\n`;
-    
     message += '🔻 **Знятий лічильник**\n';
     message += `Тип: ${data.oldMeterType || '—'}\n`;
     message += `Номер: ${data.oldMeterNumber || '—'}\n`;
     message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
-    
     message += '🔻 **Зняті пломби**\n';
     const oldSeals = [
         `кл. кришка: ${data.oldSealCover || '—'}`,
@@ -1335,12 +1139,10 @@ function sendAllDataToOwner() {
     ].filter(s => !s.includes('—'));
     message += oldSeals.length ? oldSeals.join('\n') : '—\n';
     message += '\n';
-    
     message += '🔺 **Встановлений лічильник**\n';
     message += `Тип: ${data.newMeterType || '—'}\n`;
     message += `Номер: ${data.newMeterNumber || '—'}\n`;
     message += `Покази: ${data.newMeterReading || '0000000'}\n\n`;
-    
     message += '🔺 **Встановлені пломби**\n';
     const newSeals = [
         `кл. кришка: ${data.newSealCover || '—'}`,
@@ -1354,16 +1156,12 @@ function sendAllDataToOwner() {
     ].filter(s => !s.includes('—'));
     message += newSeals.length ? newSeals.join('\n') : '—\n';
     message += '\n';
-    
     message += `📍 Адреса: ${data.address || '—'}\n`;
-    
     const encodedMessage = encodeURIComponent(message);
     const telegramUrl = `https://t.me/share/url?url=${encodedMessage}`;
     window.open(telegramUrl, '_blank');
-    
     workLog.unshift(data);
     saveData();
-    
     showToast('📨 Дані відправлено власнику!');
 }
 
@@ -1380,7 +1178,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="14">Немає записів</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Немає записів</td></tr>';
         return;
     }
     let html = '';
@@ -1389,8 +1187,6 @@ function renderLog() {
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
             <td>${escapeHtml(r.date || '')}</td>
-            <td>${escapeHtml(r.workDate || '')}</td>
-            <td>${escapeHtml(r.replacementReason || '')}</td>
             <td>${escapeHtml(r.workType || '')}</td>
             <td>${escapeHtml(r.employeeId || '')}</td>
             <td>${escapeHtml(r.accountNumber || '')}</td>
@@ -1398,14 +1194,13 @@ function renderLog() {
             <td>${escapeHtml(r.oldMeterReading || '')}</td>
             <td>${escapeHtml(r.newMeterNumber || '')}</td>
             <td>${escapeHtml(r.newMeterReading || '')}</td>
-            <td style="min-width:180px;">${escapeHtml(r.address || '')}</td>
-            <td style="min-width:200px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
-            <td style="min-width:200px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
             <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
         </tr>`;
     });
     logTable.innerHTML = html;
-    
     document.querySelectorAll('.delete-icon').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -1416,11 +1211,11 @@ function renderLog() {
 
 function exportCSV() {
     if (!workLog.length) { alert('Немає даних для експорту'); return; }
-    const headers = ['Дата','Дата виконання','Підстава','Робота','Табельний','Особовий','Знятий лічильник','Покази знятого','Встановлений лічильник','Покази встановленого','Адреса','Зняті пломби','Встановлені пломби'];
+    const headers = ['Дата','Робота','Табельний','Особовий','Знятий лічильник','Покази знятого','Встановлений лічильник','Покази встановленого','Адреса','Зняті пломби','Встановлені пломби'];
     const rows = workLog.map(r => {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(' ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(' ');
-        return [`"${r.date}"`,`"${r.workDate || ''}"`,`"${r.replacementReason || ''}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeterNumber || ''}"`,`"${r.oldMeterReading || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.newMeterReading || ''}"`,`"${r.address || ''}"`,`"${removedSeals}"`,`"${installedSeals}"`];
+        return [`"${r.date}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeterNumber || ''}"`,`"${r.oldMeterReading || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.newMeterReading || ''}"`,`"${r.address || ''}"`,`"${removedSeals}"`,`"${installedSeals}"`];
     });
     const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
@@ -1509,10 +1304,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 tempContainer.style.overflow = 'hidden';
                 document.body.appendChild(tempContainer);
             }
-            
             tempContainer.classList.remove('hidden');
             tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код пломби</span><button class="btn-close-scanner" id="closeTempScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
-            
             document.getElementById('closeTempScanner').onclick = async () => {
                 if (activeScanners[tempContainerId]) {
                     try { await activeScanners[tempContainerId].stop(); } catch(e) {}
@@ -1520,10 +1313,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
                 tempContainer.classList.add('hidden');
             };
-            
             const reader = new Html5Qrcode(`${tempContainerId}_reader`);
             activeScanners[tempContainerId] = reader;
-            
             try {
                 await reader.start(
                     { facingMode: "environment" },
@@ -1568,10 +1359,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 tempContainer.style.overflow = 'hidden';
                 document.body.appendChild(tempContainer);
             }
-            
             tempContainer.classList.remove('hidden');
             tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код лічильника</span><button class="btn-close-scanner" id="closeTempMeterScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
-            
             document.getElementById('closeTempMeterScanner').onclick = async () => {
                 if (activeScanners[tempContainerId]) {
                     try { await activeScanners[tempContainerId].stop(); } catch(e) {}
@@ -1579,10 +1368,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
                 tempContainer.classList.add('hidden');
             };
-            
             const reader = new Html5Qrcode(`${tempContainerId}_reader`);
             activeScanners[tempContainerId] = reader;
-            
             try {
                 await reader.start(
                     { facingMode: "environment" },
