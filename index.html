@@ -47,6 +47,27 @@
             <div class="sub">Облік лічильників та пломб</div>
         </div>
 
+        <!-- ===== НОВІ ПОЛЯ: ДАТА ТА ПІДСТАВА ===== -->
+        <div class="card">
+            <div class="input-scan-row" style="flex-wrap: wrap; gap: 12px;">
+                <div style="flex: 1; min-width: 160px;">
+                    <label class="field-label">📅 Дата виконання роботи</label>
+                    <input id="workDate" class="field-input" type="text" placeholder="ДД.ММ.РРРР" speech>
+                </div>
+                <div style="flex: 2; min-width: 200px;">
+                    <label class="field-label">📋 Підстава для заміни лічильника</label>
+                    <select id="replacementReason" class="field-input">
+                        <option value="">-- Виберіть --</option>
+                        <option value="Непрацюючий лічильник">Непрацюючий лічильник</option>
+                        <option value="Планова заміна (протермінований)">Планова заміна (протермінований)</option>
+                        <option value="ІП (PLC)">ІП (PLC)</option>
+                        <option value="Платна заміна (б/т)">Платна заміна (б/т)</option>
+                        <option value="Експертиза">Експертиза</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <label class="field-label">📋 Оберіть виконувану роботу</label>
             <select id="workType" class="field-input">
@@ -79,11 +100,14 @@
             <div id="accountScanner" class="scanner-container hidden"></div>
         </div>
 
-        <!-- ДЕМОНТОВАНИЙ ЛІЧИЛЬНИК -->
+        <!-- ЗНЯТИЙ ЛІЧИЛЬНИК -->
         <div class="card">
             <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Знятий лічильник</h3>
             <label class="field-label">Тип знятого лічильника</label>
-            <select id="oldMeterType" class="field-input"><option value="">-- Виберіть --</option></select>
+            <div class="input-scan-row">
+                <select id="oldMeterType" class="field-input"><option value="">-- Виберіть --</option></select>
+                <button class="btn-mic-select" data-target="oldMeterType">🎤</button>
+            </div>
             <label class="field-label" style="margin-top: 12px;">Номер знятого лічильника</label>
             <div class="input-scan-row">
                 <input id="oldMeterNumber" class="field-input meter-input" type="text" placeholder="Номер лічильника" speech>
@@ -101,7 +125,7 @@
             <div id="oldMeterReadingScanner" class="scanner-container hidden"></div>
         </div>
 
-        <!-- ДЕМОНТОВАНІ ПЛОМБИ -->
+        <!-- ЗНЯТІ ПЛОМБИ -->
         <div class="card">
             <h3 style="margin-bottom: 12px; color: #dc2626;">🔻 Зняті пломби</h3>
             
@@ -150,7 +174,10 @@
         <div class="card">
             <h3 style="margin-bottom: 12px; color: #16a34a;">🔺 Встановлений лічильник</h3>
             <label class="field-label">Тип встановленого лічильника</label>
-            <select id="newMeterType" class="field-input"><option value="">-- Виберіть --</option></select>
+            <div class="input-scan-row">
+                <select id="newMeterType" class="field-input"><option value="">-- Виберіть --</option></select>
+                <button class="btn-mic-select" data-target="newMeterType">🎤</button>
+            </div>
             <label class="field-label" style="margin-top: 12px;">Номер встановленого лічильника</label>
             <div class="input-scan-row">
                 <input id="newMeterNumber" class="field-input meter-input" type="text" placeholder="Номер лічильника" speech>
