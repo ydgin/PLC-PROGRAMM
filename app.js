@@ -25,6 +25,10 @@ const newMeterType = document.getElementById('newMeterType');
 const oldMeterReading = document.getElementById('oldMeterReading');
 const newMeterReading = document.getElementById('newMeterReading');
 
+// ===== НОВІ ПОЛЯ =====
+const workDate = document.getElementById('workDate');
+const replacementReason = document.getElementById('replacementReason');
+
 // Демонтовані пломби
 const oldSealCover = document.getElementById('oldSealCover');
 const oldSealVKP = document.getElementById('oldSealVKP');
@@ -150,6 +154,14 @@ function setDefaultValues() {
     if (newMeterReading && !newMeterReading.value) {
         newMeterReading.value = "0000000";
     }
+    // Встановлюємо сьогоднішню дату за замовчуванням
+    if (workDate && !workDate.value) {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        workDate.value = `${dd}.${mm}.${yyyy}`;
+    }
 }
 
 // ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (БЕЗ ДУБЛІКАТІВ) ==========
@@ -267,7 +279,6 @@ function parseSealRange(input) {
 
 // ========== ФУНКЦІЯ ДЛЯ ВИЗНАЧЕННЯ МОВИ КЛАВІАТУРИ ==========
 function detectKeyboardLanguage(text) {
-    // Перевіряємо, яких букв більше в тексті
     const cyrillicPattern = /[А-Яа-яЇїЄєІі]/g;
     const latinPattern = /[A-Za-z]/g;
     
@@ -282,7 +293,6 @@ function detectKeyboardLanguage(text) {
     return 'unknown';
 }
 
-// ========== ФУНКЦІЯ ДЛЯ ПЕРЕТВОРЕННЯ БУКВ У ВЕРХНІЙ РЕГІСТР З УРАХУВАННЯМ МОВИ ==========
 function toUpperCaseByLanguage(text) {
     const lang = detectKeyboardLanguage(text);
     if (lang === 'cyrillic') {
@@ -347,7 +357,7 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
     }
 }
 
-// ========== ГОЛОСОВЕ ВВЕДЕННЯ (з визначенням мови для пломб) ==========
+// ========== ГОЛОСОВЕ ВВЕДЕННЯ ==========
 function setupVoiceInput() {
     const micButtons = document.querySelectorAll('.btn-mic');
     
@@ -419,7 +429,6 @@ function setupVoiceInput() {
                     // ===== ДЛЯ ПЛОМБ - ВИЗНАЧАЄМО МОВУ ТА ПЕРЕТВОРЮЄМО У ВЕРХНІЙ РЕГІСТР =====
                     if (input.classList.contains('seal-input')) {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
-                        // Перетворюємо у верхній регістр з урахуванням мови
                         transcript = toUpperCaseByLanguage(transcript);
                     }
                     
@@ -640,7 +649,6 @@ function setupVoiceSelect() {
                     let foundValue = '';
                     let foundText = '';
                     
-                    // Шукаємо точне співпадіння
                     for (let i = 0; i < select.options.length; i++) {
                         const optionText = select.options[i].text.replace(/\s/g, '').toLowerCase();
                         if (optionText === transcript || transcript === optionText) {
@@ -652,7 +660,6 @@ function setupVoiceSelect() {
                         }
                     }
                     
-                    // Якщо не знайшли, шукаємо часткове співпадіння
                     if (!found) {
                         let bestMatch = 0;
                         for (let i = 1; i < select.options.length; i++) {
@@ -741,7 +748,6 @@ function setupAutoClean() {
             if (isNumeric) {
                 this.value = this.value.replace(/\s/g, '').replace(/\D/g, '');
             } else if (this.classList.contains('seal-input')) {
-                // Для пломб - видаляємо пробіли і перетворюємо у верхній регістр
                 this.value = this.value.replace(/\s/g, '');
                 this.value = toUpperCaseByLanguage(this.value);
             } else if (this.classList.contains('meter-input')) {
@@ -806,7 +812,6 @@ function addNewSeal() {
     let newSeal = newSealInput.value.trim();
     if (!newSeal) { alert('Введіть номер пломби'); return; }
     
-    // Перетворюємо у верхній регістр з урахуванням мови
     newSeal = toUpperCaseByLanguage(newSeal);
     newSealInput.value = newSeal;
     
@@ -1033,6 +1038,8 @@ function setupSearch() {
 function getFormData() {
     return {
         date: new Date().toLocaleString('uk-UA'),
+        workDate: workDate?.value || '',
+        replacementReason: replacementReason?.value || '',
         workType: workType?.value || '',
         employeeId: employeeId?.value || '',
         accountNumber: accountNumber?.value || '',
@@ -1072,8 +1079,9 @@ function saveAllFieldsToLog() {
 // ========== ОЧИСТКА ПОЛЕЙ ==========
 function clearAllFieldsExceptEmployee() {
     const fieldsToClear = [
-        workType, accountNumber, address, oldMeterNumber, newMeterNumber,
-        oldMeterType, newMeterType, oldMeterReading, newMeterReading,
+        workDate, replacementReason, workType, accountNumber, address, 
+        oldMeterNumber, newMeterNumber, oldMeterType, newMeterType, 
+        oldMeterReading, newMeterReading,
         oldSealCover, oldSealVKP, oldSealSHO1, oldSealSHO2, oldSealOpto,
         oldIMP1, oldIMP2, oldIMP3, newSealCover, newSealVKP, newSealSHO1,
         newSealSHO2, newSealOpto, newIMP1, newIMP2, newIMP3
@@ -1090,6 +1098,7 @@ function clearAllFieldsExceptEmployee() {
     });
     
     if (newMeterReading) newMeterReading.value = '0000000';
+    setDefaultValues();
     
     showToast('✅ Всі поля очищено (табельний номер збережено)');
 }
@@ -1107,7 +1116,8 @@ function searchLogByAccount() {
     
     function recordMatches(record, term) {
         const fieldsToCheck = [
-            record.date, record.workType, record.employeeId, record.accountNumber,
+            record.date, record.workDate, record.replacementReason, record.workType, 
+            record.employeeId, record.accountNumber,
             record.oldMeterNumber, record.newMeterNumber, record.oldMeterType, record.newMeterType,
             record.oldMeterReading, record.newMeterReading, record.address,
             record.oldSealCover, record.oldSealVKP, record.oldSealSHO1, record.oldSealSHO2,
@@ -1153,7 +1163,7 @@ function resetSearch() {
 function renderFilteredLog(filteredLog) {
     if (!logTable) return;
     if (!filteredLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Записи не знайдено</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="14">Записи не знайдено</td></tr>';
         return;
     }
     
@@ -1164,6 +1174,8 @@ function renderFilteredLog(filteredLog) {
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
             <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.workDate || '')}</td>
+            <td>${escapeHtml(r.replacementReason || '')}</td>
             <td>${escapeHtml(r.workType || '')}</td>
             <td>${escapeHtml(r.employeeId || '')}</td>
             <td>${escapeHtml(r.accountNumber || '')}</td>
@@ -1171,9 +1183,9 @@ function renderFilteredLog(filteredLog) {
             <td>${escapeHtml(r.oldMeterReading || '')}</td>
             <td>${escapeHtml(r.newMeterNumber || '')}</td>
             <td>${escapeHtml(r.newMeterReading || '')}</td>
-            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
-            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
-            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td style="min-width:180px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:200px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:200px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
             <td><button class="delete-icon" data-idx="${originalIdx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
         </tr>`;
     });
@@ -1187,7 +1199,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (ГАРАНТОВАНА ПЕРЕДАЧА) ==========
+// ========== ВІДПРАВКА В ФОРМУ ==========
 function sendToGoogleForm() {
     // Перевірка обов'язкових полів
     if (!workType.value) { 
@@ -1206,52 +1218,33 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // ===== ОТРИМУЄМО ЗНАЧЕННЯ БЕЗПОСЕРЕДНЬО З SELECT =====
-    const oldMeterTypeSelect = document.getElementById('oldMeterType');
-    const newMeterTypeSelect = document.getElementById('newMeterType');
-    
-    // Отримуємо ВИБРАНЕ ЗНАЧЕННЯ (value) з select
-    const oldMeterTypeVal = oldMeterTypeSelect ? oldMeterTypeSelect.value : '';
-    const newMeterTypeVal = newMeterTypeSelect ? newMeterTypeSelect.value : '';
-    
-    // Отримуємо ТЕКСТ вибраного варіанту (для контролю)
-    const oldMeterTypeText = oldMeterTypeSelect && oldMeterTypeSelect.selectedIndex >= 0 
-        ? oldMeterTypeSelect.options[oldMeterTypeSelect.selectedIndex]?.text || '' 
-        : '';
-    const newMeterTypeText = newMeterTypeSelect && newMeterTypeSelect.selectedIndex >= 0 
-        ? newMeterTypeSelect.options[newMeterTypeSelect.selectedIndex]?.text || '' 
-        : '';
-    
-    // ВАЖЛИВО: використовуємо ТІЛЬКИ value, без тексту (щоб уникнути дублювання)
-    const finalOldMeterType = oldMeterTypeVal;
-    const finalNewMeterType = newMeterTypeVal;
+    // Отримуємо значення
+    const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
+    const newMeterTypeVal = newMeterType ? newMeterType.value : '';
+    const workDateVal = workDate ? workDate.value : '';
+    const replacementReasonVal = replacementReason ? replacementReason.value : '';
     
     console.log('=== ВІДПРАВКА В ФОРМУ ===');
-    console.log('Тип знятого (value):', oldMeterTypeVal);
-    console.log('Тип знятого (text):', oldMeterTypeText);
-    console.log('Тип знятого (final):', finalOldMeterType);
-    console.log('Тип встановленого (value):', newMeterTypeVal);
-    console.log('Тип встановленого (text):', newMeterTypeText);
-    console.log('Тип встановленого (final):', finalNewMeterType);
+    console.log('Дата:', workDateVal);
+    console.log('Підстава:', replacementReasonVal);
+    console.log('Тип знятого:', oldMeterTypeVal);
+    console.log('Тип встановленого:', newMeterTypeVal);
     
-    // Формуємо URL з параметрами (GET)
     const params = new URLSearchParams();
+    
+    // ===== НОВІ ПОЛЯ =====
+    if (workDateVal) params.append('entry.814427514', workDateVal);
+    if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
     
     // Робота
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
     
-    // Знятий лічильник - ТИП (використовуємо value)
-    if (finalOldMeterType) {
-        params.append('entry.155422969', finalOldMeterType);
-    }
-    if (oldMeterNumber && oldMeterNumber.value) {
-        params.append('entry.1262021573', oldMeterNumber.value);
-    }
-    if (oldMeterReading && oldMeterReading.value) {
-        params.append('entry.1666715724', oldMeterReading.value);
-    }
+    // Знятий лічильник
+    if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
+    if (oldMeterNumber && oldMeterNumber.value) params.append('entry.1262021573', oldMeterNumber.value);
+    if (oldMeterReading && oldMeterReading.value) params.append('entry.1666715724', oldMeterReading.value);
     
     // Зняті пломби
     if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
@@ -1263,16 +1256,10 @@ function sendToGoogleForm() {
     if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
     if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
     
-    // Встановлений лічильник - ТИП (використовуємо value)
-    if (finalNewMeterType) {
-        params.append('entry.1958360409', finalNewMeterType);
-    }
-    if (newMeterNumber && newMeterNumber.value) {
-        params.append('entry.591456354', newMeterNumber.value);
-    }
-    if (newMeterReading && newMeterReading.value) {
-        params.append('entry.686446183', newMeterReading.value);
-    }
+    // Встановлений лічильник
+    if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
+    if (newMeterNumber && newMeterNumber.value) params.append('entry.591456354', newMeterNumber.value);
+    if (newMeterReading && newMeterReading.value) params.append('entry.686446183', newMeterReading.value);
     
     // Встановлені пломби
     if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
@@ -1286,16 +1273,12 @@ function sendToGoogleForm() {
     
     if (address && address.value) params.append('entry.1234567890', address.value);
     
-    // Формуємо URL
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     
-    console.log('URL форми (первые 500 символов):', formUrl.substring(0, 500));
-    console.log('ВСЕ ПАРАМЕТРЫ:', params.toString());
+    console.log('URL форми:', formUrl);
     
-    // Відкриваємо форму
     window.open(formUrl, '_blank');
     
-    // Зберігаємо в журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
@@ -1328,7 +1311,8 @@ function sendAllDataToOwner() {
     const data = getFormData();
     
     let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
-    message += `📅 Дата: ${data.date}\n`;
+    message += `📅 Дата виконання: ${data.workDate || '—'}\n`;
+    message += `📋 Підстава: ${data.replacementReason || '—'}\n`;
     message += `📋 Робота: ${data.workType}\n`;
     message += `👤 Табельний: ${data.employeeId}\n`;
     message += `📋 Особовий: ${data.accountNumber}\n\n`;
@@ -1396,7 +1380,7 @@ function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); 
 function renderLog() {
     if (!logTable) return;
     if (!workLog.length) {
-        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Немає записів</td></tr>';
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="14">Немає записів</td></tr>';
         return;
     }
     let html = '';
@@ -1405,6 +1389,8 @@ function renderLog() {
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
         html += `<tr>
             <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.workDate || '')}</td>
+            <td>${escapeHtml(r.replacementReason || '')}</td>
             <td>${escapeHtml(r.workType || '')}</td>
             <td>${escapeHtml(r.employeeId || '')}</td>
             <td>${escapeHtml(r.accountNumber || '')}</td>
@@ -1412,9 +1398,9 @@ function renderLog() {
             <td>${escapeHtml(r.oldMeterReading || '')}</td>
             <td>${escapeHtml(r.newMeterNumber || '')}</td>
             <td>${escapeHtml(r.newMeterReading || '')}</td>
-            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
-            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
-            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td style="min-width:180px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:200px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:200px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
             <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
         </tr>`;
     });
@@ -1430,11 +1416,11 @@ function renderLog() {
 
 function exportCSV() {
     if (!workLog.length) { alert('Немає даних для експорту'); return; }
-    const headers = ['Дата','Робота','Табельний','Особовий','Знятий лічильник','Покази знятого','Встановлений лічильник','Покази встановленого','Адреса','Зняті пломби','Встановлені пломби'];
+    const headers = ['Дата','Дата виконання','Підстава','Робота','Табельний','Особовий','Знятий лічильник','Покази знятого','Встановлений лічильник','Покази встановленого','Адреса','Зняті пломби','Встановлені пломби'];
     const rows = workLog.map(r => {
         const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(' ');
         const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(' ');
-        return [`"${r.date}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeterNumber || ''}"`,`"${r.oldMeterReading || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.newMeterReading || ''}"`,`"${r.address || ''}"`,`"${removedSeals}"`,`"${installedSeals}"`];
+        return [`"${r.date}"`,`"${r.workDate || ''}"`,`"${r.replacementReason || ''}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeterNumber || ''}"`,`"${r.oldMeterReading || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.newMeterReading || ''}"`,`"${r.address || ''}"`,`"${removedSeals}"`,`"${installedSeals}"`];
     });
     const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
