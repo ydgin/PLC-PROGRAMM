@@ -25,6 +25,10 @@ const newMeterType = document.getElementById('newMeterType');
 const oldMeterReading = document.getElementById('oldMeterReading');
 const newMeterReading = document.getElementById('newMeterReading');
 
+// ===== НОВІ ПОЛЯ =====
+const workDate = document.getElementById('workDate');
+const replacementReason = document.getElementById('replacementReason');
+
 // Демонтовані пломби
 const oldSealCover = document.getElementById('oldSealCover');
 const oldSealVKP = document.getElementById('oldSealVKP');
@@ -99,6 +103,7 @@ function pinAddNum(num) {
                 setupVoiceInput();
                 setupAutoClean();
                 setupVoiceSearch();
+                setupVoiceSelect();
             } else {
                 if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
@@ -130,6 +135,7 @@ function pinCheck() {
         setupVoiceInput();
         setupAutoClean();
         setupVoiceSearch();
+        setupVoiceSelect();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
@@ -147,6 +153,13 @@ function pinReset() {
 function setDefaultValues() {
     if (newMeterReading && !newMeterReading.value) {
         newMeterReading.value = "0000000";
+    }
+    if (workDate && !workDate.value) {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        workDate.value = `${dd}.${mm}.${yyyy}`;
     }
 }
 
@@ -209,6 +222,40 @@ function initMeterTypes() {
             newMeterType.appendChild(option);
         });
     }
+    
+    // ===== АВТОМАТИЧНЕ КОПІЮВАННЯ ТИПУ =====
+    if (oldMeterType) {
+        oldMeterType.addEventListener('change', function() {
+            const selectedValue = this.value;
+            const newTypeSelect = document.getElementById('newMeterType');
+            if (!newTypeSelect) return;
+            if (!selectedValue) {
+                newTypeSelect.value = '';
+                return;
+            }
+            let found = false;
+            for (let i = 0; i < newTypeSelect.options.length; i++) {
+                if (newTypeSelect.options[i].value === selectedValue) {
+                    newTypeSelect.selectedIndex = i;
+                    newTypeSelect.value = selectedValue;
+                    found = true;
+                    const changeEvent = new Event('change', { bubbles: true });
+                    newTypeSelect.dispatchEvent(changeEvent);
+                    newTypeSelect.style.borderColor = '#22c55e';
+                    newTypeSelect.style.backgroundColor = '#f0fdf4';
+                    setTimeout(() => {
+                        newTypeSelect.style.borderColor = '#e2e8f0';
+                        newTypeSelect.style.backgroundColor = '#f8fafc';
+                    }, 1000);
+                    showToast(`✅ Тип автоматично скопійовано: ${selectedValue}`);
+                    break;
+                }
+            }
+            if (!found && selectedValue) {
+                showToast(`⚠️ Тип "${selectedValue}" відсутній у списку встановлених`);
+            }
+        });
+    }
 }
 
 // ========== ДОПОМІЖНІ ФУНКЦІЇ ==========
@@ -238,20 +285,17 @@ function parseSealRange(input) {
     input = input.trim();
     const rangePattern = /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/i;
     const match = input.match(rangePattern);
-    
     if (match) {
         const prefix = match[1];
         const startNum = parseInt(match[2], 10);
         let endNum = parseInt(match[3], 10);
         const startNumStr = match[2];
         const endNumStr = match[3];
-        
         if (endNumStr.length < startNumStr.length) {
             const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
             const diff = endNum - startEndPart;
             endNum = startNum + diff;
         }
-        
         if (startNum <= endNum) {
             const seals = [];
             for (let i = startNum; i <= endNum; i++) {
@@ -261,6 +305,24 @@ function parseSealRange(input) {
         }
     }
     return [input];
+}
+
+// ========== ВИЗНАЧЕННЯ МОВИ ТА ВЕРХНІЙ РЕГІСТР ДЛЯ ПЛОМБ ==========
+function detectKeyboardLanguage(text) {
+    const cyrillicPattern = /[А-Яа-яЇїЄєІі]/g;
+    const latinPattern = /[A-Za-z]/g;
+    const cyrillicMatches = text.match(cyrillicPattern) || [];
+    const latinMatches = text.match(latinPattern) || [];
+    if (cyrillicMatches.length > latinMatches.length) return 'cyrillic';
+    else if (latinMatches.length > cyrillicMatches.length) return 'latin';
+    return 'unknown';
+}
+
+function toUpperCaseByLanguage(text) {
+    const lang = detectKeyboardLanguage(text);
+    if (lang === 'cyrillic') return text.toLocaleUpperCase('uk-UA');
+    else if (lang === 'latin') return text.toLocaleUpperCase('en-US');
+    return text.toUpperCase();
 }
 
 // ========== QR СКАНЕР ==========
@@ -298,10 +360,8 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
                 let result = decodedText.trim();
                 if (mode === 'digits') result = digitsExtract(result);
                 else if (mode === 'smart') result = smartMeterExtract(result);
-                
-                if (callback) {
-                    callback(result);
-                } else {
+                if (callback) callback(result);
+                else {
                     const targetInput = document.getElementById(inputId);
                     if (targetInput) targetInput.value = result;
                 }
@@ -320,62 +380,40 @@ async function startQrScanner(containerId, inputId, mode, callback = null) {
 // ========== ГОЛОСОВЕ ВВЕДЕННЯ ==========
 function setupVoiceInput() {
     const micButtons = document.querySelectorAll('.btn-mic');
-    
     micButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             const targetId = this.getAttribute('data-target');
             const input = document.getElementById(targetId);
-            
-            if (!input) {
-                showToast('❌ Поле не знайдено');
-                return;
-            }
-            
+            if (!input) { showToast('❌ Поле не знайдено'); return; }
             const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
             if (!hasSpeech) {
                 showToast('❌ Голосове введення не підтримується');
                 alert('❌ Ваш браузер не підтримує голосове введення.\nВикористовуйте Google Chrome або Safari.');
                 return;
             }
-            
-            if (this.classList.contains('listening')) {
-                return;
-            }
-            
+            if (this.classList.contains('listening')) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
-            
             recognition.lang = 'uk-UA';
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-            
             this.classList.add('listening');
             this.textContent = '⏺';
-            
-            try {
-                recognition.start();
-            } catch(err) {
+            try { recognition.start(); } catch(err) {
                 this.classList.remove('listening');
                 this.textContent = '🎤';
                 showToast('❌ Помилка запуску мікрофона');
                 console.error('Speech start error:', err);
                 return;
             }
-            
-            recognition.onstart = function() {
-                showToast('🎤 Скажіть щось...');
-            };
-            
+            recognition.onstart = function() { showToast('🎤 Скажіть щось...'); };
             recognition.onresult = function(event) {
                 try {
                     let transcript = event.results[0][0].transcript;
-                    
                     const fieldId = input.id;
-                    
                     if (fieldId === 'address') {
                         transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.,\- ]/g, '');
                         transcript = transcript.replace(/\s+/g, ' ').trim();
@@ -383,47 +421,36 @@ function setupVoiceInput() {
                         transcript = transcript.replace(/\s/g, '');
                         transcript = transcript.replace(/[ \t\n\r\f\v\u00A0\u2028\u2029]/g, '');
                     }
-                    
+                    if (input.classList.contains('seal-input')) {
+                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
+                        transcript = toUpperCaseByLanguage(transcript);
+                    }
+                    if (input.classList.contains('meter-input')) {
+                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.\-]/g, '');
+                    }
                     const numericFields = ['accountNumber', 'employeeId', 'oldMeterReading', 'newMeterReading'];
                     const isNumeric = input.type === 'number' || input.type === 'tel' || 
                                       input.getAttribute('inputmode') === 'numeric' ||
                                       numericFields.includes(fieldId);
-                    
                     if (isNumeric && fieldId !== 'address') {
                         transcript = transcript.replace(/\D/g, '');
-                        if (fieldId === 'accountNumber') {
-                            transcript = transcript.substring(0, 10);
-                        }
+                        if (fieldId === 'accountNumber') transcript = transcript.substring(0, 10);
                     }
-                    
-                    if (input.classList.contains('seal-input')) {
-                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\-]/g, '');
-                        transcript = transcript.toUpperCase();
-                    }
-                    
-                    if (input.classList.contains('meter-input')) {
-                        transcript = transcript.replace(/[^A-Za-zА-Яа-яЇїЄєІі0-9\.\-]/g, '');
-                    }
-                    
                     input.value = transcript;
-                    
                     const inputEvent = new Event('input', { bubbles: true });
                     input.dispatchEvent(inputEvent);
-                    
                     input.style.borderColor = '#22c55e';
                     input.style.backgroundColor = '#f0fdf4';
                     setTimeout(() => {
                         input.style.borderColor = '#e2e8f0';
                         input.style.backgroundColor = '#f8fafc';
                     }, 1000);
-                    
                     showToast(`✅ Розпізнано: ${transcript.substring(0, 30)}`);
                 } catch(err) {
                     console.error('Result error:', err);
                     showToast('❌ Помилка обробки результату');
                 }
             };
-            
             recognition.onerror = function(event) {
                 console.error('Speech recognition error:', event.error);
                 let msg = '';
@@ -437,7 +464,6 @@ function setupVoiceInput() {
                 }
                 showToast(msg);
             };
-            
             recognition.onend = function() {
                 micButtons.forEach(b => {
                     b.classList.remove('listening');
@@ -451,76 +477,47 @@ function setupVoiceInput() {
 // ========== ГОЛОСОВИЙ ПОШУК ==========
 function setupVoiceSearch() {
     const micSearchButtons = document.querySelectorAll('.btn-mic-search');
-    
     micSearchButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             const targetId = this.getAttribute('data-target');
             const input = document.getElementById(targetId);
-            
-            if (!input) {
-                showToast('❌ Поле не знайдено');
-                return;
-            }
-            
+            if (!input) { showToast('❌ Поле не знайдено'); return; }
             const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-            if (!hasSpeech) {
-                showToast('❌ Голосове введення не підтримується');
-                return;
-            }
-            
-            if (this.classList.contains('listening')) {
-                return;
-            }
-            
+            if (!hasSpeech) { showToast('❌ Голосове введення не підтримується'); return; }
+            if (this.classList.contains('listening')) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
-            
             recognition.lang = 'uk-UA';
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-            
             this.classList.add('listening');
             this.textContent = '⏺';
-            
-            try {
-                recognition.start();
-            } catch(err) {
+            try { recognition.start(); } catch(err) {
                 this.classList.remove('listening');
                 this.textContent = '🎤';
                 showToast('❌ Помилка запуску мікрофона');
                 return;
             }
-            
-            recognition.onstart = function() {
-                showToast('🎤 Скажіть запит для пошуку...');
-            };
-            
+            recognition.onstart = function() { showToast('🎤 Скажіть запит для пошуку...'); };
             recognition.onresult = function(event) {
                 try {
                     let transcript = event.results[0][0].transcript;
                     transcript = transcript.replace(/\s/g, '');
                     input.value = transcript;
-                    
                     const inputEvent = new Event('input', { bubbles: true });
                     input.dispatchEvent(inputEvent);
-                    
                     input.style.borderColor = '#22c55e';
                     input.style.backgroundColor = '#f0fdf4';
                     setTimeout(() => {
                         input.style.borderColor = '#e2e8f0';
                         input.style.backgroundColor = '#f8fafc';
                     }, 1000);
-                    
                     showToast(`✅ Розпізнано: ${transcript.substring(0, 30)}`);
-                } catch(err) {
-                    console.error('Result error:', err);
-                }
+                } catch(err) { console.error('Result error:', err); }
             };
-            
             recognition.onerror = function(event) {
                 console.error('Speech recognition error:', event.error);
                 let msg = '';
@@ -532,7 +529,6 @@ function setupVoiceSearch() {
                 }
                 showToast(msg);
             };
-            
             recognition.onend = function() {
                 micSearchButtons.forEach(b => {
                     b.classList.remove('listening');
@@ -546,77 +542,43 @@ function setupVoiceSearch() {
 // ========== ГОЛОСОВИЙ ВИБІР ЗІ СПИСКУ ==========
 function setupVoiceSelect() {
     const selectMicButtons = document.querySelectorAll('.btn-mic-select');
-    
     selectMicButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             const targetId = this.getAttribute('data-target');
             const select = document.getElementById(targetId);
-            
-            if (!select) {
-                showToast('❌ Список не знайдено');
-                return;
-            }
-            
+            if (!select) { showToast('❌ Список не знайдено'); return; }
             const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-            if (!hasSpeech) {
-                showToast('❌ Голосове введення не підтримується');
-                return;
-            }
-            
-            if (this.classList.contains('listening')) {
-                return;
-            }
-            
+            if (!hasSpeech) { showToast('❌ Голосове введення не підтримується'); return; }
+            if (this.classList.contains('listening')) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
-            
             recognition.lang = 'uk-UA';
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-            
             this.classList.add('listening');
             this.textContent = '⏺';
-            
-            try {
-                recognition.start();
-            } catch(err) {
+            try { recognition.start(); } catch(err) {
                 this.classList.remove('listening');
                 this.textContent = '🎤';
                 showToast('❌ Помилка запуску мікрофона');
                 return;
             }
-            
-            recognition.onstart = function() {
-                showToast('🎤 Назвіть тип лічильника...');
-            };
-            
+            recognition.onstart = function() { showToast('🎤 Назвіть тип лічильника...'); };
             recognition.onresult = function(event) {
                 try {
                     let transcript = event.results[0][0].transcript;
                     transcript = transcript.replace(/\s/g, '').toLowerCase();
-                    
-                    let found = false;
-                    let foundIndex = -1;
-                    let foundValue = '';
-                    let foundText = '';
-                    
-                    // Шукаємо точне співпадіння
+                    let found = false, foundIndex = -1, foundValue = '', foundText = '';
                     for (let i = 0; i < select.options.length; i++) {
                         const optionText = select.options[i].text.replace(/\s/g, '').toLowerCase();
                         if (optionText === transcript || transcript === optionText) {
-                            found = true;
-                            foundIndex = i;
-                            foundValue = select.options[i].value;
-                            foundText = select.options[i].text;
+                            found = true; foundIndex = i; foundValue = select.options[i].value; foundText = select.options[i].text;
                             break;
                         }
                     }
-                    
-                    // Якщо не знайшли, шукаємо часткове співпадіння
                     if (!found) {
                         let bestMatch = 0;
                         for (let i = 1; i < select.options.length; i++) {
@@ -627,34 +589,24 @@ function setupVoiceSelect() {
                             }
                             if (matchCount > bestMatch && matchCount >= 3) {
                                 bestMatch = matchCount;
-                                found = true;
-                                foundIndex = i;
-                                foundValue = select.options[i].value;
-                                foundText = select.options[i].text;
+                                found = true; foundIndex = i; foundValue = select.options[i].value; foundText = select.options[i].text;
                             }
                         }
                     }
-                    
                     if (found && foundIndex > 0) {
                         select.selectedIndex = foundIndex;
                         select.value = foundValue;
-                        
                         const changeEvent = new Event('change', { bubbles: true });
                         select.dispatchEvent(changeEvent);
-                        
                         select.style.borderColor = '#22c55e';
                         select.style.backgroundColor = '#f0fdf4';
                         setTimeout(() => {
                             select.style.borderColor = '#e2e8f0';
                             select.style.backgroundColor = '#f8fafc';
                         }, 1000);
-                        
                         showToast(`✅ Вибрано: ${foundText}`);
-                        
-                        // Додатково зберігаємо вибране значення в data-атрибут
                         select.dataset.selectedValue = foundValue;
                         select.dataset.selectedText = foundText;
-                        
                     } else {
                         showToast(`⚠️ Не знайдено: "${transcript}"`);
                     }
@@ -663,7 +615,6 @@ function setupVoiceSelect() {
                     showToast('❌ Помилка обробки');
                 }
             };
-            
             recognition.onerror = function(event) {
                 console.error('Speech recognition error:', event.error);
                 let msg = '';
@@ -675,7 +626,6 @@ function setupVoiceSelect() {
                 }
                 showToast(msg);
             };
-            
             recognition.onend = function() {
                 selectMicButtons.forEach(b => {
                     b.classList.remove('listening');
@@ -686,26 +636,26 @@ function setupVoiceSelect() {
     });
 }
 
-// ========== АВТОМАТИЧНЕ ОЧИЩЕННЯ ВІД ПРОБІЛІВ ==========
+// ========== АВТОМАТИЧНЕ ОЧИЩЕННЯ ==========
 function setupAutoClean() {
     const allInputs = document.querySelectorAll('input:not([type="hidden"])');
     allInputs.forEach(input => {
         input.addEventListener('input', function() {
             const fieldId = this.id;
-            
             if (fieldId === 'address') {
                 this.value = this.value.replace(/\s+/g, ' ').trim();
                 return;
             }
-            
             const numericFields = ['accountNumber', 'employeeId', 'oldMeterReading', 'newMeterReading'];
             const isNumeric = this.type === 'number' || this.type === 'tel' || 
                               this.getAttribute('inputmode') === 'numeric' ||
                               numericFields.includes(fieldId);
-            
             if (isNumeric) {
                 this.value = this.value.replace(/\s/g, '').replace(/\D/g, '');
-            } else if (this.classList.contains('seal-input') || this.classList.contains('meter-input')) {
+            } else if (this.classList.contains('seal-input')) {
+                this.value = this.value.replace(/\s/g, '');
+                this.value = toUpperCaseByLanguage(this.value);
+            } else if (this.classList.contains('meter-input')) {
                 this.value = this.value.replace(/\s/g, '');
             } else {
                 this.value = this.value.replace(/\s/g, '');
@@ -737,7 +687,6 @@ function renderSealsList(filter = '') {
         html += `<div class="seal-item"><span class="seal-number" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</span><button class="delete-seal" data-seal="${escapeHtml(seal)}">🗑️</button></div>`;
     });
     sealsListDiv.innerHTML = html;
-    
     document.querySelectorAll('.seal-number').forEach(el => {
         el.addEventListener('click', () => {
             const seal = el.getAttribute('data-seal');
@@ -748,7 +697,6 @@ function renderSealsList(filter = '') {
             }
         });
     });
-    
     document.querySelectorAll('.delete-seal').forEach(el => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -764,13 +712,12 @@ function renderSealsList(filter = '') {
 }
 
 function addNewSeal() {
-    const newSeal = newSealInput.value.trim();
+    let newSeal = newSealInput.value.trim();
     if (!newSeal) { alert('Введіть номер пломби'); return; }
-    
+    newSeal = toUpperCaseByLanguage(newSeal);
+    newSealInput.value = newSeal;
     const sealsToAdd = parseSealRange(newSeal);
-    let addedCount = 0;
-    const addedSeals = [];
-    
+    let addedCount = 0, addedSeals = [];
     sealsToAdd.forEach(seal => {
         if (!sealsDB.includes(seal)) {
             sealsDB.push(seal);
@@ -778,13 +725,11 @@ function addNewSeal() {
             addedSeals.push(seal);
         }
     });
-    
     saveSeals();
     newSealInput.value = '';
     sealAddPanel.classList.add('hidden');
     if (sealSearch) sealSearch.value = '';
     renderSealsList('');
-    
     if (addedCount > 0) {
         showToast(`✅ Додано пломб: ${addedCount} (${addedSeals[0]} ... ${addedSeals[addedSeals.length-1]})`);
     } else {
@@ -815,7 +760,6 @@ function renderMetersList(filter = '') {
         html += `<div class="seal-item"><span class="seal-number" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</span><button class="delete-meter" data-meter="${escapeHtml(meter)}">🗑️</button></div>`;
     });
     metersListDiv.innerHTML = html;
-    
     document.querySelectorAll('.seal-number[data-meter]').forEach(el => {
         el.addEventListener('click', () => {
             const meter = el.getAttribute('data-meter');
@@ -826,7 +770,6 @@ function renderMetersList(filter = '') {
             }
         });
     });
-    
     document.querySelectorAll('.delete-meter').forEach(el => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -844,11 +787,8 @@ function renderMetersList(filter = '') {
 function addNewMeter() {
     const newMeter = newMeterInput.value.trim();
     if (!newMeter) { alert('Введіть номер лічильника'); return; }
-    
     const metersToAdd = parseSealRange(newMeter);
-    let addedCount = 0;
-    const addedMeters = [];
-    
+    let addedCount = 0, addedMeters = [];
     metersToAdd.forEach(meter => {
         if (!metersDB.includes(meter)) {
             metersDB.push(meter);
@@ -856,13 +796,11 @@ function addNewMeter() {
             addedMeters.push(meter);
         }
     });
-    
     saveMeters();
     newMeterInput.value = '';
     meterAddPanel.classList.add('hidden');
     if (meterSearch) meterSearch.value = '';
     renderMetersList('');
-    
     if (addedCount > 0) {
         showToast(`✅ Додано лічильників: ${addedCount} (${addedMeters[0]} ... ${addedMeters[addedMeters.length-1]})`);
     } else {
@@ -880,22 +818,17 @@ function showSearchResults(fieldId, query) {
         return; 
     }
     const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { 
-        container.classList.add('hidden'); 
-        return; 
-    }
+    if (!filtered.length) { container.classList.add('hidden'); return; }
     container.classList.remove('hidden');
     let html = '';
     filtered.forEach(seal => { 
         html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
     });
     container.innerHTML = html;
-    
     const items = container.querySelectorAll('.search-result-item');
     items.forEach(item => {
         const oldHandler = item._clickHandler;
         if (oldHandler) item.removeEventListener('click', oldHandler);
-        
         const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -927,22 +860,17 @@ function showMeterSearchResults(fieldId, query) {
         return; 
     }
     const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { 
-        container.classList.add('hidden'); 
-        return; 
-    }
+    if (!filtered.length) { container.classList.add('hidden'); return; }
     container.classList.remove('hidden');
     let html = '';
     filtered.forEach(meter => { 
         html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
     });
     container.innerHTML = html;
-    
     const items = container.querySelectorAll('.search-result-item');
     items.forEach(item => {
         const oldHandler = item._clickHandler;
         if (oldHandler) item.removeEventListener('click', oldHandler);
-        
         const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -964,24 +892,15 @@ function setupSearch() {
     const sealInputs = document.querySelectorAll('.seal-input');
     sealInputs.forEach(input => {
         if (input) {
-            input.addEventListener('input', function() { 
-                showSearchResults(this.id, this.value); 
-            });
-            input.addEventListener('blur', function() { 
-                setTimeout(() => hideSearchResults(this.id), 300); 
-            });
+            input.addEventListener('input', function() { showSearchResults(this.id, this.value); });
+            input.addEventListener('blur', function() { setTimeout(() => hideSearchResults(this.id), 300); });
         }
     });
-    
     const meterInputs = document.querySelectorAll('.meter-input');
     meterInputs.forEach(input => {
         if (input) {
-            input.addEventListener('input', function() { 
-                showMeterSearchResults(this.id, this.value); 
-            });
-            input.addEventListener('blur', function() { 
-                setTimeout(() => hideSearchResults(this.id), 300); 
-            });
+            input.addEventListener('input', function() { showMeterSearchResults(this.id, this.value); });
+            input.addEventListener('blur', function() { setTimeout(() => hideSearchResults(this.id), 300); });
         }
     });
 }
@@ -1029,25 +948,21 @@ function saveAllFieldsToLog() {
 // ========== ОЧИСТКА ПОЛЕЙ ==========
 function clearAllFieldsExceptEmployee() {
     const fieldsToClear = [
-        workType, accountNumber, address, oldMeterNumber, newMeterNumber,
-        oldMeterType, newMeterType, oldMeterReading, newMeterReading,
+        workDate, replacementReason, workType, accountNumber, address, 
+        oldMeterNumber, newMeterNumber, oldMeterType, newMeterType, 
+        oldMeterReading, newMeterReading,
         oldSealCover, oldSealVKP, oldSealSHO1, oldSealSHO2, oldSealOpto,
         oldIMP1, oldIMP2, oldIMP3, newSealCover, newSealVKP, newSealSHO1,
         newSealSHO2, newSealOpto, newIMP1, newIMP2, newIMP3
     ];
-    
     fieldsToClear.forEach(field => {
         if (field) {
-            if (field.tagName === 'SELECT') {
-                field.value = '';
-            } else {
-                field.value = '';
-            }
+            if (field.tagName === 'SELECT') field.value = '';
+            else field.value = '';
         }
     });
-    
     if (newMeterReading) newMeterReading.value = '0000000';
-    
+    setDefaultValues();
     showToast('✅ Всі поля очищено (табельний номер збережено)');
 }
 
@@ -1059,9 +974,7 @@ function searchLogByAccount() {
         currentSearchTerm = "";
         return;
     }
-    
     currentSearchTerm = searchTerm;
-    
     function recordMatches(record, term) {
         const fieldsToCheck = [
             record.date, record.workType, record.employeeId, record.accountNumber,
@@ -1072,29 +985,22 @@ function searchLogByAccount() {
             record.newSealCover, record.newSealVKP, record.newSealSHO1, record.newSealSHO2,
             record.newSealOpto, record.newIMP1, record.newIMP2, record.newIMP3
         ];
-        
         const removedSealsCombined = [
             record.oldSealCover, record.oldSealVKP, record.oldSealSHO1, 
             record.oldSealSHO2, record.oldSealOpto, record.oldIMP1, 
             record.oldIMP2, record.oldIMP3
         ].filter(v => v && v.trim() !== '').join(' ');
-        
         const installedSealsCombined = [
             record.newSealCover, record.newSealVKP, record.newSealSHO1,
             record.newSealSHO2, record.newSealOpto, record.newIMP1,
             record.newIMP2, record.newIMP3
         ].filter(v => v && v.trim() !== '').join(' ');
-        
         fieldsToCheck.push(removedSealsCombined, installedSealsCombined);
-        
         for (let field of fieldsToCheck) {
-            if (field && field.toString().toLowerCase().includes(term)) {
-                return true;
-            }
+            if (field && field.toString().toLowerCase().includes(term)) return true;
         }
         return false;
     }
-    
     const filtered = workLog.filter(record => recordMatches(record, searchTerm));
     renderFilteredLog(filtered);
     showToast(`🔍 Знайдено ${filtered.length} запис(ів) за запитом: "${searchTerm}"`);
@@ -1113,7 +1019,6 @@ function renderFilteredLog(filteredLog) {
         logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Записи не знайдено</td></tr>';
         return;
     }
-    
     let html = '';
     filteredLog.forEach((r, idx) => {
         const originalIdx = workLog.findIndex(original => original.date === r.date && original.accountNumber === r.accountNumber);
@@ -1135,7 +1040,6 @@ function renderFilteredLog(filteredLog) {
         </tr>`;
     });
     logTable.innerHTML = html;
-    
     document.querySelectorAll('.delete-icon').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -1144,7 +1048,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (ГАРАНТОВАНА ПЕРЕДАЧА) ==========
+// ========== ВІДПРАВКА В ФОРМУ (ВИПРАВЛЕНА) ==========
 function sendToGoogleForm() {
     // Перевірка обов'язкових полів
     if (!workType.value) { 
@@ -1163,52 +1067,56 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // ===== ОТРИМУЄМО ЗНАЧЕННЯ БЕЗПОСЕРЕДНЬО З SELECT =====
-    const oldMeterTypeSelect = document.getElementById('oldMeterType');
-    const newMeterTypeSelect = document.getElementById('newMeterType');
+    // Отримуємо значення з полів
+    const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
+    const newMeterTypeVal = newMeterType ? newMeterType.value : '';
+    let workDateVal = workDate ? workDate.value : '';
+    let replacementReasonVal = replacementReason ? replacementReason.value : '';
     
-    // Отримуємо ВИБРАНЕ ЗНАЧЕННЯ (value) з select
-    const oldMeterTypeVal = oldMeterTypeSelect ? oldMeterTypeSelect.value : '';
-    const newMeterTypeVal = newMeterTypeSelect ? newMeterTypeSelect.value : '';
+    // ===== ВИПРАВЛЕННЯ ДЛЯ ПІДСТАВИ =====
+    const reasonMap = {
+        'ІП (PLC)': 'IN (PLC)',
+        'Непрацюючий лічильник': 'Непрацюючий лічильник',
+        'Планова заміна (протермінований)': 'Планова заміна (протермінований)',
+        'Платна заміна (б/т)': 'Платна заміна (б/т)',
+        'Експертиза': 'Експертиза'
+    };
+    replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
     
-    // Отримуємо ТЕКСТ вибраного варіанту (для контролю)
-    const oldMeterTypeText = oldMeterTypeSelect && oldMeterTypeSelect.selectedIndex >= 0 
-        ? oldMeterTypeSelect.options[oldMeterTypeSelect.selectedIndex]?.text || '' 
-        : '';
-    const newMeterTypeText = newMeterTypeSelect && newMeterTypeSelect.selectedIndex >= 0 
-        ? newMeterTypeSelect.options[newMeterTypeSelect.selectedIndex]?.text || '' 
-        : '';
-    
-    // ВАЖЛИВО: використовуємо value, якщо воно є, інакше текст
-    const finalOldMeterType = oldMeterTypeVal || oldMeterTypeText;
-    const finalNewMeterType = newMeterTypeVal || newMeterTypeText;
+    // ===== ВИПРАВЛЕННЯ ДЛЯ ДАТИ =====
+    if (workDateVal) {
+        const parts = workDateVal.split('.');
+        if (parts.length === 3) {
+            workDateVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+    }
     
     console.log('=== ВІДПРАВКА В ФОРМУ ===');
-    console.log('Тип знятого (value):', oldMeterTypeVal);
-    console.log('Тип знятого (text):', oldMeterTypeText);
-    console.log('Тип знятого (final):', finalOldMeterType);
-    console.log('Тип встановленого (value):', newMeterTypeVal);
-    console.log('Тип встановленого (text):', newMeterTypeText);
-    console.log('Тип встановленого (final):', finalNewMeterType);
+    console.log('Дата (відправка):', workDateVal);
+    console.log('Підстава (відправка):', replacementReasonVal);
+    console.log('Тип знятого:', oldMeterTypeVal);
+    console.log('Тип встановленого:', newMeterTypeVal);
+    console.log('Номер знятого:', oldMeterNumber?.value || '');
+    console.log('Номер встановленого:', newMeterNumber?.value || '');
+    console.log('Покази знятого:', oldMeterReading?.value || '');
+    console.log('Покази встановленого:', newMeterReading?.value || '');
     
-    // Формуємо URL з параметрами (GET)
+    // Формуємо параметри
     const params = new URLSearchParams();
     
-    // Робота
+    // ===== НОВІ ПОЛЯ =====
+    if (workDateVal) params.append('entry.814427514', workDateVal);
+    if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
+    
+    // Основні поля
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
     
-    // Знятий лічильник - ТИП (обов'язково передаємо)
-    if (finalOldMeterType) {
-        params.append('entry.155422969', finalOldMeterType);
-    }
-    if (oldMeterNumber && oldMeterNumber.value) {
-        params.append('entry.1262021573', oldMeterNumber.value);
-    }
-    if (oldMeterReading && oldMeterReading.value) {
-        params.append('entry.1666715724', oldMeterReading.value);
-    }
+    // Знятий лічильник
+    if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
+    if (oldMeterNumber && oldMeterNumber.value) params.append('entry.1262021573', oldMeterNumber.value);
+    if (oldMeterReading && oldMeterReading.value) params.append('entry.1666715724', oldMeterReading.value);
     
     // Зняті пломби
     if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
@@ -1220,16 +1128,10 @@ function sendToGoogleForm() {
     if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
     if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
     
-    // Встановлений лічильник - ТИП (обов'язково передаємо)
-    if (finalNewMeterType) {
-        params.append('entry.1958360409', finalNewMeterType);
-    }
-    if (newMeterNumber && newMeterNumber.value) {
-        params.append('entry.591456354', newMeterNumber.value);
-    }
-    if (newMeterReading && newMeterReading.value) {
-        params.append('entry.686446183', newMeterReading.value);
-    }
+    // Встановлений лічильник
+    if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
+    if (newMeterNumber && newMeterNumber.value) params.append('entry.591456354', newMeterNumber.value);
+    if (newMeterReading && newMeterReading.value) params.append('entry.686446183', newMeterReading.value);
     
     // Встановлені пломби
     if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
@@ -1246,8 +1148,8 @@ function sendToGoogleForm() {
     // Формуємо URL
     const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
     
-    console.log('URL форми (первые 500 символов):', formUrl.substring(0, 500));
-    console.log('ВСЕ ПАРАМЕТРЫ:', params.toString());
+    console.log('URL форми (довжина):', formUrl.length);
+    console.log('Параметри:', params.toString());
     
     // Відкриваємо форму
     window.open(formUrl, '_blank');
@@ -1283,18 +1185,16 @@ function sendAllDataToOwner() {
     }
     
     const data = getFormData();
-    
     let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
-    message += `📅 Дата: ${data.date}\n`;
+    message += `📅 Дата виконання: ${workDate?.value || '—'}\n`;
+    message += `📋 Підстава: ${replacementReason?.value || '—'}\n`;
     message += `📋 Робота: ${data.workType}\n`;
     message += `👤 Табельний: ${data.employeeId}\n`;
     message += `📋 Особовий: ${data.accountNumber}\n\n`;
-    
     message += '🔻 **Знятий лічильник**\n';
     message += `Тип: ${data.oldMeterType || '—'}\n`;
     message += `Номер: ${data.oldMeterNumber || '—'}\n`;
     message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
-    
     message += '🔻 **Зняті пломби**\n';
     const oldSeals = [
         `кл. кришка: ${data.oldSealCover || '—'}`,
@@ -1308,12 +1208,10 @@ function sendAllDataToOwner() {
     ].filter(s => !s.includes('—'));
     message += oldSeals.length ? oldSeals.join('\n') : '—\n';
     message += '\n';
-    
     message += '🔺 **Встановлений лічильник**\n';
     message += `Тип: ${data.newMeterType || '—'}\n`;
     message += `Номер: ${data.newMeterNumber || '—'}\n`;
     message += `Покази: ${data.newMeterReading || '0000000'}\n\n`;
-    
     message += '🔺 **Встановлені пломби**\n';
     const newSeals = [
         `кл. кришка: ${data.newSealCover || '—'}`,
@@ -1327,16 +1225,12 @@ function sendAllDataToOwner() {
     ].filter(s => !s.includes('—'));
     message += newSeals.length ? newSeals.join('\n') : '—\n';
     message += '\n';
-    
     message += `📍 Адреса: ${data.address || '—'}\n`;
-    
     const encodedMessage = encodeURIComponent(message);
     const telegramUrl = `https://t.me/share/url?url=${encodedMessage}`;
     window.open(telegramUrl, '_blank');
-    
     workLog.unshift(data);
     saveData();
-    
     showToast('📨 Дані відправлено власнику!');
 }
 
@@ -1376,7 +1270,6 @@ function renderLog() {
         </tr>`;
     });
     logTable.innerHTML = html;
-    
     document.querySelectorAll('.delete-icon').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -1480,10 +1373,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 tempContainer.style.overflow = 'hidden';
                 document.body.appendChild(tempContainer);
             }
-            
             tempContainer.classList.remove('hidden');
             tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код пломби</span><button class="btn-close-scanner" id="closeTempScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
-            
             document.getElementById('closeTempScanner').onclick = async () => {
                 if (activeScanners[tempContainerId]) {
                     try { await activeScanners[tempContainerId].stop(); } catch(e) {}
@@ -1491,10 +1382,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
                 tempContainer.classList.add('hidden');
             };
-            
             const reader = new Html5Qrcode(`${tempContainerId}_reader`);
             activeScanners[tempContainerId] = reader;
-            
             try {
                 await reader.start(
                     { facingMode: "environment" },
@@ -1539,10 +1428,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 tempContainer.style.overflow = 'hidden';
                 document.body.appendChild(tempContainer);
             }
-            
             tempContainer.classList.remove('hidden');
             tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код лічильника</span><button class="btn-close-scanner" id="closeTempMeterScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
-            
             document.getElementById('closeTempMeterScanner').onclick = async () => {
                 if (activeScanners[tempContainerId]) {
                     try { await activeScanners[tempContainerId].stop(); } catch(e) {}
@@ -1550,10 +1437,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
                 tempContainer.classList.add('hidden');
             };
-            
             const reader = new Html5Qrcode(`${tempContainerId}_reader`);
             activeScanners[tempContainerId] = reader;
-            
             try {
                 await reader.start(
                     { facingMode: "environment" },
