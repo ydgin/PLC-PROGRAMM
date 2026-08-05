@@ -1047,7 +1047,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (POST - БЕЗ ОБМЕЖЕННЯ ДОВЖИНИ) ==========
+// ========== ВІДПРАВКА В ФОРМУ (ВИПРАВЛЕНА) ==========
 function sendToGoogleForm() {
     // Перевірка обов'язкових полів
     if (!workType.value) { 
@@ -1066,83 +1066,101 @@ function sendToGoogleForm() {
         return; 
     }
     
-    // Отримуємо значення з select
+    // Отримуємо значення з полів
     const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
     const newMeterTypeVal = newMeterType ? newMeterType.value : '';
-    const workDateVal = workDate ? workDate.value : '';
-    const replacementReasonVal = replacementReason ? replacementReason.value : '';
+    let workDateVal = workDate ? workDate.value : '';
+    let replacementReasonVal = replacementReason ? replacementReason.value : '';
     
-    console.log('=== ВІДПРАВКА В ФОРМУ (POST) ===');
-    console.log('Тип знятого:', oldMeterTypeVal);
-    console.log('Тип встановленого:', newMeterTypeVal);
-    console.log('Дата:', workDateVal);
-    console.log('Підстава:', replacementReasonVal);
-    
-    // Створюємо приховану форму для POST-запиту
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse';
-    form.target = '_blank';
-    form.style.display = 'none';
-    
-    // Всі поля
-    const fields = {
-        'entry.814427514': workDateVal,
-        'entry.2001364225': replacementReasonVal,
-        'entry.1609399626': workType.value,
-        'entry.244962092': accountNumber.value,
-        'entry.1583379400': employeeId.value,
-        'entry.155422969': oldMeterTypeVal,
-        'entry.1262021573': oldMeterNumber?.value || '',
-        'entry.1666715724': oldMeterReading?.value || '',
-        'entry.980914247': oldSealCover?.value || '',
-        'entry.1281985427': oldSealVKP?.value || '',
-        'entry.1571141896': oldSealSHO1?.value || '',
-        'entry.950038743': oldSealSHO2?.value || '',
-        'entry.1825187506': oldSealOpto?.value || '',
-        'entry.851707833': oldIMP1?.value || '',
-        'entry.1653188291': oldIMP2?.value || '',
-        'entry.174981808': oldIMP3?.value || '',
-        'entry.1958360409': newMeterTypeVal,
-        'entry.591456354': newMeterNumber?.value || '',
-        'entry.686446183': newMeterReading?.value || '0000000',
-        'entry.1577377109': newSealCover?.value || '',
-        'entry.1292803469': newSealVKP?.value || '',
-        'entry.1309070612': newSealSHO1?.value || '',
-        'entry.1176747559': newSealSHO2?.value || '',
-        'entry.67142835': newSealOpto?.value || '',
-        'entry.245114888': newIMP1?.value || '',
-        'entry.1581321253': newIMP2?.value || '',
-        'entry.865785872': newIMP3?.value || '',
-        'entry.1234567890': address?.value || ''
+    // ===== ВИПРАВЛЕННЯ ДЛЯ ПІДСТАВИ =====
+    // Відповідність значень додатку та форми
+    const reasonMap = {
+        'ІП (PLC)': 'IN (PLC)',
+        'Непрацюючий лічильник': 'Непрацюючий лічильник',
+        'Планова заміна (протермінований)': 'Планова заміна (протермінований)',
+        'Платна заміна (б/т)': 'Платна заміна (б/т)',
+        'Експертиза': 'Експертиза'
     };
+    replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
     
-    // Додаємо поля у форму
-    for (const [name, value] of Object.entries(fields)) {
-        if (value) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = name;
-            input.value = value;
-            form.appendChild(input);
+    // ===== ВИПРАВЛЕННЯ ДЛЯ ДАТИ =====
+    // Перетворюємо DD.MM.YYYY на YYYY-MM-DD для форми
+    if (workDateVal) {
+        const parts = workDateVal.split('.');
+        if (parts.length === 3) {
+            workDateVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
     }
     
-    // Відправляємо форму
-    document.body.appendChild(form);
-    form.submit();
+    console.log('=== ВІДПРАВКА В ФОРМУ ===');
+    console.log('Дата (відправка):', workDateVal);
+    console.log('Підстава (відправка):', replacementReasonVal);
+    console.log('Тип знятого:', oldMeterTypeVal);
+    console.log('Тип встановленого:', newMeterTypeVal);
+    console.log('Номер знятого:', oldMeterNumber?.value || '');
+    console.log('Номер встановленого:', newMeterNumber?.value || '');
+    console.log('Покази знятого:', oldMeterReading?.value || '');
+    console.log('Покази встановленого:', newMeterReading?.value || '');
     
-    // Видаляємо форму після відправки
-    setTimeout(() => {
-        document.body.removeChild(form);
-    }, 1000);
+    // Формуємо параметри
+    const params = new URLSearchParams();
+    
+    // ===== НОВІ ПОЛЯ =====
+    if (workDateVal) params.append('entry.814427514', workDateVal);
+    if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
+    
+    // Основні поля
+    params.append('entry.1609399626', workType.value);
+    params.append('entry.244962092', accountNumber.value);
+    params.append('entry.1583379400', employeeId.value);
+    
+    // Знятий лічильник
+    if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
+    if (oldMeterNumber && oldMeterNumber.value) params.append('entry.1262021573', oldMeterNumber.value);
+    if (oldMeterReading && oldMeterReading.value) params.append('entry.1666715724', oldMeterReading.value);
+    
+    // Зняті пломби
+    if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
+    if (oldSealVKP && oldSealVKP.value) params.append('entry.1281985427', oldSealVKP.value);
+    if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.1571141896', oldSealSHO1.value);
+    if (oldSealSHO2 && oldSealSHO2.value) params.append('entry.950038743', oldSealSHO2.value);
+    if (oldSealOpto && oldSealOpto.value) params.append('entry.1825187506', oldSealOpto.value);
+    if (oldIMP1 && oldIMP1.value) params.append('entry.851707833', oldIMP1.value);
+    if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
+    if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
+    
+    // Встановлений лічильник
+    if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
+    if (newMeterNumber && newMeterNumber.value) params.append('entry.591456354', newMeterNumber.value);
+    if (newMeterReading && newMeterReading.value) params.append('entry.686446183', newMeterReading.value);
+    
+    // Встановлені пломби
+    if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
+    if (newSealVKP && newSealVKP.value) params.append('entry.1292803469', newSealVKP.value);
+    if (newSealSHO1 && newSealSHO1.value) params.append('entry.1309070612', newSealSHO1.value);
+    if (newSealSHO2 && newSealSHO2.value) params.append('entry.1176747559', newSealSHO2.value);
+    if (newSealOpto && newSealOpto.value) params.append('entry.67142835', newSealOpto.value);
+    if (newIMP1 && newIMP1.value) params.append('entry.245114888', newIMP1.value);
+    if (newIMP2 && newIMP2.value) params.append('entry.1581321253', newIMP2.value);
+    if (newIMP3 && newIMP3.value) params.append('entry.865785872', newIMP3.value);
+    
+    if (address && address.value) params.append('entry.1234567890', address.value);
+    
+    // Формуємо URL
+    const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
+    
+    console.log('URL форми (довжина):', formUrl.length);
+    console.log('Параметри:', params.toString());
+    
+    // Відкриваємо форму
+    window.open(formUrl, '_blank');
     
     // Зберігаємо в журнал
     const data = getFormData();
     workLog.unshift(data);
     saveData();
     
-    alert('✅ Дані відправлено у форму!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
+    alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
 
 function openGoogleForm() {
