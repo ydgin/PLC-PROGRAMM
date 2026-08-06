@@ -25,7 +25,7 @@ const newMeterType = document.getElementById('newMeterType');
 const oldMeterReading = document.getElementById('oldMeterReading');
 const newMeterReading = document.getElementById('newMeterReading');
 
-// ===== НОВІ ПОЛЯ =====
+// Нові поля
 const workDate = document.getElementById('workDate');
 const replacementReason = document.getElementById('replacementReason');
 
@@ -163,7 +163,7 @@ function setDefaultValues() {
     }
 }
 
-// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (БЕЗ ДУБЛІКАТІВ) ==========
+// ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ (ЗГІДНО З ФОРМОЮ) ==========
 const meterTypesList = [
     "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
     "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis ZCG110ATt", "Landis310",
@@ -307,7 +307,6 @@ function parseSealRange(input) {
     return [input];
 }
 
-// ========== ВИЗНАЧЕННЯ МОВИ ТА ВЕРХНІЙ РЕГІСТР ДЛЯ ПЛОМБ ==========
 function detectKeyboardLanguage(text) {
     const cyrillicPattern = /[А-Яа-яЇїЄєІі]/g;
     const latinPattern = /[A-Za-z]/g;
@@ -1048,7 +1047,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (ВИПРАВЛЕНА) ==========
+// ========== ВІДПРАВКА В ФОРМУ ==========
 function sendToGoogleForm() {
     // Перевірка обов'язкових полів
     if (!workType.value) { 
@@ -1073,7 +1072,7 @@ function sendToGoogleForm() {
     let workDateVal = workDate ? workDate.value : '';
     let replacementReasonVal = replacementReason ? replacementReason.value : '';
     
-    // ===== ВИПРАВЛЕННЯ ДЛЯ ПІДСТАВИ =====
+    // ===== ВІДПОВІДНІСТЬ ЗНАЧЕНЬ ДЛЯ ПІДСТАВИ =====
     const reasonMap = {
         'ІП (PLC)': 'IN (PLC)',
         'Непрацюючий лічильник': 'Непрацюючий лічильник',
@@ -1083,7 +1082,7 @@ function sendToGoogleForm() {
     };
     replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
     
-    // ===== ВИПРАВЛЕННЯ ДЛЯ ДАТИ =====
+    // ===== ФОРМАТУВАННЯ ДАТИ =====
     if (workDateVal) {
         const parts = workDateVal.split('.');
         if (parts.length === 3) {
@@ -1092,10 +1091,10 @@ function sendToGoogleForm() {
     }
     
     console.log('=== ВІДПРАВКА В ФОРМУ ===');
-    console.log('Дата (відправка):', workDateVal);
-    console.log('Підстава (відправка):', replacementReasonVal);
-    console.log('Тип знятого:', oldMeterTypeVal);
-    console.log('Тип встановленого:', newMeterTypeVal);
+    console.log('Дата:', workDateVal);
+    console.log('Підстава:', replacementReasonVal);
+    console.log('Тип знятого (oldMeterType):', oldMeterTypeVal);
+    console.log('Тип встановленого (newMeterType):', newMeterTypeVal);
     console.log('Номер знятого:', oldMeterNumber?.value || '');
     console.log('Номер встановленого:', newMeterNumber?.value || '');
     console.log('Покази знятого:', oldMeterReading?.value || '');
@@ -1104,21 +1103,24 @@ function sendToGoogleForm() {
     // Формуємо параметри
     const params = new URLSearchParams();
     
-    // ===== НОВІ ПОЛЯ =====
+    // ===== ДАТА (entry.814427514) =====
     if (workDateVal) params.append('entry.814427514', workDateVal);
+    
+    // ===== ПІДСТАВА (entry.2001364225) =====
     if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
     
-    // Основні поля
+    // ===== ОСНОВНІ ПОЛЯ =====
     params.append('entry.1609399626', workType.value);
     params.append('entry.244962092', accountNumber.value);
     params.append('entry.1583379400', employeeId.value);
     
-    // Знятий лічильник
+    // ===== ЗНЯТИЙ ЛІЧИЛЬНИК =====
+    // Тип знятого (entry.155422969)
     if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
     if (oldMeterNumber && oldMeterNumber.value) params.append('entry.1262021573', oldMeterNumber.value);
     if (oldMeterReading && oldMeterReading.value) params.append('entry.1666715724', oldMeterReading.value);
     
-    // Зняті пломби
+    // ===== ЗНЯТІ ПЛОМБИ =====
     if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
     if (oldSealVKP && oldSealVKP.value) params.append('entry.1281985427', oldSealVKP.value);
     if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.1571141896', oldSealSHO1.value);
@@ -1128,12 +1130,13 @@ function sendToGoogleForm() {
     if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
     if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
     
-    // Встановлений лічильник
+    // ===== ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК =====
+    // Тип встановленого (entry.1958360409) - ВАЖЛИВО!
     if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
     if (newMeterNumber && newMeterNumber.value) params.append('entry.591456354', newMeterNumber.value);
     if (newMeterReading && newMeterReading.value) params.append('entry.686446183', newMeterReading.value);
     
-    // Встановлені пломби
+    // ===== ВСТАНОВЛЕНІ ПЛОМБИ =====
     if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
     if (newSealVKP && newSealVKP.value) params.append('entry.1292803469', newSealVKP.value);
     if (newSealSHO1 && newSealSHO1.value) params.append('entry.1309070612', newSealSHO1.value);
@@ -1143,6 +1146,7 @@ function sendToGoogleForm() {
     if (newIMP2 && newIMP2.value) params.append('entry.1581321253', newIMP2.value);
     if (newIMP3 && newIMP3.value) params.append('entry.865785872', newIMP3.value);
     
+    // ===== АДРЕСА =====
     if (address && address.value) params.append('entry.1234567890', address.value);
     
     // Формуємо URL
