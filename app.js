@@ -5,7 +5,7 @@ let sealsDB = [];
 let metersDB = [];
 let activeScanners = {};
 let currentSearchTerm = "";
-// новый файл
+// новый файл  2
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
 const pinError = document.getElementById('pinError');
