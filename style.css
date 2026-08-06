@@ -193,7 +193,7 @@ select.field-input {
     flex: 1;
 }
 
-/* ===== КНОПКИ ===== */
+/* ===== КНОПКИ МІКРОФОНА ===== */
 .btn-mic {
     width: 52px;
     height: 52px;
@@ -223,6 +223,37 @@ select.field-input {
     animation: pulse 1s infinite;
 }
 
+/* ===== КНОПКА МІКРОФОНА ДЛЯ SELECT ===== */
+.btn-mic-select {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    font-size: 1.2rem;
+    background: #e0f2fe;
+    color: #0284c7;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-mic-select:active {
+    transform: scale(0.92);
+    background: #bae6fd;
+}
+
+.btn-mic-select.listening {
+    background: #dc2626 !important;
+    color: white !important;
+    border-color: #dc2626 !important;
+    animation: pulse 1s infinite;
+}
+
+/* ===== КНОПКА МІКРОФОНА ДЛЯ ПОШУКУ ===== */
 .btn-mic-search {
     width: 48px;
     height: 48px;
@@ -290,6 +321,7 @@ select.field-input {
     background: #e2e8f0;
 }
 
+/* ===== СКАНЕР ===== */
 .scanner-container {
     margin-top: 12px;
     background: #000;
@@ -319,6 +351,7 @@ select.field-input {
     font-size: 16px;
 }
 
+/* ===== РЕЗУЛЬТАТИ ПОШУКУ ===== */
 .search-results {
     background: white;
     border: 2px solid #e2e8f0;
@@ -417,7 +450,7 @@ select.field-input {
     transform: scale(0.97);
 }
 
-/* PIN-экран */
+/* ===== PIN-ЭКРАН ===== */
 .pin-screen {
     position: fixed;
     top: 0;
@@ -516,7 +549,7 @@ select.field-input {
     cursor: pointer;
 }
 
-/* База пломб и лічильників */
+/* ===== БАЗА ПЛОМБ І ЛІЧИЛЬНИКІВ ===== */
 .flex-between {
     display: flex;
     justify-content: space-between;
@@ -612,7 +645,7 @@ select.field-input {
     color: #94a3b8;
 }
 
-/* Журнал */
+/* ===== ЖУРНАЛ ===== */
 .search-log-row {
     display: flex;
     gap: 12px;
@@ -775,6 +808,15 @@ select.field-input {
         border-radius: 14px !important;
     }
     
+    .btn-mic-select {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        font-size: 1rem !important;
+        border-radius: 14px !important;
+    }
+    
     .btn-mic-search {
         width: 44px;
         height: 44px;
@@ -873,6 +915,15 @@ select.field-input {
         min-width: 42px !important;
         min-height: 42px !important;
         font-size: 1rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .btn-mic-select {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        font-size: 0.9rem !important;
         border-radius: 12px !important;
     }
     
