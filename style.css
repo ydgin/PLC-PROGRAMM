@@ -12,6 +12,7 @@ body {
     color: #1e293b;
     position: relative;
 }
+/* новый файл */
 
 /* ===== ЗАДНІЙ ФОН СТОРІНКИ (ПІКТОГРАМИ) ===== */
 body::before {
