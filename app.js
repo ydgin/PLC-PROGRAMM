@@ -1,235 +1,436 @@
-"use strict";
+/* PLS INVEST — основной script.js */
 
-
-/* =====================================================
-   PIN
-===================================================== */
-
-const CORRECT_PIN = "3268";
-
-let enteredPin = "";
-
+let enteredPin = '';
 let workLog = [];
-
-let sealsDB = [];
-
-let metersDB = [];
-
 let activeScanners = {};
 
-let currentSearchTerm = "";
+const CORRECT_PIN = '3268';
 
 
-/* =====================================================
-   DOM
-===================================================== */
+/* ================= ТИПЫ СЧЕТЧИКОВ ================= */
+
+const meterTypesList = [
+    "AD11A.1-5-1",
+    "EMH ED2500",
+    "GAMMA 100 G1B",
+    "GAMMA 300",
+    "GROSS DDS-UA",
+    "ISKRA ME162-D1A44-V12L11-M2KO",
+    "ITZ",
+    "Landis Gur L550",
+    "Landis ZCG110ATt",
+    "Landis310",
+    "MCS301-CE51B 30MIS-004 000",
+    "MTX 1A10.DF.2LO-C04",
+    "MTX 1A10.DF.2LO-Y04",
+    "MTX 1A10.DF.2ZO-CD4",
+    "MTX 1A10.DF.2ZO-C04",
+    "MTX 3A 10.DF.4Z1-C4",
+    "MTX 3A 10.DG.4Z3-CD4",
+    "MTX 3A 10.DH.4Z1-CD4",
+    "NIK 2100 AP2.0000.0.11",
+    "NIK 2100 AP2T.1000.C.11",
+    "NIK 2100 AP2T.1002.MC.11",
+    "NIK 2100 AP2T.1002.C.11",
+    "NIK 2100 AP6T.1002.MC.11",
+    "NIK 2100 AP6T.2000.MC.11",
+    "NIK 2100 AP6T.2002.MC.11",
+    "NIK 2100 AP2T.2802.MC.11",
+    "NIK 2100 AP6T.2802.MC.11",
+    "NIK 2100 AP6T.2902.MC.11",
+    "NIK 2104 AP2T.1000.M.11",
+    "NIK 2104 AP2T.1000.C.11",
+    "NIK 2104 AP2T.1002.MC.11",
+    "NIK 2104 AP2T.1802.MC.11",
+    "NIK 2104 AP2TB.1802.M.11",
+    "NIK 2104 AP6T.2602.MC.21",
+    "NIK 2300 AP6T.1000.C.11",
+    "NIK 2300 ARP3T.2900 MC 21",
+    "NIK 2300 ATT.2900 MC 21",
+    "NIK 2300 ARTT.2902.MC.11",
+    "NIK 2300 AP3.2000.MC.11",
+    "NIK 2300 AP3T.2000.MC.11",
+    "NIK 2300 AP6T.2002.MC.11",
+    "NIK 2300 AP6T.2802.MC.11",
+    "NIK 2300 AP6T.2902.MC.11",
+    "NIK 2301 AP3.0 0000.0.11",
+    "NIK 2303 ARP3T.1202.MC.11",
+    "NIK 2303 ARP3T.1802.MC.11",
+    "NIK 2303 ARP6T.1002.MC.11",
+    "NIK 2303 ARP6T.1800.MC.11",
+    "NIK 2303 ART T.1800.MC.11",
+    "NIK 2303 AT T.1800.MC.21",
+    "NIK 2303 ARP3T.1802.MC.11",
+    "NIK 2303 ARP3T.1802.MC.21",
+    "NIK 2303 ARP6T.1802.MC.11",
+    "NIK 2303 AP3T.1000.MC.11",
+    "NIK 2303 AP3T.1002.MC.11",
+    "NIK 2303 AP3T.1802.MC.11",
+    "NIK 2303 AP3T.2000.MC.11",
+    "NIK 2303 AP6T.1000.MC.11",
+    "NIK 2303 AP6T.1000.C.11",
+    "NIK 2303 AP6T.1002.MC.11",
+    "NIK 2303 AP6T.1802.MC.11",
+    "NIK 2303 AP6T.1802MC.21",
+    "NIK 2303 AP6T.2000.MC.11",
+    "NIK 2307 0.5s ARTT.1600.MC.21",
+    "NIK 2307 ARP3T.1602.M.21",
+    "NIK 2307 ARP3T.1602.MC.21",
+    "NP-06 TD MME 1F 2S-U",
+    "NP-06 TD MME 1F 3S-U",
+    "ACE-3000",
+    "ЛЭО",
+    "ЛЭО-М1.4",
+    "МЕРИДИАН ЛТЕ-1.03",
+    "МЕРИДИАН ЛТЕ-1.03Т",
+    "МЕРИДИАН ЛТЕ-1.03ТУ",
+    "Меркурій 200",
+    "Меркурій 200.02",
+    "Меркурій 201",
+    "Меркурій 206",
+    "МЕРКУРІЙ 231 АТ-01",
+    "НИК 2102-01.E2МСТ",
+    "НИК 2102-01.E2МТ",
+    "НИК 2102-01.E2МТ1",
+    "НИК 2102-01.E2Р1",
+    "НИК 2102-01.E2СТ",
+    "НИК 2102-01.E2Т",
+    "НИК 2102-01.E2ТР1",
+    "НИК 2102-02.M1",
+    "НИК 2102-02.M1В",
+    "НИК 2102-02.M2",
+    "НИК 2102-02.M2В",
+    "НИК 2301 АП1",
+    "НИК 2303 АП2",
+    "НИК 2301 АП2В",
+    "HIK 2102-01.E2T",
+    "HIK 2102-01.E2TP1",
+    "HIK 2102-02.M1",
+    "HIK 2102-02.M1B",
+    "HIK 2102-02.M2",
+    "HIK 2102-02.M2B",
+    "HIK 2301 AP1",
+    "HIK 2303 AP2",
+    "HIK 2301 AP2B",
+    "HIK 2301 AP3",
+    "HIK 2301 AP3B",
+    "HIK 2303 AP2T",
+    "HIK 2303 AP3T",
+    "HIK 2303L AP1T",
+    "HIK 2303L AP6",
+    "HIK 2303L AP6T",
+    "CA4-195",
+    "CA4-И672п",
+    "CO-193",
+    "CO-197",
+    "CO-197М",
+    "CO-2",
+    "CO-2М",
+    "COEA09М",
+    "CO-И446",
+    "CO-И446М",
+    "CO-И449",
+    "CO-И449М1",
+    "CO-И449М1-1",
+    "CO-И449М1-2",
+    "CO9-1.02/2",
+    "CO9-1.02/2KPT",
+    "CO9-1.02/2KT",
+    "CO9-1.02/2T",
+    "CO9-1.02/5KPTД",
+    "CO-ЭА10Д",
+    "CO-Э96705",
+    "CO-Э96706",
+    "СТ-ЭА05",
+    "ЦЭ6807Бк",
+    "ЭНЕРГОМЕРА СЕ 102М"
+];
+
 
 const $ = id => document.getElementById(id);
 
 
-/* PIN */
+const ids = [
+    'workType',
+    'employeeId',
+    'accountNumber',
+    'address',
+    'oldMeterNumber',
+    'newMeterNumber',
+    'oldMeterType',
+    'newMeterType',
+    'oldMeterReading',
+    'newMeterReading',
 
-const pinScreen = $("pinScreen");
+    'oldSealCover',
+    'oldSealVKP',
+    'oldSealSHO1',
+    'oldSealSHO2',
+    'oldSealOpto',
+    'oldIMP1',
+    'oldIMP2',
+    'oldIMP3',
 
-const pinDisplay = $("pinDisplay");
+    'newSealCover',
+    'newSealVKP',
+    'newSealSHO1',
+    'newSealSHO2',
+    'newSealOpto',
+    'newIMP1',
+    'newIMP2',
+    'newIMP3'
+];
 
-const pinError = $("pinError");
 
-const pinForgot = $("pinForgot");
+const fields = Object.fromEntries(
+    ids.map(id => [id, $(id)])
+);
 
-const mainApp = $("mainApp");
+
+/* ================= TOAST ================= */
+
+function showToast(msg) {
+
+    const t = document.createElement('div');
+
+    t.className = 'toast';
+
+    t.textContent = msg;
+
+    document.body.appendChild(t);
+
+    setTimeout(() => t.remove(), 2800);
+}
 
 
-/* =====================================================
-   PIN DISPLAY
-===================================================== */
+/* ================= HTML ================= */
+
+function escapeHtml(s) {
+
+    return String(s ?? '')
+        .replace(/[&<>"']/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[c]));
+
+}
+
+
+/* ================= PIN ================= */
 
 function updatePinDisplay() {
 
-    if (!pinDisplay) return;
+    const display = $('pinDisplay');
 
-    const dots =
-        pinDisplay.querySelectorAll(".pin-dot");
+    if (!display) return;
+
+    const dots = display.querySelectorAll('.pin-dot');
 
     dots.forEach((dot, index) => {
 
-        if (index < enteredPin.length) {
-
-            dot.classList.add("active");
-
-        } else {
-
-            dot.classList.remove("active");
-
-        }
+        dot.classList.toggle(
+            'active',
+            index < enteredPin.length
+        );
 
     });
+
+    display.setAttribute(
+        'aria-label',
+        'PIN: ' + enteredPin.length + ' з 4'
+    );
 }
 
 
-/* =====================================================
-   PIN ADD
-===================================================== */
+function openApp() {
 
-function pinAddNum(num) {
+    const screen = $('pinScreen');
+    const app = $('mainApp');
 
-    num = String(num);
-
-    if (!/^\d$/.test(num)) return;
-
-    if (enteredPin.length >= 4) return;
-
-    enteredPin += num;
-
-    updatePinDisplay();
-
-    if (pinError) {
-
-        pinError.textContent = "";
-
+    if (screen) {
+        screen.style.display = 'none';
     }
 
-    /*
-     * Проверяем автоматически после 4 цифр
-     */
+    if (app) {
+        app.classList.remove('hidden');
+    }
+
+    loadData();
+    initMeterTypes();
+    setDefaults();
+    setupAutoClean();
+    renderLog();
+
+}
+
+
+function pinAdd(n) {
+
+    n = String(n);
+
+    if (!/^\d$/.test(n)) {
+        return;
+    }
+
+    if (enteredPin.length >= 4) {
+        return;
+    }
+
+    enteredPin += n;
+
+    const error = $('pinError');
+
+    if (error) {
+        error.textContent = '';
+    }
+
+    updatePinDisplay();
 
     if (enteredPin.length === 4) {
 
-        setTimeout(pinCheck, 100);
+        setTimeout(
+            pinCheck,
+            80
+        );
 
     }
+
 }
 
-
-/* =====================================================
-   PIN CHECK
-===================================================== */
 
 function pinCheck() {
 
-    if (enteredPin.length !== 4) {
-
-        pinError.textContent =
-            "Введіть 4 цифри";
-
-        return;
-    }
-
-
     if (enteredPin === CORRECT_PIN) {
 
-        pinError.textContent = "";
-
-        pinScreen.classList.add("hidden");
-
-        mainApp.classList.remove("hidden");
-
-        initApplication();
+        openApp();
 
         return;
-    }
-
-
-    pinError.textContent =
-        "❌ Невірний PIN";
-
-
-    /*
-     * Небольшая анимация ошибки
-     */
-
-    pinDisplay.classList.add("pin-shake");
-
-    setTimeout(() => {
-
-        pinDisplay.classList.remove("pin-shake");
-
-    }, 300);
-
-
-    enteredPin = "";
-
-    updatePinDisplay();
-}
-
-
-/* =====================================================
-   PIN CLEAR
-===================================================== */
-
-function pinClear() {
-
-    enteredPin = "";
-
-    updatePinDisplay();
-
-    if (pinError) {
-
-        pinError.textContent = "";
 
     }
+
+    const error = $('pinError');
+
+    if (error) {
+        error.textContent = '❌ Невірний PIN';
+    }
+
+    const card = document.querySelector('.pin-card');
+
+    if (card) {
+
+        card.classList.remove('pin-shake');
+
+        void card.offsetWidth;
+
+        card.classList.add('pin-shake');
+
+    }
+
+    enteredPin = '';
+
+    setTimeout(
+        updatePinDisplay,
+        80
+    );
+
 }
 
 
-/* =====================================================
-   SHOW PIN
-===================================================== */
+/* ================= DEFAULT ================= */
 
-function pinReset() {
+function setDefaults() {
 
-    enteredPin = "";
+    if (
+        fields.newMeterReading &&
+        !fields.newMeterReading.value
+    ) {
 
-    updatePinDisplay();
+        fields.newMeterReading.value = '0000000';
 
-    pinError.textContent =
-        "PIN: 3268";
+    }
 
-    setTimeout(() => {
-
-        pinError.textContent = "";
-
-    }, 3000);
 }
 
 
-/* =====================================================
-   PIN EVENTS
-===================================================== */
+/* ================= TYPES ================= */
 
-function setupPin() {
+function initMeterTypes() {
 
-    updatePinDisplay();
+    for (
+        const id of [
+            'oldMeterType',
+            'newMeterType'
+        ]
+    ) {
+
+        const select = $(id);
+
+        if (!select) continue;
+
+        select.innerHTML =
+            '<option value="">-- Виберіть --</option>';
+
+        meterTypesList.forEach(value => {
+
+            const option =
+                document.createElement('option');
+
+            option.value = value;
+
+            option.textContent = value;
+
+            select.appendChild(option);
+
+        });
+
+    }
+
+}
 
 
-    document
-        .querySelectorAll(".pin-btn")
-        .forEach(button => {
+/* ================= AUTO CLEAN ================= */
 
-            /*
-             * pointerdown работает и на телефоне,
-             * и мышью.
-             */
+function setupAutoClean() {
 
-            button.addEventListener(
-                "pointerdown",
-                event => {
+    document.querySelectorAll('input')
+        .forEach(input => {
 
-                    event.preventDefault();
+            input.addEventListener(
+                'input',
+                () => {
 
-                    const value =
-                        button.dataset.num;
+                    if (input.id === 'address') {
 
-                    if (value === "clear") {
+                        input.value =
+                            input.value
+                                .replace(/\s+/g, ' ')
+                                .trim();
 
-                        pinClear();
+                        return;
+                    }
 
-                    } else if (value === "enter") {
+                    if (
+                        input.inputMode === 'numeric' ||
+                        [
+                            'employeeId',
+                            'accountNumber',
+                            'oldMeterReading',
+                            'newMeterReading'
+                        ].includes(input.id)
+                    ) {
 
-                        pinCheck();
+                        input.value =
+                            input.value
+                                .replace(/\D/g, '');
 
                     } else {
 
-                        pinAddNum(value);
+                        input.value =
+                            input.value
+                                .replace(/\s+/g, '');
 
                     }
 
@@ -238,190 +439,286 @@ function setupPin() {
 
         });
 
+}
 
-    if (pinForgot) {
 
-        pinForgot.addEventListener(
-            "click",
-            pinReset
-        );
+/* ================= QR ================= */
+
+function digitsExtract(text) {
+
+    return String(text)
+        .replace(/\D/g, '')
+        .slice(0, 10);
+
+}
+
+
+function smartMeterExtract(text) {
+
+    const digits =
+        String(text)
+            .replace(/\D/g, '');
+
+    return digits.length > 8
+        ? digits.slice(0, 8)
+        : digits;
+
+}
+
+
+async function stopScanner(id) {
+
+    if (!activeScanners[id]) {
+        return;
+    }
+
+    try {
+        await activeScanners[id].stop();
+    } catch (e) {}
+
+    delete activeScanners[id];
+
+}
+
+
+async function startQrScanner(
+    containerId,
+    inputId,
+    mode
+) {
+
+    if (activeScanners[containerId]) {
+
+        await stopScanner(containerId);
+
+        $(containerId)?.classList.add('hidden');
+
+        return;
 
     }
+
+
+    for (const id in activeScanners) {
+
+        await stopScanner(id);
+
+    }
+
+
+    const container = $(containerId);
+
+    if (!container) {
+        return;
+    }
+
+
+    container.classList.remove('hidden');
+
+    container.innerHTML = `
+        <div class="scanner-head">
+            📷 Наведіть камеру на QR
+            <button
+                type="button"
+                class="close-scan"
+            >
+                ✕
+            </button>
+        </div>
+
+        <div id="${containerId}_reader"></div>
+    `;
+
+
+    const closeButton =
+        container.querySelector('.close-scan');
+
+
+    if (closeButton) {
+
+        closeButton.onclick = () => {
+
+            stopScanner(containerId)
+                .then(() =>
+                    container.classList.add('hidden')
+                );
+
+        };
+
+    }
+
+
+    const reader =
+        new Html5Qrcode(
+            containerId + '_reader'
+        );
+
+
+    activeScanners[containerId] = reader;
+
+
+    try {
+
+        await reader.start(
+
+            {
+                facingMode: 'environment'
+            },
+
+            {
+                fps: 10,
+                qrbox: {
+                    width: 260,
+                    height: 180
+                }
+            },
+
+            text => {
+
+                let value = text.trim();
+
+                if (mode === 'digits') {
+                    value = digitsExtract(value);
+                }
+
+                if (mode === 'smart') {
+                    value = smartMeterExtract(value);
+                }
+
+                const input = $(inputId);
+
+                if (input) {
+
+                    input.value = value;
+
+                    input.dispatchEvent(
+                        new Event(
+                            'input',
+                            { bubbles: true }
+                        )
+                    );
+
+                }
+
+                stopScanner(containerId)
+                    .then(() =>
+                        container.classList.add('hidden')
+                    );
+
+                showToast(
+                    '✅ QR: ' + value
+                );
+
+            },
+
+            () => {}
+
+        );
+
+    } catch (error) {
+
+        alert(
+            '❌ Не вдалося запустити камеру. ' +
+            'Дозвольте доступ до камери.'
+        );
+
+        container.classList.add('hidden');
+
+        delete activeScanners[containerId];
+
+    }
+
 }
 
 
-/* =====================================================
-   TOAST
-===================================================== */
-
-function showToast(message) {
-
-    const old =
-        document.querySelector(".toast");
-
-    if (old) old.remove();
-
-
-    const toast =
-        document.createElement("div");
-
-    toast.className = "toast";
-
-    toast.textContent = message;
-
-
-    Object.assign(
-        toast.style,
-        {
-            position: "fixed",
-            left: "50%",
-            bottom: "20px",
-            transform: "translateX(-50%)",
-            zIndex: "200000",
-            background: "#16a34a",
-            color: "#fff",
-            padding: "11px 18px",
-            borderRadius: "30px",
-            boxShadow:
-                "0 8px 25px rgba(0,0,0,.25)",
-            maxWidth: "90%",
-            textAlign: "center"
-        }
-    );
-
-
-    document.body.appendChild(toast);
-
-
-    setTimeout(() => {
-
-        toast.remove();
-
-    }, 3000);
-}
-
-
-/* =====================================================
-   ESCAPE
-===================================================== */
-
-function escapeHtml(value) {
-
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-
-/* =====================================================
-   GET FORM DATA
-===================================================== */
+/* ================= FORM DATA ================= */
 
 function getFormData() {
 
-    return {
+    const date =
+        new Date();
+
+    const data = {
 
         date:
-            new Date()
-                .toLocaleString("uk-UA"),
+            date.toLocaleString('uk-UA'),
 
         workType:
-            $("workType")?.value || "",
+            fields.workType?.value || '',
 
         employeeId:
-            $("employeeId")?.value || "",
+            fields.employeeId?.value || '',
 
         accountNumber:
-            $("accountNumber")?.value || "",
+            fields.accountNumber?.value || '',
 
         address:
-            $("address")?.value || "",
-
-        oldMeterType:
-            $("oldMeterType")?.value || "",
+            fields.address?.value || '',
 
         oldMeterNumber:
-            $("oldMeterNumber")?.value || "",
-
-        oldMeterReading:
-            $("oldMeterReading")?.value || "",
-
-        newMeterType:
-            $("newMeterType")?.value || "",
+            fields.oldMeterNumber?.value || '',
 
         newMeterNumber:
-            $("newMeterNumber")?.value || "",
+            fields.newMeterNumber?.value || '',
+
+        oldMeterType:
+            fields.oldMeterType?.value || '',
+
+        newMeterType:
+            fields.newMeterType?.value || '',
+
+        oldMeterReading:
+            fields.oldMeterReading?.value || '',
 
         newMeterReading:
-            $("newMeterReading")?.value || "0000000",
-
-        oldSealCover:
-            $("oldSealCover")?.value || "",
-
-        oldSealVKP:
-            $("oldSealVKP")?.value || "",
-
-        oldSealSHO1:
-            $("oldSealSHO1")?.value || "",
-
-        oldSealSHO2:
-            $("oldSealSHO2")?.value || "",
-
-        oldSealOpto:
-            $("oldSealOpto")?.value || "",
-
-        oldIMP1:
-            $("oldIMP1")?.value || "",
-
-        oldIMP2:
-            $("oldIMP2")?.value || "",
-
-        oldIMP3:
-            $("oldIMP3")?.value || "",
-
-        newSealCover:
-            $("newSealCover")?.value || "",
-
-        newSealVKP:
-            $("newSealVKP")?.value || "",
-
-        newSealSHO1:
-            $("newSealSHO1")?.value || "",
-
-        newSealSHO2:
-            $("newSealSHO2")?.value || "",
-
-        newSealOpto:
-            $("newSealOpto")?.value || "",
-
-        newIMP1:
-            $("newIMP1")?.value || "",
-
-        newIMP2:
-            $("newIMP2")?.value || "",
-
-        newIMP3:
-            $("newIMP3")?.value || ""
+            fields.newMeterReading?.value || ''
 
     };
+
+
+    [
+
+        'oldSealCover',
+        'oldSealVKP',
+        'oldSealSHO1',
+        'oldSealSHO2',
+        'oldSealOpto',
+        'oldIMP1',
+        'oldIMP2',
+        'oldIMP3',
+
+        'newSealCover',
+        'newSealVKP',
+        'newSealSHO1',
+        'newSealSHO2',
+        'newSealOpto',
+        'newIMP1',
+        'newIMP2',
+        'newIMP3'
+
+    ].forEach(id => {
+
+        data[id] =
+            $(id)?.value || '';
+
+    });
+
+
+    return data;
+
 }
 
 
-/* =====================================================
-   SAVE DATA
-===================================================== */
+/* ================= STORAGE ================= */
 
 function saveData() {
 
     localStorage.setItem(
-        "pls_log",
+        'pls_log',
         JSON.stringify(workLog)
     );
 
     renderLog();
+
 }
 
 
@@ -429,17 +726,12 @@ function loadData() {
 
     try {
 
-        const data =
-            localStorage.getItem("pls_log");
-
         workLog =
-            data ? JSON.parse(data) : [];
-
-        if (!Array.isArray(workLog)) {
-
-            workLog = [];
-
-        }
+            JSON.parse(
+                localStorage.getItem(
+                    'pls_log'
+                ) || '[]'
+            );
 
     } catch {
 
@@ -447,315 +739,58 @@ function loadData() {
 
     }
 
-    renderLog();
 }
 
 
-/* =====================================================
-   SAVE RECORD
-===================================================== */
+/* ================= LOG ================= */
 
-function saveAllFieldsToLog() {
+function renderLog() {
 
-    const data = getFormData();
+    const table =
+        $('logTable');
 
-
-    if (
-        !data.accountNumber ||
-        data.accountNumber.length !== 10
-    ) {
-
-        alert(
-            "Введіть особовий рахунок — 10 цифр."
-        );
-
-        $("accountNumber")?.focus();
-
+    if (!table) {
         return;
     }
 
 
-    workLog.unshift(data);
+    table.innerHTML = `
+        <tr>
+            <th>Дата</th>
+            <th>Робота</th>
+            <th>Особовий</th>
+            <th>Знятий</th>
+            <th>Встановлений</th>
+            <th>Адреса</th>
+            <th>Дії</th>
+        </tr>
+    `;
 
-    saveData();
-
-    showToast(
-        "✅ Запис збережено в журнал"
-    );
-}
-
-
-/* =====================================================
-   CLEAR FIELDS
-===================================================== */
-
-function clearAllFields() {
-
-    const fields = [
-
-        "workType",
-        "accountNumber",
-        "address",
-
-        "oldMeterType",
-        "oldMeterNumber",
-        "oldMeterReading",
-
-        "newMeterType",
-        "newMeterNumber",
-
-        "oldSealCover",
-        "oldSealVKP",
-        "oldSealSHO1",
-        "oldSealSHO2",
-        "oldSealOpto",
-        "oldIMP1",
-        "oldIMP2",
-        "oldIMP3",
-
-        "newSealCover",
-        "newSealVKP",
-        "newSealSHO1",
-        "newSealSHO2",
-        "newSealOpto",
-        "newIMP1",
-        "newIMP2",
-        "newIMP3"
-
-    ];
-
-
-    fields.forEach(id => {
-
-        const field = $(id);
-
-        if (field) {
-
-            field.value = "";
-
-        }
-
-    });
-
-
-    if ($("newMeterReading")) {
-
-        $("newMeterReading").value =
-            "0000000";
-
-    }
-
-
-    showToast(
-        "🗑️ Поля очищено"
-    );
-}
-
-
-/* =====================================================
-   CSV
-===================================================== */
-
-function csvEscape(value) {
-
-    return `"${String(value ?? "")
-        .replace(/"/g, '""')}"`;
-}
-
-
-function exportCSV() {
 
     if (!workLog.length) {
 
-        alert("Журнал порожній.");
-
-        return;
-    }
-
-
-    const headers = [
-
-        "Дата",
-        "Робота",
-        "Табельний",
-        "Особовий рахунок",
-        "Знятий лічильник",
-        "Покази знятого",
-        "Встановлений лічильник",
-        "Покази встановленого",
-        "Адреса",
-        "Зняті пломби",
-        "Встановлені пломби"
-
-    ];
-
-
-    const rows =
-        workLog.map(record => {
-
-            const oldSeals = [
-
-                record.oldSealCover,
-                record.oldSealVKP,
-                record.oldSealSHO1,
-                record.oldSealSHO2,
-                record.oldSealOpto,
-                record.oldIMP1,
-                record.oldIMP2,
-                record.oldIMP3
-
-            ]
-                .filter(Boolean)
-                .join(" ");
-
-
-            const newSeals = [
-
-                record.newSealCover,
-                record.newSealVKP,
-                record.newSealSHO1,
-                record.newSealSHO2,
-                record.newSealOpto,
-                record.newIMP1,
-                record.newIMP2,
-                record.newIMP3
-
-            ]
-                .filter(Boolean)
-                .join(" ");
-
-
-            return [
-
-                record.date,
-                record.workType,
-                record.employeeId,
-                record.accountNumber,
-                record.oldMeterNumber,
-                record.oldMeterReading,
-                record.newMeterNumber,
-                record.newMeterReading,
-                record.address,
-                oldSeals,
-                newSeals
-
-            ].map(csvEscape).join(",");
-
-        });
-
-
-    const csv =
-        "\uFEFF" +
-        headers.map(csvEscape).join(",") +
-        "\n" +
-        rows.join("\n");
-
-
-    const blob =
-        new Blob(
-            [csv],
-            {
-                type:
-                    "text/csv;charset=utf-8;"
-            }
-        );
-
-
-    const url =
-        URL.createObjectURL(blob);
-
-
-    const link =
-        document.createElement("a");
-
-    link.href = url;
-
-    link.download =
-        "pls_log_" +
-        new Date()
-            .toISOString()
-            .slice(0, 19)
-            .replace(/:/g, "-") +
-        ".csv";
-
-
-    link.click();
-
-
-    URL.revokeObjectURL(url);
-}
-
-
-/* =====================================================
-   RENDER LOG
-===================================================== */
-
-function renderLog(list = workLog) {
-
-    const table = $("logTable");
-
-    if (!table) return;
-
-
-    if (!list.length) {
-
-        table.innerHTML = `
-
-            <tr class="empty-row">
-
-                <td colspan="11">
+        table.innerHTML += `
+            <tr>
+                <td
+                    colspan="7"
+                    class="empty"
+                >
                     Немає записів
                 </td>
-
             </tr>
-
         `;
 
         return;
+
     }
 
 
-    table.innerHTML =
-        list.map((record, index) => {
+    workLog.forEach(
+        (record, index) => {
 
-            const oldSeals = [
-
-                record.oldSealCover,
-                record.oldSealVKP,
-                record.oldSealSHO1,
-                record.oldSealSHO2,
-                record.oldSealOpto,
-                record.oldIMP1,
-                record.oldIMP2,
-                record.oldIMP3
-
-            ]
-                .filter(Boolean)
-                .join(", ");
-
-
-            const newSeals = [
-
-                record.newSealCover,
-                record.newSealVKP,
-                record.newSealSHO1,
-                record.newSealSHO2,
-                record.newSealOpto,
-                record.newIMP1,
-                record.newIMP2,
-                record.newIMP3
-
-            ]
-                .filter(Boolean)
-                .join(", ");
-
-
-            const originalIndex =
-                workLog.indexOf(record);
-
-
-            return `
-
+            table.insertAdjacentHTML(
+                'beforeend',
+                `
                 <tr>
 
                     <td>
@@ -767,10 +802,6 @@ function renderLog(list = workLog) {
                     </td>
 
                     <td>
-                        ${escapeHtml(record.employeeId)}
-                    </td>
-
-                    <td>
                         ${escapeHtml(record.accountNumber)}
                     </td>
 
@@ -779,15 +810,7 @@ function renderLog(list = workLog) {
                     </td>
 
                     <td>
-                        ${escapeHtml(record.oldMeterReading)}
-                    </td>
-
-                    <td>
                         ${escapeHtml(record.newMeterNumber)}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(record.newMeterReading)}
                     </td>
 
                     <td>
@@ -795,1068 +818,248 @@ function renderLog(list = workLog) {
                     </td>
 
                     <td>
-                        <b>Зняті:</b>
-                        ${escapeHtml(oldSeals || "—")}
-
-                        <br><br>
-
-                        <b>Встановлені:</b>
-                        ${escapeHtml(newSeals || "—")}
-                    </td>
-
-                    <td>
-
                         <button
-                            type="button"
-                            class="delete-log"
-                            data-index="${originalIndex}"
+                            class="delete-icon"
+                            data-i="${index}"
                         >
                             🗑️
                         </button>
-
                     </td>
 
                 </tr>
+                `
+            );
 
-            `;
-
-        }).join("");
+        }
+    );
 
 
     table
-        .querySelectorAll(".delete-log")
+        .querySelectorAll('.delete-icon')
         .forEach(button => {
 
-            button.addEventListener(
-                "click",
-                () => {
+            button.onclick = () => {
 
-                    const index =
-                        Number(button.dataset.index);
+                if (
+                    confirm(
+                        'Видалити запис?'
+                    )
+                ) {
 
-                    if (
-                        confirm(
-                            "Видалити цей запис?"
-                        )
-                    ) {
+                    workLog.splice(
+                        Number(button.dataset.i),
+                        1
+                    );
 
-                        workLog.splice(
-                            index,
-                            1
-                        );
-
-                        saveData();
-
-                    }
+                    saveData();
 
                 }
-            );
 
-        });
-}
-
-
-/* =====================================================
-   SEARCH
-===================================================== */
-
-function searchLog() {
-
-    const query =
-        $("searchAccountInput")
-            ?.value
-            .trim()
-            .toLowerCase();
-
-
-    if (!query) {
-
-        renderLog();
-
-        return;
-    }
-
-
-    const result =
-        workLog.filter(record => {
-
-            return Object
-                .values(record)
-                .join(" ")
-                .toLowerCase()
-                .includes(query);
+            };
 
         });
 
-
-    renderLog(result);
-
-
-    showToast(
-        `🔍 Знайдено: ${result.length}`
-    );
 }
 
 
-/* =====================================================
-   SEALS DATABASE
-===================================================== */
+/* ================= SAVE ================= */
 
-function loadSeals() {
+function saveRecord() {
 
-    try {
-
-        const data =
-            localStorage.getItem(
-                "pls_seals"
-            );
-
-        sealsDB =
-            data ? JSON.parse(data) : [];
-
-        if (!Array.isArray(sealsDB)) {
-
-            sealsDB = [];
-
-        }
-
-    } catch {
-
-        sealsDB = [];
-
-    }
-
-
-    renderSealsList();
-}
-
-
-function saveSeals() {
-
-    localStorage.setItem(
-        "pls_seals",
-        JSON.stringify(sealsDB)
-    );
-
-    renderSealsList();
-}
-
-
-function renderSealsList(filter = "") {
-
-    const container =
-        $("sealsList");
-
-    if (!container) return;
-
-
-    const query =
-        filter.toLowerCase();
-
-
-    const list =
-        sealsDB.filter(item =>
-            item.toLowerCase()
-                .includes(query)
-        );
-
-
-    if (!list.length) {
-
-        container.innerHTML = `
-
-            <div style="
-                padding:20px;
-                text-align:center;
-                color:#94a3b8;
-            ">
-                База пломб порожня
-            </div>
-
-        `;
-
-        return;
-    }
-
-
-    container.innerHTML =
-        list.map(seal => `
-
-            <div class="database-item">
-
-                <span class="database-number">
-                    🔒 ${escapeHtml(seal)}
-                </span>
-
-                <button
-                    type="button"
-                    class="database-delete"
-                    data-seal="${escapeHtml(seal)}"
-                >
-                    🗑️
-                </button>
-
-            </div>
-
-        `).join("");
-
-
-    container
-        .querySelectorAll(".database-delete")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const seal =
-                        button.dataset.seal;
-
-                    if (
-                        confirm(
-                            `Видалити пломбу ${seal}?`
-                        )
-                    ) {
-
-                        sealsDB =
-                            sealsDB.filter(
-                                item =>
-                                    item !== seal
-                            );
-
-                        saveSeals();
-
-                    }
-
-                }
-            );
-
-        });
-}
-
-
-/* =====================================================
-   RANGE
-===================================================== */
-
-function parseRange(value) {
-
-    const match =
-        value.match(
-            /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/
-        );
-
-
-    if (!match) {
-
-        return [value];
-
-    }
-
-
-    const prefix =
-        match[1];
-
-    const start =
-        Number(match[2]);
-
-    const end =
-        Number(match[3]);
-
-
-    if (start > end) {
-
-        return [value];
-
-    }
-
-
-    const result = [];
-
-
-    for (
-        let i = start;
-        i <= end;
-        i++
-    ) {
-
-        result.push(
-            prefix + i
-        );
-
-    }
-
-
-    return result;
-}
-
-
-/* =====================================================
-   ADD SEAL
-===================================================== */
-
-function addNewSeal() {
-
-    const input =
-        $("newSealInput");
-
-    const value =
-        input.value.trim();
-
-
-    if (!value) {
-
-        alert(
-            "Введіть номер пломби."
-        );
-
-        return;
-    }
-
-
-    const values =
-        parseRange(value);
-
-
-    let added = 0;
-
-
-    values.forEach(item => {
-
-        if (!sealsDB.includes(item)) {
-
-            sealsDB.push(item);
-
-            added++;
-
-        }
-
-    });
-
-
-    saveSeals();
-
-
-    input.value = "";
-
-    $("sealAddPanel")
-        ?.classList
-        .add("hidden");
-
-
-    showToast(
-        `✅ Додано пломб: ${added}`
-    );
-}
-
-
-/* =====================================================
-   METERS DATABASE
-===================================================== */
-
-function loadMeters() {
-
-    try {
-
-        const data =
-            localStorage.getItem(
-                "pls_meters"
-            );
-
-        metersDB =
-            data ? JSON.parse(data) : [];
-
-        if (!Array.isArray(metersDB)) {
-
-            metersDB = [];
-
-        }
-
-    } catch {
-
-        metersDB = [];
-
-    }
-
-
-    renderMetersList();
-}
-
-
-function saveMeters() {
-
-    localStorage.setItem(
-        "pls_meters",
-        JSON.stringify(metersDB)
-    );
-
-    renderMetersList();
-}
-
-
-function renderMetersList(filter = "") {
-
-    const container =
-        $("metersList");
-
-    if (!container) return;
-
-
-    const query =
-        filter.toLowerCase();
-
-
-    const list =
-        metersDB.filter(item =>
-            item.toLowerCase()
-                .includes(query)
-        );
-
-
-    if (!list.length) {
-
-        container.innerHTML = `
-
-            <div style="
-                padding:20px;
-                text-align:center;
-                color:#94a3b8;
-            ">
-                База лічильників порожня
-            </div>
-
-        `;
-
-        return;
-    }
-
-
-    container.innerHTML =
-        list.map(meter => `
-
-            <div class="database-item">
-
-                <span class="database-number">
-                    🔢 ${escapeHtml(meter)}
-                </span>
-
-                <button
-                    type="button"
-                    class="database-delete"
-                    data-meter="${escapeHtml(meter)}"
-                >
-                    🗑️
-                </button>
-
-            </div>
-
-        `).join("");
-
-
-    container
-        .querySelectorAll(".database-delete")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const meter =
-                        button.dataset.meter;
-
-                    if (
-                        confirm(
-                            `Видалити лічильник ${meter}?`
-                        )
-                    ) {
-
-                        metersDB =
-                            metersDB.filter(
-                                item =>
-                                    item !== meter
-                            );
-
-                        saveMeters();
-
-                    }
-
-                }
-            );
-
-        });
-}
-
-
-/* =====================================================
-   ADD METER
-===================================================== */
-
-function addNewMeter() {
-
-    const input =
-        $("newMeterInput");
-
-    const value =
-        input.value.trim();
-
-
-    if (!value) {
-
-        alert(
-            "Введіть номер лічильника."
-        );
-
-        return;
-    }
-
-
-    const values =
-        parseRange(value);
-
-
-    let added = 0;
-
-
-    values.forEach(item => {
-
-        if (!metersDB.includes(item)) {
-
-            metersDB.push(item);
-
-            added++;
-
-        }
-
-    });
-
-
-    saveMeters();
-
-
-    input.value = "";
-
-    $("meterAddPanel")
-        ?.classList
-        .add("hidden");
-
-
-    showToast(
-        `✅ Додано лічильників: ${added}`
-    );
-}
-
-
-/* =====================================================
-   QR
-===================================================== */
-
-async function stopScanner(id) {
-
-    const scanner =
-        activeScanners[id];
-
-    if (!scanner) return;
-
-
-    try {
-
-        await scanner.stop();
-
-    } catch {}
-
-    try {
-
-        await scanner.clear();
-
-    } catch {}
-
-
-    delete activeScanners[id];
-}
-
-
-function extractDigits(text, max = 10) {
-
-    return String(text || "")
-        .replace(/\D/g, "")
-        .slice(0, max);
-}
-
-
-function extractMeter(text) {
-
-    const digits =
-        String(text || "")
-            .replace(/\D/g, "");
-
-
-    if (digits.length <= 8) {
-
-        return digits;
-
-    }
-
-
-    /*
-     * Для QR, где вокруг номера есть
-     * дополнительные цифры.
-     */
-
-    return digits.slice(0, 8);
-}
-
-
-async function startQrScanner(
-    containerId,
-    inputId,
-    mode
-) {
-
-    const container =
-        $(containerId);
-
-
-    if (!container) {
-
-        return;
-    }
-
-
-    if (activeScanners[containerId]) {
-
-        await stopScanner(
-            containerId
-        );
-
-        container.classList.add(
-            "hidden"
-        );
-
-        return;
-    }
-
-
-    /*
-     * Закрываем другие камеры.
-     */
-
-    for (
-        const id in activeScanners
-    ) {
-
-        await stopScanner(id);
-
-        $(id)?.classList.add(
-            "hidden"
-        );
-
-    }
-
-
-    container.classList.remove(
-        "hidden"
-    );
-
-
-    container.innerHTML = `
-
-        <div class="scanner-header">
-
-            <span>
-                📷 Наведіть камеру на QR
-            </span>
-
-            <button
-                type="button"
-                class="btn-close-scanner"
-                id="${containerId}Close"
-            >
-                ✕
-            </button>
-
-        </div>
-
-        <div
-            id="${containerId}Reader"
-        ></div>
-
-    `;
-
-
-    $(`${containerId}Close`)
-        ?.addEventListener(
-            "click",
-            async () => {
-
-                await stopScanner(
-                    containerId
-                );
-
-                container.classList.add(
-                    "hidden"
-                );
-
-            }
-        );
+    const data =
+        getFormData();
 
 
     if (
-        typeof Html5Qrcode ===
-        "undefined"
+        !data.accountNumber ||
+        data.accountNumber.length !== 10
     ) {
 
         alert(
-            "QR-бібліотека не завантажилась."
+            'Введіть особовий рахунок (10 цифр)'
+        );
+
+        fields.accountNumber?.focus();
+
+        return;
+
+    }
+
+
+    workLog.unshift(data);
+
+    saveData();
+
+    showToast(
+        '✅ Запис збережено'
+    );
+
+}
+
+
+/* ================= CLEAR ================= */
+
+function clearFields() {
+
+    [
+
+        'workType',
+        'accountNumber',
+        'address',
+
+        'oldMeterNumber',
+        'oldMeterReading',
+        'oldMeterType',
+
+        'newMeterNumber',
+        'newMeterType',
+
+        'oldSealCover',
+        'oldSealVKP',
+        'oldSealSHO1',
+        'oldSealSHO2',
+        'oldSealOpto',
+        'oldIMP1',
+        'oldIMP2',
+        'oldIMP3',
+
+        'newSealCover',
+        'newSealVKP',
+        'newSealSHO1',
+        'newSealSHO2',
+        'newSealOpto',
+        'newIMP1',
+        'newIMP2',
+        'newIMP3'
+
+    ].forEach(id => {
+
+        const element = $(id);
+
+        if (element) {
+            element.value = '';
+        }
+
+    });
+
+
+    if (fields.newMeterReading) {
+
+        fields.newMeterReading.value =
+            '0000000';
+
+    }
+
+
+    showToast(
+        '🧹 Поля очищено'
+    );
+
+}
+
+
+/* ================= CSV ================= */
+
+function exportCSV() {
+
+    if (!workLog.length) {
+
+        alert(
+            'Немає даних'
         );
 
         return;
-    }
-
-
-    const reader =
-        new Html5Qrcode(
-            `${containerId}Reader`
-        );
-
-
-    activeScanners[containerId] =
-        reader;
-
-
-    try {
-
-        await reader.start(
-
-            {
-                facingMode: "environment"
-            },
-
-            {
-                fps: 10,
-
-                qrbox: {
-                    width: 260,
-                    height: 260
-                }
-            },
-
-            async decodedText => {
-
-                let result =
-                    decodedText.trim();
-
-
-                if (mode === "digits") {
-
-                    result =
-                        extractDigits(
-                            result,
-                            10
-                        );
-
-                } else if (
-                    mode === "smart"
-                ) {
-
-                    result =
-                        extractMeter(
-                            result
-                        );
-
-                }
-
-
-                const input =
-                    $(inputId);
-
-
-                if (input) {
-
-                    input.value =
-                        result;
-
-                    input.dispatchEvent(
-                        new Event(
-                            "input",
-                            {
-                                bubbles: true
-                            }
-                        )
-                    );
-
-                }
-
-
-                await stopScanner(
-                    containerId
-                );
-
-
-                container.classList.add(
-                    "hidden"
-                );
-
-
-                showToast(
-                    `✅ QR: ${result}`
-                );
-
-            },
-
-            () => {}
-
-        );
-
-    } catch (error) {
-
-        console.error(
-            "QR error:",
-            error
-        );
-
-
-        alert(
-            "❌ Не вдалося запустити камеру.\n\n" +
-            "Перевірте дозвіл на камеру."
-        );
-
-
-        await stopScanner(
-            containerId
-        );
-
-
-        container.classList.add(
-            "hidden"
-        );
 
     }
-}
 
 
-/* =====================================================
-   VOICE
-===================================================== */
+    const keys = [
 
-function setupVoice() {
+        'date',
+        'workType',
+        'employeeId',
+        'accountNumber',
+        'address',
 
-    document
-        .querySelectorAll(".btn-mic")
-        .forEach(button => {
+        'oldMeterType',
+        'oldMeterNumber',
+        'oldMeterReading',
 
-            button.addEventListener(
-                "click",
-                () => {
+        'newMeterType',
+        'newMeterNumber',
+        'newMeterReading',
 
-                    const target =
-                        button.dataset.target;
+        'oldSealCover',
+        'oldSealVKP',
+        'oldSealSHO1',
+        'oldSealSHO2',
+        'oldSealOpto',
+        'oldIMP1',
+        'oldIMP2',
+        'oldIMP3',
 
-                    const input =
-                        $(target);
+        'newSealCover',
+        'newSealVKP',
+        'newSealSHO1',
+        'newSealSHO2',
+        'newSealOpto',
+        'newIMP1',
+        'newIMP2',
+        'newIMP3'
 
-
-                    if (!input) return;
-
-
-                    const SpeechRecognition =
-                        window.SpeechRecognition ||
-                        window.webkitSpeechRecognition;
-
-
-                    if (!SpeechRecognition) {
-
-                        alert(
-                            "Голосове введення не підтримується."
-                        );
-
-                        return;
-                    }
+    ];
 
 
-                    const recognition =
-                        new SpeechRecognition();
+    const csv =
+        '\uFEFF' +
+        keys.join(';') +
+        '\n' +
 
-
-                    recognition.lang =
-                        "uk-UA";
-
-                    recognition.continuous =
-                        false;
-
-                    recognition.interimResults =
-                        false;
-
-
-                    button.classList.add(
-                        "listening"
-                    );
-
-
-                    recognition.onresult =
-                        event => {
-
-                            let text =
-                                event
-                                    .results[0][0]
-                                    .transcript;
-
-
-                            if (
-                                target ===
-                                "address"
-                            ) {
-
-                                text =
-                                    text
-                                        .replace(
-                                            /\s+/g,
-                                            " "
-                                        )
-                                        .trim();
-
-                            } else {
-
-                                text =
-                                    text.replace(
-                                        /\s/g,
-                                        ""
-                                    );
-
-                            }
-
-
-                            if (
-                                target ===
-                                    "accountNumber" ||
-                                target ===
-                                    "employeeId" ||
-                                target ===
-                                    "oldMeterReading" ||
-                                target ===
-                                    "newMeterReading"
-                            ) {
-
-                                text =
-                                    text.replace(
-                                        /\D/g,
-                                        ""
-                                    );
-
-                            }
-
-
-                            input.value =
-                                text;
-
-
-                            input.dispatchEvent(
-                                new Event(
-                                    "input",
-                                    {
-                                        bubbles: true
-                                    }
+        workLog
+            .map(
+                record =>
+                    keys
+                        .map(
+                            key =>
+                                '"' +
+                                String(
+                                    record[key] ?? ''
                                 )
-                            );
+                                .replace(/"/g, '""') +
+                                '"'
+                        )
+                        .join(';')
+            )
+            .join('\n');
 
 
-                            showToast(
-                                `🎤 Розпізнано: ${text}`
-                            );
+    const link =
+        document.createElement('a');
 
-                        };
-
-
-                    recognition.onerror =
-                        event => {
-
-                            console.error(
-                                event
-                            );
-
-                            showToast(
-                                "❌ Помилка голосового введення"
-                            );
-
-                        };
-
-
-                    recognition.onend =
-                        () => {
-
-                            button.classList.remove(
-                                "listening"
-                            );
-
-                        };
-
-
-                    try {
-
-                        recognition.start();
-
-                    } catch (error) {
-
-                        button.classList.remove(
-                            "listening"
-                        );
-
-                    }
-
+    link.href =
+        URL.createObjectURL(
+            new Blob(
+                [csv],
+                {
+                    type:
+                        'text/csv;charset=utf-8'
                 }
-            );
+            )
+        );
 
-        });
+    link.download =
+        'pls_log.csv';
+
+    link.click();
+
+    URL.revokeObjectURL(
+        link.href
+    );
+
 }
 
 
-/* =====================================================
-   AUTO CLEAN
-===================================================== */
-
-function setupAutoClean() {
-
-    document
-        .querySelectorAll(
-            "input:not([type=file])"
-        )
-        .forEach(input => {
-
-            input.addEventListener(
-                "input",
-                () => {
-
-                    const numeric =
-                        input.id ===
-                            "accountNumber" ||
-                        input.id ===
-                            "employeeId" ||
-                        input.id ===
-                            "oldMeterReading" ||
-                        input.id ===
-                            "newMeterReading";
-
-
-                    if (numeric) {
-
-                        input.value =
-                            input.value
-                                .replace(
-                                    /\D/g,
-                                    ""
-                                );
-
-                    }
-
-                }
-            );
-
-        });
-}
-
-
-/* =====================================================
-   GOOGLE FORM
-===================================================== */
+/* ================= GOOGLE FORM ================= */
 
 function sendToGoogleForm() {
 
@@ -1864,398 +1067,271 @@ function sendToGoogleForm() {
         getFormData();
 
 
-    if (
-        !data.accountNumber ||
-        data.accountNumber.length !== 10
-    ) {
+    if (!data.accountNumber) {
 
         alert(
-            "Введіть особовий рахунок — 10 цифр."
+            'Введіть особовий рахунок'
         );
 
         return;
+
     }
 
 
     const params =
-        new URLSearchParams();
+        new URLSearchParams({
+            usp: 'pp_url'
+        });
 
 
-    /*
-     * Эти entry ID сохранены
-     * из предыдущей версии проекта.
-     */
+    const map = {
 
-    params.append(
-        "entry.1609399626",
-        data.workType
-    );
+        workType: 'entry.1609399626',
 
-    params.append(
-        "entry.244962092",
-        data.accountNumber
-    );
+        accountNumber: 'entry.244962092',
 
-    params.append(
-        "entry.1583379400",
-        data.employeeId
-    );
+        employeeId: 'entry.1583379400',
 
+        oldMeterType: 'entry.155422969',
 
-    if (data.oldMeterType) {
+        oldMeterNumber: 'entry.1262021573',
 
-        params.append(
-            "entry.155422969",
-            data.oldMeterType
-        );
+        oldMeterReading: 'entry.1666715724',
 
-    }
+        oldSealCover: 'entry.980914247',
 
+        oldSealVKP: 'entry.1281985427',
 
-    if (data.oldMeterNumber) {
+        oldSealSHO1: 'entry.1571141896',
 
-        params.append(
-            "entry.1262021573",
-            data.oldMeterNumber
-        );
+        oldSealSHO2: 'entry.950038743',
 
-    }
+        oldSealOpto: 'entry.1825187506',
 
+        oldIMP1: 'entry.851707833',
 
-    if (data.oldMeterReading) {
+        oldIMP2: 'entry.1653188291',
 
-        params.append(
-            "entry.1666715724",
-            data.oldMeterReading
-        );
+        oldIMP3: 'entry.174981808',
 
-    }
+        newMeterType: 'entry.1958360409',
 
+        newMeterNumber: 'entry.591456354',
 
-    const oldSeals = {
+        newMeterReading: 'entry.686446183',
 
-        oldSealCover:
-            "entry.980914247",
+        newSealCover: 'entry.1577377109',
 
-        oldSealVKP:
-            "entry.1281985427",
+        newSealVKP: 'entry.1292803469',
 
-        oldSealSHO1:
-            "entry.1571141896",
+        newSealSHO1: 'entry.1309070612',
 
-        oldSealSHO2:
-            "entry.950038743",
+        newSealSHO2: 'entry.1176747559',
 
-        oldSealOpto:
-            "entry.1825187506",
+        newSealOpto: 'entry.67142835',
 
-        oldIMP1:
-            "entry.851707833",
+        newIMP1: 'entry.245114888',
 
-        oldIMP2:
-            "entry.1653188291",
+        newIMP2: 'entry.1581321253',
 
-        oldIMP3:
-            "entry.174981808"
+        newIMP3: 'entry.865785872',
+
+        address: 'entry.1234567890'
 
     };
 
 
-    Object.entries(oldSeals)
+    Object.entries(map)
         .forEach(
-            ([field, entry]) => {
+            ([key, entry]) => {
 
-                if (data[field]) {
+                if (data[key]) {
 
                     params.append(
                         entry,
-                        data[field]
+                        data[key]
                     );
 
                 }
 
             }
         );
-
-
-    if (data.newMeterType) {
-
-        params.append(
-            "entry.1958360409",
-            data.newMeterType
-        );
-
-    }
-
-
-    if (data.newMeterNumber) {
-
-        params.append(
-            "entry.591456354",
-            data.newMeterNumber
-        );
-
-    }
-
-
-    if (data.newMeterReading) {
-
-        params.append(
-            "entry.686446183",
-            data.newMeterReading
-        );
-
-    }
-
-
-    const newSeals = {
-
-        newSealCover:
-            "entry.1577377109",
-
-        newSealVKP:
-            "entry.1292803469",
-
-        newSealSHO1:
-            "entry.1309070612",
-
-        newSealSHO2:
-            "entry.1176747559",
-
-        newSealOpto:
-            "entry.67142835",
-
-        newIMP1:
-            "entry.245114888",
-
-        newIMP2:
-            "entry.1581321253",
-
-        newIMP3:
-            "entry.865785872"
-
-    };
-
-
-    Object.entries(newSeals)
-        .forEach(
-            ([field, entry]) => {
-
-                if (data[field]) {
-
-                    params.append(
-                        entry,
-                        data[field]
-                    );
-
-                }
-
-            }
-        );
-
-
-    if (data.address) {
-
-        params.append(
-            "entry.1234567890",
-            data.address
-        );
-
-    }
-
-
-    const url =
-        "https://docs.google.com/forms/d/e/" +
-        "1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/" +
-        "viewform?usp=pp_url&" +
-        params.toString();
-
-
-    console.log(
-        "Google Form URL:",
-        url
-    );
 
 
     window.open(
-        url,
-        "_blank"
+        'https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?' +
+        params.toString(),
+        '_blank'
     );
 
-
-    workLog.unshift(data);
-
-    saveData();
-
-
-    showToast(
-        "✅ Google Form відкрито"
-    );
 }
 
 
-/* =====================================================
-   TELEGRAM SHARE
-===================================================== */
+/* ================= ОТЧЕТ ================= */
 
-function sendAllDataToOwner() {
+function sendReport() {
 
     const data =
         getFormData();
 
 
-    if (
-        !data.accountNumber ||
-        data.accountNumber.length !== 10
-    ) {
-
-        alert(
-            "Введіть особовий рахунок — 10 цифр."
-        );
-
-        return;
-    }
-
-
-    const oldSeals = [
-
-        data.oldSealCover,
-        data.oldSealVKP,
-        data.oldSealSHO1,
-        data.oldSealSHO2,
-        data.oldSealOpto,
-        data.oldIMP1,
-        data.oldIMP2,
-        data.oldIMP3
-
-    ]
-        .filter(Boolean)
-        .join(", ");
-
-
-    const newSeals = [
-
-        data.newSealCover,
-        data.newSealVKP,
-        data.newSealSHO1,
-        data.newSealSHO2,
-        data.newSealOpto,
-        data.newIMP1,
-        data.newIMP2,
-        data.newIMP3
-
-    ]
-        .filter(Boolean)
-        .join(", ");
-
-
-    const message =
-
-        "📋 ЗВІТ ПРО РОБОТУ\n\n" +
-
-        `📅 Дата: ${data.date}\n` +
-
-        `📋 Робота: ${data.workType}\n` +
-
-        `👤 Табельний: ${data.employeeId}\n` +
-
-        `📋 Особовий: ${data.accountNumber}\n\n` +
-
-        "🔻 ЗНЯТИЙ ЛІЧИЛЬНИК\n" +
-
-        `Тип: ${data.oldMeterType || "—"}\n` +
-
-        `Номер: ${data.oldMeterNumber || "—"}\n` +
-
-        `Покази: ${data.oldMeterReading || "—"}\n\n` +
-
-        `Пломби: ${oldSeals || "—"}\n\n` +
-
-        "🔺 ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК\n" +
-
-        `Тип: ${data.newMeterType || "—"}\n` +
-
-        `Номер: ${data.newMeterNumber || "—"}\n` +
-
-        `Покази: ${data.newMeterReading || "—"}\n\n` +
-
-        `Пломби: ${newSeals || "—"}\n\n` +
-
-        `📍 Адреса: ${data.address || "—"}`;
-
-
-    const url =
-        "https://t.me/share/url?text=" +
-        encodeURIComponent(message);
+    const text =
+`📋 ЗВІТ
+Дата: ${data.date}
+Робота: ${data.workType}
+Табельний: ${data.employeeId}
+Особовий: ${data.accountNumber}
+Лічильник: ${data.newMeterNumber}
+Пломба кришки: ${data.newSealCover}
+Пломба оптопорту: ${data.newSealOpto}
+Адреса: ${data.address}`;
 
 
     window.open(
-        url,
-        "_blank"
+        'https://t.me/share/url?url=' +
+        encodeURIComponent(text),
+        '_blank'
     );
 
-
-    workLog.unshift(data);
-
-    saveData();
-
-
-    showToast(
-        "📤 Звіт підготовлено"
-    );
 }
 
 
-/* =====================================================
-   EVENTS
-===================================================== */
+/* ================= START ================= */
 
-function setupButtons() {
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
 
-
-    $("saveRecordBtn")
-        ?.addEventListener(
-            "click",
-            saveAllFieldsToLog
-        );
+        const pinScreen =
+            $('pinScreen');
 
 
-    $("sendToFormBtn")
-        ?.addEventListener(
-            "click",
-            sendToGoogleForm
-        );
+        /*
+         * ВАЖНО:
+         * Используем делегирование событий.
+         * Поэтому кнопки PIN работают
+         * и мышью, и на телефоне.
+         */
+
+        if (pinScreen) {
+
+            pinScreen.addEventListener(
+                'click',
+                event => {
+
+                    const button =
+                        event.target.closest(
+                            '.pin-btn'
+                        );
 
 
-    $("sendAllBtn")
-        ?.addEventListener(
-            "click",
-            sendAllDataToOwner
-        );
+                    if (!button) {
+                        return;
+                    }
 
 
-    $("clearFieldsBtn")
-        ?.addEventListener(
-            "click",
-            clearAllFields
-        );
+                    event.preventDefault();
+
+                    event.stopPropagation();
 
 
-    $("exportBtn")
-        ?.addEventListener(
-            "click",
-            exportCSV
-        );
+                    if (
+                        button.dataset.num !==
+                        undefined
+                    ) {
+
+                        pinAdd(
+                            button.dataset.num
+                        );
+
+                        return;
+
+                    }
 
 
-    $("clearLogBtn")
-        ?.addEventListener(
-            "click",
+                    if (
+                        button.id ===
+                        'pinClear'
+                    ) {
+
+                        enteredPin = '';
+
+                        $('pinError').textContent =
+                            '';
+
+                        updatePinDisplay();
+
+                        return;
+
+                    }
+
+
+                    if (
+                        button.id ===
+                        'pinEnter'
+                    ) {
+
+                        pinCheck();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        document
+            .querySelectorAll(
+                '.pin-btn[data-num]'
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    'pointerdown',
+                    event => {
+
+                        event.preventDefault();
+
+                    }
+                );
+
+            });
+
+
+        $('pinForgot').onclick =
+            () => {
+
+                $('pinError').textContent =
+                    'PIN: ' + CORRECT_PIN;
+
+                setTimeout(
+                    () =>
+                        $('pinError').textContent =
+                            '',
+                    3000
+                );
+
+            };
+
+
+        updatePinDisplay();
+
+
+        $('saveRecordBtn').onclick =
+            saveRecord;
+
+
+        $('exportBtn').onclick =
+            exportCSV;
+
+
+        $('clearLogBtn').onclick =
             () => {
 
                 if (
                     confirm(
-                        "Видалити весь журнал?"
+                        'Очистити журнал?'
                     )
                 ) {
 
@@ -2265,199 +1341,86 @@ function setupButtons() {
 
                 }
 
-            }
-        );
+            };
 
 
-    $("searchLogBtn")
-        ?.addEventListener(
-            "click",
-            searchLog
-        );
+        $('clearFieldsBtn').onclick =
+            clearFields;
 
 
-    $("resetSearchBtn")
-        ?.addEventListener(
-            "click",
-            () => {
-
-                $("searchAccountInput")
-                    .value = "";
-
-                renderLog();
-
-            }
-        );
+        $('sendToFormBtn').onclick =
+            sendToGoogleForm;
 
 
-    $("addSealBtn")
-        ?.addEventListener(
-            "click",
-            () => {
-
-                $("sealAddPanel")
-                    ?.classList
-                    .toggle("hidden");
-
-            }
-        );
+        $('sendAllBtn').onclick =
+            sendReport;
 
 
-    $("confirmSealBtn")
-        ?.addEventListener(
-            "click",
-            addNewSeal
-        );
+        document
+            .querySelectorAll('.scan-btn')
+            .forEach(button => {
+
+                button.onclick =
+                    () => {
+
+                        const target =
+                            button.dataset.target;
+
+                        startQrScanner(
+                            target + 'Scanner',
+                            target,
+                            button.dataset.mode
+                        );
+
+                    };
+
+            });
 
 
-    $("sealSearch")
-        ?.addEventListener(
-            "input",
-            event => {
+        /*
+         * Если контейнера сканера нет —
+         * создаём автоматически.
+         */
 
-                renderSealsList(
-                    event.target.value
-                );
+        document
+            .querySelectorAll('.scan-btn')
+            .forEach(button => {
 
-            }
-        );
-
-
-    $("addMeterBtn")
-        ?.addEventListener(
-            "click",
-            () => {
-
-                $("meterAddPanel")
-                    ?.classList
-                    .toggle("hidden");
-
-            }
-        );
+                const target =
+                    button.dataset.target;
 
 
-    $("confirmMeterBtn")
-        ?.addEventListener(
-            "click",
-            addNewMeter
-        );
+                if (
+                    !$(target + 'Scanner')
+                ) {
+
+                    const container =
+                        document.createElement(
+                            'div'
+                        );
+
+                    container.id =
+                        target + 'Scanner';
+
+                    container.className =
+                        'scanner hidden';
 
 
-    $("meterSearch")
-        ?.addEventListener(
-            "input",
-            event => {
-
-                renderMetersList(
-                    event.target.value
-                );
-
-            }
-        );
-
-
-    /*
-     * QR buttons
-     */
-
-    document
-        .querySelectorAll(".btn-scan")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                event => {
-
-                    event.preventDefault();
-
-                    const inputId =
-                        button.dataset.target;
-
-                    const mode =
-                        button.dataset.mode ||
-                        "text";
-
-
-                    startQrScanner(
-                        inputId +
-                        "Scanner",
-
-                        inputId,
-
-                        mode
-                    );
+                    $(target)
+                        .closest('.input-row')
+                        .after(container);
 
                 }
-            );
 
-        });
-
-}
+            });
 
 
-/* =====================================================
-   APPLICATION INIT
-===================================================== */
+        if (fields.employeeId) {
 
-let applicationInitialized = false;
+            fields.employeeId.maxLength =
+                10;
 
-
-function initApplication() {
-
-    if (applicationInitialized) {
-
-        return;
-    }
-
-
-    applicationInitialized = true;
-
-
-    loadData();
-
-    loadSeals();
-
-    loadMeters();
-
-    setupButtons();
-
-    setupVoice();
-
-    setupAutoClean();
-
-    /*
-     * OCR запускается из ocr.js
-     */
-
-    if (
-        typeof setupOCR ===
-        "function"
-    ) {
-
-        setupOCR();
-
-    }
-
-
-    if ($("newMeterReading")) {
-
-        $("newMeterReading").value =
-            "0000000";
-
-    }
-
-}
-
-
-/* =====================================================
-   START
-===================================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        setupPin();
+        }
 
     }
 );
