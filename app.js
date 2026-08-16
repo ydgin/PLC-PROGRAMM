@@ -678,14 +678,12 @@ function setupOCR() {
             return;
         }
         
-        // Створюємо input для вибору фото
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
         
-        // На мобільних пристроях дозволяємо вибір з галереї
         if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             fileInput.capture = 'environment';
         }
@@ -760,23 +758,191 @@ function setupOCR() {
     });
 }
 
-// ========== ПАРСИНГ РОЗПІЗНАНОГО ТЕКСТУ ==========
+// ========== ПАРСИНГ РОЗПІЗНАНОГО ТЕКСТУ (ДЛЯ ВАШИХ ФОТО) ==========
 function parseAndFillFields(text) {
     if (!text || text.length < 3) {
         console.log('❌ Текст занадто короткий');
         return false;
     }
-    
+
     const lines = text.split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 1);
-    
-    console.log('📋 Рядки для парсингу:', lines.length);
-    console.log('Перші 5 рядків:', lines.slice(0, 5));
-    
+
+    console.log('📋 Рядки для парсингу:', lines);
+    console.log('Перші 10 рядків:', lines.slice(0, 10));
+
     let foundAny = false;
-    
-    // ===== 1. ДАТА =====
+
+    // ===== 1. ОСОБОВИЙ РАХУНОК (Фото 1: oye 123138577) =====
+    const accountField = document.getElementById('accountNumber');
+    if (accountField && !accountField.value) {
+        for (let line of lines) {
+            // oye 123138577
+            const oyeMatch = line.match(/oye\s*(\d{9,10})/i);
+            if (oyeMatch) {
+                accountField.value = oyeMatch[1];
+                foundAny = true;
+                console.log(`📋 Особовий (oye): ${oyeMatch[1]}`);
+                showToast(`📋 Особовий: ${oyeMatch[1]}`);
+                break;
+            }
+            // Просто 10 цифр
+            const digitsMatch = line.match(/\b(\d{9,10})\b/);
+            if (digitsMatch && digitsMatch[1].length >= 9) {
+                accountField.value = digitsMatch[1];
+                foundAny = true;
+                console.log(`📋 Особовий (цифри): ${digitsMatch[1]}`);
+                showToast(`📋 Особовий: ${digitsMatch[1]}`);
+                break;
+            }
+        }
+    }
+
+    // ===== 2. АДРЕСА (Фото 2: Героїв України буд. 4 кв. 145) =====
+    const addressField = document.getElementById('address');
+    if (addressField && !addressField.value) {
+        for (let line of lines) {
+            if (line.includes('Героїв') || line.includes('вул') || line.includes('буд') || line.includes('кв') || 
+                line.includes('просп') || line.includes('пров') || line.includes('будинок')) {
+                addressField.value = line;
+                foundAny = true;
+                console.log(`📍 Адреса: ${line}`);
+                showToast(`📍 Адреса: ${line}`);
+                break;
+            }
+        }
+    }
+
+    // ===== 3. НОМЕР ЗНЯТОГО ЛІЧИЛЬНИКА (Фото 3: 058854) =====
+    const oldNumberField = document.getElementById('oldMeterNumber');
+    if (oldNumberField && !oldNumberField.value) {
+        for (let line of lines) {
+            // Заводський номер/рік випуску 058854
+            const numberMatch = line.match(/номер\s*[\s\/]*(\d{6,8})/i);
+            if (numberMatch) {
+                oldNumberField.value = numberMatch[1];
+                foundAny = true;
+                console.log(`🔢 Номер знятого (заводський): ${numberMatch[1]}`);
+                showToast(`🔢 Номер знятого: ${numberMatch[1]}`);
+                break;
+            }
+            // Просто 6 цифр
+            const digitsMatch = line.match(/\b(\d{6,8})\b/);
+            if (digitsMatch && digitsMatch[1].length >= 6) {
+                oldNumberField.value = digitsMatch[1];
+                foundAny = true;
+                console.log(`🔢 Номер знятого (цифри): ${digitsMatch[1]}`);
+                showToast(`🔢 Номер знятого: ${digitsMatch[1]}`);
+                break;
+            }
+        }
+    }
+
+    // ===== 4. ПОКАЗИ ЗНЯТОГО ЛІЧИЛЬНИКА (Фото 4: 876543210) =====
+    const readingField = document.getElementById('oldMeterReading');
+    if (readingField && !readingField.value) {
+        for (let line of lines) {
+            // Покази (876543210)
+            const readingMatch = line.match(/показ[иі]\s*[\(\)\-]*\s*(\d{5,10})/i);
+            if (readingMatch) {
+                readingField.value = readingMatch[1];
+                foundAny = true;
+                console.log(`📊 Покази знятого (з текстом): ${readingMatch[1]}`);
+                showToast(`📊 Покази знятого: ${readingMatch[1]}`);
+                break;
+            }
+            // Таблиця показів: | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+            const tableMatch = line.match(/[\|\s]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*/);
+            if (tableMatch) {
+                const reading = tableMatch.slice(1).join('');
+                if (reading.length >= 5) {
+                    readingField.value = reading;
+                    foundAny = true;
+                    console.log(`📊 Покази знятого (таблиця): ${reading}`);
+                    showToast(`📊 Покази знятого: ${reading}`);
+                    break;
+                }
+            }
+        }
+    }
+
+    // ===== 5. НОМЕР ВСТАНОВЛЕНОГО ЛІЧИЛЬНИКА (Фото 5: 123456789) =====
+    const newNumberField = document.getElementById('newMeterNumber');
+    if (newNumberField && !newNumberField.value) {
+        for (let line of lines) {
+            // Таблиця: | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+            const tableMatch = line.match(/[\|\s]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*/);
+            if (tableMatch) {
+                const number = tableMatch.slice(1).join('');
+                if (number.length >= 5) {
+                    newNumberField.value = number;
+                    foundAny = true;
+                    console.log(`🔢 Номер встановленого (таблиця): ${number}`);
+                    showToast(`🔢 Номер встановленого: ${number}`);
+                    break;
+                }
+            }
+        }
+    }
+
+    // ===== 6. ПЛОМБА КЛЕМНА КРИШКА (ЗНЯТА) (Фото 6: 4985088261) =====
+    const sealCoverField = document.getElementById('oldSealCover');
+    if (sealCoverField && !sealCoverField.value) {
+        for (let line of lines) {
+            if (line.includes('Держспоживстандарту') || line.includes('відбиток') || line.includes('пломби')) {
+                const sealMatch = line.match(/\b(\d{6,12})\b/);
+                if (sealMatch) {
+                    sealCoverField.value = sealMatch[1];
+                    foundAny = true;
+                    console.log(`🔒 Пломба кл. кришка (знята): ${sealMatch[1]}`);
+                    showToast(`🔒 Пломба кл. кришка: ${sealMatch[1]}`);
+                    break;
+                }
+            }
+        }
+    }
+
+    // ===== 7. ПЛОМБА ВВОДНИЙ АВТОМАТ (ЗНЯТА) (Фото 7: 19975569) =====
+    const sealVKPField = document.getElementById('oldSealVKP');
+    if (sealVKPField && !sealVKPField.value) {
+        for (let line of lines) {
+            if (line.includes('Шафа') || line.includes('облику') || line.includes('вводний') || line.includes('автомат')) {
+                const sealMatch = line.match(/\b(\d{6,12})\b/);
+                if (sealMatch) {
+                    sealVKPField.value = sealMatch[1];
+                    foundAny = true;
+                    console.log(`🔒 Пломба ВКП (знята): ${sealMatch[1]}`);
+                    showToast(`🔒 Пломба ВКП: ${sealMatch[1]}`);
+                    break;
+                }
+            }
+        }
+    }
+
+    // ===== 8. ПЛОМБА КЛЕМНА КРИШКА (ВСТАНОВЛЕНА) =====
+    const newSealCoverField = document.getElementById('newSealCover');
+    if (newSealCoverField && !newSealCoverField.value) {
+        if (sealCoverField && sealCoverField.value) {
+            newSealCoverField.value = sealCoverField.value;
+            foundAny = true;
+            console.log(`🔒 Пломба кл. кришка (встановлена): ${sealCoverField.value}`);
+            showToast(`🔒 Пломба кл. кришка встановлена: ${sealCoverField.value}`);
+        }
+    }
+
+    // ===== 9. ПЛОМБА ВВОДНИЙ АВТОМАТ (ВСТАНОВЛЕНА) =====
+    const newSealVKPField = document.getElementById('newSealVKP');
+    if (newSealVKPField && !newSealVKPField.value) {
+        if (sealVKPField && sealVKPField.value) {
+            newSealVKPField.value = sealVKPField.value;
+            foundAny = true;
+            console.log(`🔒 Пломба ВКП (встановлена): ${sealVKPField.value}`);
+            showToast(`🔒 Пломба ВКП встановлена: ${sealVKPField.value}`);
+        }
+    }
+
+    // ===== 10. ДАТА =====
     const dateField = document.getElementById('workDate');
     if (dateField && !dateField.value) {
         const datePatterns = [
@@ -801,164 +967,7 @@ function parseAndFillFields(text) {
             if (dateField.value) break;
         }
     }
-    
-    // ===== 2. ТИП ЛІЧИЛЬНИКА =====
-    const meterTypeSelect = document.getElementById('oldMeterType');
-    if (meterTypeSelect && !meterTypeSelect.value) {
-        for (let line of lines) {
-            const cleanLine = line.replace(/\s/g, '').toUpperCase();
-            for (let i = 0; i < meterTypeSelect.options.length; i++) {
-                const optionText = meterTypeSelect.options[i].text.replace(/\s/g, '').toUpperCase();
-                const optionValue = meterTypeSelect.options[i].value;
-                if (optionText.length > 3 && (cleanLine.includes(optionText) || optionText.includes(cleanLine))) {
-                    meterTypeSelect.value = optionValue;
-                    foundAny = true;
-                    console.log(`📟 Тип знятого: ${optionValue}`);
-                    showToast(`📟 Тип знятого: ${optionValue}`);
-                    break;
-                }
-            }
-            if (meterTypeSelect.value) break;
-        }
-    }
-    
-    // ===== 3. НОМЕР ЛІЧИЛЬНИКА =====
-    const meterNumberField = document.getElementById('oldMeterNumber');
-    if (meterNumberField && !meterNumberField.value) {
-        for (let line of lines) {
-            const matches = line.match(/\b(\d{6,12})\b/g);
-            if (matches) {
-                for (let match of matches) {
-                    if (match.length >= 6 && match.length <= 12) {
-                        meterNumberField.value = match;
-                        foundAny = true;
-                        console.log(`🔢 Номер знятого: ${match}`);
-                        showToast(`🔢 Номер знятого: ${match}`);
-                        break;
-                    }
-                }
-                if (meterNumberField.value) break;
-            }
-        }
-    }
-    
-    // ===== 4. ПОКАЗИ ЛІЧИЛЬНИКА =====
-    const readingField = document.getElementById('oldMeterReading');
-    if (readingField && !readingField.value) {
-        for (let line of lines) {
-            const matches = line.match(/\b(\d{5,8})\b/g);
-            if (matches) {
-                for (let match of matches) {
-                    if (match.length >= 5 && match.length <= 8) {
-                        readingField.value = match;
-                        foundAny = true;
-                        console.log(`📊 Покази знятого: ${match}`);
-                        showToast(`📊 Покази знятого: ${match}`);
-                        break;
-                    }
-                }
-                if (readingField.value) break;
-            }
-        }
-    }
-    
-    // ===== 5. ОСОБОВИЙ РАХУНОК =====
-    const accountField = document.getElementById('accountNumber');
-    if (accountField && !accountField.value) {
-        for (let line of lines) {
-            const matches = line.match(/\b(\d{10})\b/g);
-            if (matches) {
-                accountField.value = matches[0];
-                foundAny = true;
-                console.log(`📋 Особовий: ${matches[0]}`);
-                showToast(`📋 Особовий: ${matches[0]}`);
-                break;
-            }
-        }
-    }
-    
-    // ===== 6. ПЛОМБИ =====
-    const sealFields = [
-        { id: 'oldSealCover', keywords: ['кл. кришка', 'клемна', 'кришка'] },
-        { id: 'oldSealVKP', keywords: ['ВКП', 'вкп'] },
-        { id: 'oldSealSHO1', keywords: ['ШО 1', 'ШО(1)'] },
-        { id: 'oldSealSHO2', keywords: ['ШО 2', 'ШО(2)'] },
-        { id: 'oldSealOpto', keywords: ['оптопорт', 'опто'] },
-        { id: 'oldIMP1', keywords: ['ИМП 1', 'ІМП 1'] },
-        { id: 'oldIMP2', keywords: ['ИМП 2', 'ІМП 2'] },
-        { id: 'oldIMP3', keywords: ['ИМП 3', 'ІМП 3'] }
-    ];
-    
-    for (let fieldInfo of sealFields) {
-        const field = document.getElementById(fieldInfo.id);
-        if (field && !field.value) {
-            for (let line of lines) {
-                const lowerLine = line.toLowerCase();
-                let foundKeyword = false;
-                for (let keyword of fieldInfo.keywords) {
-                    if (lowerLine.includes(keyword.toLowerCase())) {
-                        foundKeyword = true;
-                        break;
-                    }
-                }
-                if (foundKeyword) {
-                    let sealMatch = line.match(/([A-Za-zА-Яа-яІіЇїЄє]+\d+)/);
-                    if (!sealMatch) {
-                        sealMatch = line.match(/\b(\d{6,12})\b/);
-                    }
-                    if (sealMatch) {
-                        field.value = sealMatch[1].toUpperCase();
-                        foundAny = true;
-                        console.log(`🔒 ${fieldInfo.id}: ${sealMatch[1].toUpperCase()}`);
-                        showToast(`🔒 ${fieldInfo.id}: ${sealMatch[1].toUpperCase()}`);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    
-    // ===== 7. АДРЕСА =====
-    const addressField = document.getElementById('address');
-    if (addressField && !addressField.value) {
-        const addressKeywords = ['вул', 'вулиця', 'просп', 'пров', 'буд', 'будинок', 'кв'];
-        for (let line of lines) {
-            const lowerLine = line.toLowerCase();
-            let foundAddress = false;
-            for (let kw of addressKeywords) {
-                if (lowerLine.includes(kw)) {
-                    foundAddress = true;
-                    break;
-                }
-            }
-            if (foundAddress && line.length > 5) {
-                addressField.value = line;
-                foundAny = true;
-                console.log(`📍 Адреса: ${line}`);
-                showToast(`📍 Адреса: ${line}`);
-                break;
-            }
-        }
-    }
-    
-    // ===== 8. ПІДСТАВА =====
-    const reasonField = document.getElementById('replacementReason');
-    if (reasonField && !reasonField.value) {
-        const reasonKeywords = ['Непрацюючий', 'Планова', 'IN (PLC)', 'Платна', 'Експертиза'];
-        for (let line of lines) {
-            for (let kw of reasonKeywords) {
-                if (line.includes(kw)) {
-                    reasonField.value = kw;
-                    foundAny = true;
-                    console.log(`📋 Підстава: ${kw}`);
-                    showToast(`📋 Підстава: ${kw}`);
-                    break;
-                }
-            }
-            if (reasonField.value) break;
-        }
-    }
-    
+
     console.log('✅ Результат парсингу:', foundAny ? 'Знайдено дані' : 'Нічого не знайдено');
     return foundAny;
 }
@@ -1370,7 +1379,6 @@ function sendToGoogleForm() {
     let workDateVal = workDate ? workDate.value : '';
     let replacementReasonVal = replacementReason ? replacementReason.value : '';
     
-    // Відповідність для підстави
     const reasonMap = {
         'ІП (PLC)': 'IN (PLC)',
         'Непрацюючий лічильник': 'Непрацюючий лічильник',
@@ -1380,7 +1388,6 @@ function sendToGoogleForm() {
     };
     replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
     
-    // Форматування дати
     if (workDateVal) {
         const parts = workDateVal.split('.');
         if (parts.length === 3) {
@@ -1396,7 +1403,6 @@ function sendToGoogleForm() {
     
     const params = new URLSearchParams();
     
-    // Нові поля
     if (workDateVal) params.append('entry.814427514', workDateVal);
     if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
     
