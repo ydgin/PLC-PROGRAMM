@@ -867,7 +867,7 @@ function parseAndFillFields(text) {
         }
     }
     
-    // 8. Підстава (шукаємо в тексті)
+    // 8. Підстава
     const reasonField = document.getElementById('replacementReason');
     if (reasonField && !reasonField.value) {
         const reasonKeywords = ['Непрацюючий', 'Планова', 'IN (PLC)', 'Платна', 'Експертиза'];
@@ -1381,4 +1381,314 @@ function sendAllDataToOwner() {
     }
     if (!employeeId.value) {
         alert('❌ Введіть табельний номер');
-        employeeId
+        employeeId.focus();
+        return;
+    }
+    if (!accountNumber.value || accountNumber.value.length !== 10) {
+        alert('❌ Введіть особовий рахунок (10 цифр)');
+        accountNumber.focus();
+        return;
+    }
+    
+    const data = getFormData();
+    let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
+    message += `📅 Дата виконання: ${workDate?.value || '—'}\n`;
+    message += `📋 Підстава: ${replacementReason?.value || '—'}\n`;
+    message += `📋 Робота: ${data.workType}\n`;
+    message += `👤 Табельний: ${data.employeeId}\n`;
+    message += `📋 Особовий: ${data.accountNumber}\n\n`;
+    message += '🔻 **Знятий лічильник**\n';
+    message += `Тип: ${data.oldMeterType || '—'}\n`;
+    message += `Номер: ${data.oldMeterNumber || '—'}\n`;
+    message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
+    message += '🔻 **Зняті пломби**\n';
+    const oldSeals = [
+        `кл. кришка: ${data.oldSealCover || '—'}`,
+        `ВКП: ${data.oldSealVKP || '—'}`,
+        `ШО (1): ${data.oldSealSHO1 || '—'}`,
+        `ШО (2): ${data.oldSealSHO2 || '—'}`,
+        `оптопорт: ${data.oldSealOpto || '—'}`,
+        `ИМП (1): ${data.oldIMP1 || '—'}`,
+        `ИМП (2): ${data.oldIMP2 || '—'}`,
+        `ИМП (3): ${data.oldIMP3 || '—'}`
+    ].filter(s => !s.includes('—'));
+    message += oldSeals.length ? oldSeals.join('\n') : '—\n';
+    message += '\n';
+    message += '🔺 **Встановлений лічильник**\n';
+    message += `Тип: ${data.newMeterType || '—'}\n`;
+    message += `Номер: ${data.newMeterNumber || '—'}\n`;
+    message += `Покази: ${data.newMeterReading || '0000000'}\n\n`;
+    message += '🔺 **Встановлені пломби**\n';
+    const newSeals = [
+        `кл. кришка: ${data.newSealCover || '—'}`,
+        `ВКП: ${data.newSealVKP || '—'}`,
+        `ШО (1): ${data.newSealSHO1 || '—'}`,
+        `ШО (2): ${data.newSealSHO2 || '—'}`,
+        `оптопорт: ${data.newSealOpto || '—'}`,
+        `ИМП (1): ${data.newIMP1 || '—'}`,
+        `ИМП (2): ${data.newIMP2 || '—'}`,
+        `ИМП (3): ${data.newIMP3 || '—'}`
+    ].filter(s => !s.includes('—'));
+    message += newSeals.length ? newSeals.join('\n') : '—\n';
+    message += '\n';
+    message += `📍 Адреса: ${data.address || '—'}\n`;
+    const encodedMessage = encodeURIComponent(message);
+    const telegramUrl = `https://t.me/share/url?url=${encodedMessage}`;
+    window.open(telegramUrl, '_blank');
+    workLog.unshift(data);
+    saveData();
+    showToast('📨 Дані відправлено власнику!');
+}
+
+// ========== ЖУРНАЛ ==========
+function loadData() {
+    const stored = localStorage.getItem('pls_log');
+    if (stored) { try { workLog = JSON.parse(stored); } catch(e) { workLog = []; } }
+    if (!workLog.length) workLog = [];
+    renderLog();
+}
+
+function saveData() { localStorage.setItem('pls_log', JSON.stringify(workLog)); renderLog(); }
+
+function renderLog() {
+    if (!logTable) return;
+    if (!workLog.length) {
+        logTable.innerHTML = '<tr class="empty-row"><td colspan="12">Немає записів</td></tr>';
+        return;
+    }
+    let html = '';
+    workLog.forEach((r, idx) => {
+        const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(', ');
+        const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(', ');
+        html += `<tr>
+            <td>${escapeHtml(r.date || '')}</td>
+            <td>${escapeHtml(r.workType || '')}</td>
+            <td>${escapeHtml(r.employeeId || '')}</td>
+            <td>${escapeHtml(r.accountNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterNumber || '')}</td>
+            <td>${escapeHtml(r.oldMeterReading || '')}</td>
+            <td>${escapeHtml(r.newMeterNumber || '')}</td>
+            <td>${escapeHtml(r.newMeterReading || '')}</td>
+            <td style="min-width:220px;">${escapeHtml(r.address || '')}</td>
+            <td style="min-width:240px;"><div style="background:#fee2e2; color:#dc2626; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔻 Зняті</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(removedSeals) || '—'}</div></td>
+            <td style="min-width:240px;"><div style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:600; display:inline-block; margin-bottom:6px;">🔺 Встановлені</div><div style="white-space:normal; word-break:break-word;">${escapeHtml(installedSeals) || '—'}</div></td>
+            <td><button class="delete-icon" data-idx="${idx}" style="border:none; background:none; cursor:pointer; font-size:18px;">🗑️</button></td>
+        </tr>`;
+    });
+    logTable.innerHTML = html;
+    document.querySelectorAll('.delete-icon').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            if (confirm('Видалити запис?')) { workLog.splice(idx, 1); saveData(); }
+        });
+    });
+}
+
+function exportCSV() {
+    if (!workLog.length) { alert('Немає даних для експорту'); return; }
+    const headers = ['Дата','Робота','Табельний','Особовий','Знятий лічильник','Покази знятого','Встановлений лічильник','Покази встановленого','Адреса','Зняті пломби','Встановлені пломби'];
+    const rows = workLog.map(r => {
+        const removedSeals = [r.oldSealCover, r.oldSealVKP, r.oldSealSHO1, r.oldSealSHO2, r.oldSealOpto, r.oldIMP1, r.oldIMP2, r.oldIMP3].filter(v => v && v.trim() !== '').join(' ');
+        const installedSeals = [r.newSealCover, r.newSealVKP, r.newSealSHO1, r.newSealSHO2, r.newSealOpto, r.newIMP1, r.newIMP2, r.newIMP3].filter(v => v && v.trim() !== '').join(' ');
+        return [`"${r.date}"`,`"${r.workType || ''}"`,`"${r.employeeId || ''}"`,`"${r.accountNumber || ''}"`,`"${r.oldMeterNumber || ''}"`,`"${r.oldMeterReading || ''}"`,`"${r.newMeterNumber || ''}"`,`"${r.newMeterReading || ''}"`,`"${r.address || ''}"`,`"${removedSeals}"`,`"${installedSeals}"`];
+    });
+    const csv = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `pls_log_${new Date().toISOString().slice(0,19)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+function clearLog() {
+    if (confirm('⚠️ Видалити ВСІ записи? Це не можна скасувати.')) { workLog = []; saveData(); alert('✅ Журнал очищено'); }
+}
+
+// ========== ІНІЦІАЛІЗАЦІЯ ==========
+document.addEventListener("DOMContentLoaded", function() {
+    updatePinDisplay();
+    setupSearch();
+    
+    document.querySelectorAll(".pin-btn").forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const num = btn.getAttribute('data-num');
+            if (num === "clear") pinClear();
+            else if (num === "enter") pinCheck();
+            else pinAddNum(num);
+        });
+    });
+    
+    if (pinForgot) pinForgot.onclick = pinReset;
+    
+    if (saveBtn) saveBtn.onclick = saveAllFieldsToLog;
+    if (exportBtn) exportBtn.onclick = exportCSV;
+    if (clearLogBtn) clearLogBtn.onclick = clearLog;
+    if (sendToFormBtn) sendToFormBtn.onclick = sendToGoogleForm;
+    if (clearFieldsBtn) clearFieldsBtn.onclick = clearAllFieldsExceptEmployee;
+    if (searchLogBtn) searchLogBtn.onclick = searchLogByAccount;
+    if (resetSearchBtn) resetSearchBtn.onclick = resetSearch;
+    
+    const sendAllBtn = document.getElementById('sendAllBtn');
+    if (sendAllBtn) {
+        sendAllBtn.addEventListener('click', sendAllDataToOwner);
+    }
+    
+    const openFormBtn = document.getElementById('openFormBtn');
+    if (openFormBtn) {
+        openFormBtn.addEventListener('click', openGoogleForm);
+    }
+    
+    const scanAccountBtn = document.getElementById('scanAccountBtn');
+    if (scanAccountBtn) {
+        scanAccountBtn.addEventListener('click', () => {
+            startQrScanner('accountScanner', 'accountNumber', 'digits');
+        });
+    }
+    
+    document.querySelectorAll(".btn-scan:not(#scanAccountBtn)").forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = btn.getAttribute('data-target');
+            const mode = btn.getAttribute('data-mode');
+            if (!target) return;
+            let scannerId = target + 'Scanner';
+            startQrScanner(scannerId, target, mode);
+        });
+    });
+    
+    const scanSealBtn = document.getElementById('scanSealBtn');
+    if (scanSealBtn) {
+        scanSealBtn.addEventListener('click', async () => {
+            const tempContainerId = 'tempSealScanner';
+            let tempContainer = document.getElementById(tempContainerId);
+            if (!tempContainer) {
+                tempContainer = document.createElement('div');
+                tempContainer.id = tempContainerId;
+                tempContainer.className = 'scanner-container';
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.top = '50%';
+                tempContainer.style.left = '50%';
+                tempContainer.style.transform = 'translate(-50%, -50%)';
+                tempContainer.style.width = '90%';
+                tempContainer.style.maxWidth = '400px';
+                tempContainer.style.zIndex = '10000';
+                tempContainer.style.backgroundColor = '#000';
+                tempContainer.style.borderRadius = '20px';
+                tempContainer.style.overflow = 'hidden';
+                document.body.appendChild(tempContainer);
+            }
+            tempContainer.classList.remove('hidden');
+            tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код пломби</span><button class="btn-close-scanner" id="closeTempScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
+            document.getElementById('closeTempScanner').onclick = async () => {
+                if (activeScanners[tempContainerId]) {
+                    try { await activeScanners[tempContainerId].stop(); } catch(e) {}
+                    delete activeScanners[tempContainerId];
+                }
+                tempContainer.classList.add('hidden');
+            };
+            const reader = new Html5Qrcode(`${tempContainerId}_reader`);
+            activeScanners[tempContainerId] = reader;
+            try {
+                await reader.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        let result = decodedText.trim();
+                        if (newSealInput) newSealInput.value = result;
+                        reader.stop().then(() => {
+                            tempContainer.classList.add('hidden');
+                            delete activeScanners[tempContainerId];
+                        }).catch(e => console.log(e));
+                        showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
+                    },
+                    (error) => { console.log(error); }
+                );
+            } catch(err) {
+                alert('❌ Не вдалося запустити камеру');
+                tempContainer.classList.add('hidden');
+                delete activeScanners[tempContainerId];
+            }
+        });
+    }
+    
+    const scanMeterBtn = document.getElementById('scanMeterBtn');
+    if (scanMeterBtn) {
+        scanMeterBtn.addEventListener('click', async () => {
+            const tempContainerId = 'tempMeterScanner';
+            let tempContainer = document.getElementById(tempContainerId);
+            if (!tempContainer) {
+                tempContainer = document.createElement('div');
+                tempContainer.id = tempContainerId;
+                tempContainer.className = 'scanner-container';
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.top = '50%';
+                tempContainer.style.left = '50%';
+                tempContainer.style.transform = 'translate(-50%, -50%)';
+                tempContainer.style.width = '90%';
+                tempContainer.style.maxWidth = '400px';
+                tempContainer.style.zIndex = '10000';
+                tempContainer.style.backgroundColor = '#000';
+                tempContainer.style.borderRadius = '20px';
+                tempContainer.style.overflow = 'hidden';
+                document.body.appendChild(tempContainer);
+            }
+            tempContainer.classList.remove('hidden');
+            tempContainer.innerHTML = `<div class="scanner-header"><span>📷 Скануйте QR код лічильника</span><button class="btn-close-scanner" id="closeTempMeterScanner">✕</button></div><div id="${tempContainerId}_reader" style="width:100%"></div>`;
+            document.getElementById('closeTempMeterScanner').onclick = async () => {
+                if (activeScanners[tempContainerId]) {
+                    try { await activeScanners[tempContainerId].stop(); } catch(e) {}
+                    delete activeScanners[tempContainerId];
+                }
+                tempContainer.classList.add('hidden');
+            };
+            const reader = new Html5Qrcode(`${tempContainerId}_reader`);
+            activeScanners[tempContainerId] = reader;
+            try {
+                await reader.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        let result = decodedText.trim();
+                        result = smartMeterExtract(result);
+                        if (newMeterInput) newMeterInput.value = result;
+                        reader.stop().then(() => {
+                            tempContainer.classList.add('hidden');
+                            delete activeScanners[tempContainerId];
+                        }).catch(e => console.log(e));
+                        showToast(`✅ Відскановано: ${result.substring(0, 30)}`);
+                    },
+                    (error) => { console.log(error); }
+                );
+            } catch(err) {
+                alert('❌ Не вдалося запустити камеру');
+                tempContainer.classList.add('hidden');
+                delete activeScanners[tempContainerId];
+            }
+        });
+    }
+    
+    if (addSealBtn) {
+        addSealBtn.onclick = () => sealAddPanel.classList.toggle('hidden');
+        if (confirmSealBtn) confirmSealBtn.onclick = addNewSeal;
+    }
+    if (sealSearch) {
+        sealSearch.addEventListener('input', (e) => renderSealsList(e.target.value));
+    }
+    
+    if (addMeterBtn) {
+        addMeterBtn.onclick = () => meterAddPanel.classList.toggle('hidden');
+        if (confirmMeterBtn) confirmMeterBtn.onclick = addNewMeter;
+    }
+    if (meterSearch) {
+        meterSearch.addEventListener('input', (e) => renderMetersList(e.target.value));
+    }
+    
+    setDefaultValues();
+    setupVoiceInput();
+    setupAutoClean();
+    setupVoiceSearch();
+    setupVoiceSelect();
+    setupOCR();
+});
