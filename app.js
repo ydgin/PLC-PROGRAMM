@@ -670,17 +670,25 @@ function setupOCR() {
     const ocrBtn = document.getElementById('ocrFromPhotoBtn');
     if (!ocrBtn) return;
     
-    ocrBtn.addEventListener('click', function() {
+    ocrBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
         if (typeof Tesseract === 'undefined') {
             alert('❌ Бібліотека Tesseract не завантажена. Перевірте інтернет.');
             return;
         }
         
+        // Створюємо input для вибору фото
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
+        
+        // На мобільних пристроях дозволяємо вибір з галереї
+        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            fileInput.capture = 'environment';
+        }
         
         fileInput.click();
         
@@ -698,6 +706,7 @@ function setupOCR() {
                 showToast('⏳ Розпізнавання тексту...');
                 ocrBtn.textContent = '⏳ РОЗПІЗНАЄТЬСЯ...';
                 ocrBtn.disabled = true;
+                ocrBtn.style.opacity = '0.6';
                 
                 Tesseract.recognize(
                     imageData,
@@ -711,19 +720,38 @@ function setupOCR() {
                     }
                 ).then(function(result) {
                     const text = result.data.text;
-                    console.log('Розпізнаний текст:', text);
+                    console.log('=== РОЗПІЗНАНИЙ ТЕКСТ ===');
+                    console.log(text);
                     
-                    parseAndFillFields(text);
+                    if (text.length < 3) {
+                        showToast('⚠️ Текст не розпізнано. Спробуйте чіткіше фото.');
+                        ocrBtn.textContent = '📷 РОЗПІЗНАТИ З ФОТО';
+                        ocrBtn.disabled = false;
+                        ocrBtn.style.opacity = '1';
+                        document.body.removeChild(fileInput);
+                        return;
+                    }
                     
-                    showToast('✅ Текст розпізнано!');
+                    showToast(`📝 Текст розпізнано! Довжина: ${text.length} символів`);
+                    
+                    const filled = parseAndFillFields(text);
+                    
+                    if (filled) {
+                        showToast('✅ Поля заповнено!');
+                    } else {
+                        showToast('⚠️ Не вдалося розпізнати дані. Спробуйте чіткіше фото.');
+                    }
+                    
                     ocrBtn.textContent = '📷 РОЗПІЗНАТИ З ФОТО';
                     ocrBtn.disabled = false;
+                    ocrBtn.style.opacity = '1';
                     document.body.removeChild(fileInput);
                 }).catch(function(err) {
                     console.error('OCR помилка:', err);
                     alert('❌ Помилка розпізнавання: ' + err.message);
                     ocrBtn.textContent = '📷 РОЗПІЗНАТИ З ФОТО';
                     ocrBtn.disabled = false;
+                    ocrBtn.style.opacity = '1';
                     document.body.removeChild(fileInput);
                 });
             };
@@ -734,41 +762,59 @@ function setupOCR() {
 
 // ========== ПАРСИНГ РОЗПІЗНАНОГО ТЕКСТУ ==========
 function parseAndFillFields(text) {
-    if (!text) {
-        showToast('⚠️ Текст не розпізнано');
-        return;
+    if (!text || text.length < 3) {
+        console.log('❌ Текст занадто короткий');
+        return false;
     }
     
-    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    console.log('Рядки для парсингу:', lines);
+    const lines = text.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 1);
+    
+    console.log('📋 Рядки для парсингу:', lines.length);
+    console.log('Перші 5 рядків:', lines.slice(0, 5));
     
     let foundAny = false;
     
-    // 1. Дата виконання роботи
-    const datePattern = /(\d{2})[.\/](\d{2})[.\/](\d{4})/;
-    for (let line of lines) {
-        const match = line.match(datePattern);
-        if (match) {
-            const dateField = document.getElementById('workDate');
-            if (dateField && !dateField.value) {
-                dateField.value = `${match[1]}.${match[2]}.${match[3]}`;
-                foundAny = true;
-                showToast(`📅 Дата: ${dateField.value}`);
-                break;
+    // ===== 1. ДАТА =====
+    const dateField = document.getElementById('workDate');
+    if (dateField && !dateField.value) {
+        const datePatterns = [
+            /(\d{2})[.\/](\d{2})[.\/](\d{4})/,
+            /(\d{2})[.\/](\d{2})[.\/](\d{2})/
+        ];
+        for (let line of lines) {
+            for (let pattern of datePatterns) {
+                const match = line.match(pattern);
+                if (match) {
+                    let day = match[1];
+                    let month = match[2];
+                    let year = match[3];
+                    if (year.length === 2) year = '20' + year;
+                    dateField.value = `${day}.${month}.${year}`;
+                    foundAny = true;
+                    console.log(`📅 Дата: ${dateField.value}`);
+                    showToast(`📅 Дата: ${dateField.value}`);
+                    break;
+                }
             }
+            if (dateField.value) break;
         }
     }
     
-    // 2. Тип лічильника
+    // ===== 2. ТИП ЛІЧИЛЬНИКА =====
     const meterTypeSelect = document.getElementById('oldMeterType');
     if (meterTypeSelect && !meterTypeSelect.value) {
         for (let line of lines) {
+            const cleanLine = line.replace(/\s/g, '').toUpperCase();
             for (let i = 0; i < meterTypeSelect.options.length; i++) {
-                const optionText = meterTypeSelect.options[i].text;
-                if (line.includes(optionText) || optionText.includes(line)) {
-                    meterTypeSelect.value = optionText;
+                const optionText = meterTypeSelect.options[i].text.replace(/\s/g, '').toUpperCase();
+                const optionValue = meterTypeSelect.options[i].value;
+                if (optionText.length > 3 && (cleanLine.includes(optionText) || optionText.includes(cleanLine))) {
+                    meterTypeSelect.value = optionValue;
                     foundAny = true;
-                    showToast(`📟 Тип знятого: ${optionText}`);
+                    console.log(`📟 Тип знятого: ${optionValue}`);
+                    showToast(`📟 Тип знятого: ${optionValue}`);
                     break;
                 }
             }
@@ -776,61 +822,71 @@ function parseAndFillFields(text) {
         }
     }
     
-    // 3. Номер лічильника
-    const meterNumberPattern = /\b(\d{6,10})\b/;
+    // ===== 3. НОМЕР ЛІЧИЛЬНИКА =====
     const meterNumberField = document.getElementById('oldMeterNumber');
     if (meterNumberField && !meterNumberField.value) {
         for (let line of lines) {
-            const match = line.match(meterNumberPattern);
-            if (match) {
-                meterNumberField.value = match[1];
-                foundAny = true;
-                showToast(`🔢 Номер знятого: ${match[1]}`);
-                break;
+            const matches = line.match(/\b(\d{6,12})\b/g);
+            if (matches) {
+                for (let match of matches) {
+                    if (match.length >= 6 && match.length <= 12) {
+                        meterNumberField.value = match;
+                        foundAny = true;
+                        console.log(`🔢 Номер знятого: ${match}`);
+                        showToast(`🔢 Номер знятого: ${match}`);
+                        break;
+                    }
+                }
+                if (meterNumberField.value) break;
             }
         }
     }
     
-    // 4. Покази лічильника
-    const readingPattern = /\b(\d{5,8})\b/;
+    // ===== 4. ПОКАЗИ ЛІЧИЛЬНИКА =====
     const readingField = document.getElementById('oldMeterReading');
     if (readingField && !readingField.value) {
         for (let line of lines) {
-            const match = line.match(readingPattern);
-            if (match) {
-                readingField.value = match[1];
-                foundAny = true;
-                showToast(`📊 Покази знятого: ${match[1]}`);
-                break;
+            const matches = line.match(/\b(\d{5,8})\b/g);
+            if (matches) {
+                for (let match of matches) {
+                    if (match.length >= 5 && match.length <= 8) {
+                        readingField.value = match;
+                        foundAny = true;
+                        console.log(`📊 Покази знятого: ${match}`);
+                        showToast(`📊 Покази знятого: ${match}`);
+                        break;
+                    }
+                }
+                if (readingField.value) break;
             }
         }
     }
     
-    // 5. Особовий рахунок
-    const accountPattern = /\b(\d{10})\b/;
+    // ===== 5. ОСОБОВИЙ РАХУНОК =====
     const accountField = document.getElementById('accountNumber');
     if (accountField && !accountField.value) {
         for (let line of lines) {
-            const match = line.match(accountPattern);
-            if (match) {
-                accountField.value = match[1];
+            const matches = line.match(/\b(\d{10})\b/g);
+            if (matches) {
+                accountField.value = matches[0];
                 foundAny = true;
-                showToast(`📋 Особовий: ${match[1]}`);
+                console.log(`📋 Особовий: ${matches[0]}`);
+                showToast(`📋 Особовий: ${matches[0]}`);
                 break;
             }
         }
     }
     
-    // 6. Пломби
+    // ===== 6. ПЛОМБИ =====
     const sealFields = [
-        { id: 'oldSealCover', keywords: ['кл. кришка', 'клемна кришка', 'кришка'] },
+        { id: 'oldSealCover', keywords: ['кл. кришка', 'клемна', 'кришка'] },
         { id: 'oldSealVKP', keywords: ['ВКП', 'вкп'] },
-        { id: 'oldSealSHO1', keywords: ['ШО 1', 'шо 1', 'ШО(1)'] },
-        { id: 'oldSealSHO2', keywords: ['ШО 2', 'шо 2', 'ШО(2)'] },
+        { id: 'oldSealSHO1', keywords: ['ШО 1', 'ШО(1)'] },
+        { id: 'oldSealSHO2', keywords: ['ШО 2', 'ШО(2)'] },
         { id: 'oldSealOpto', keywords: ['оптопорт', 'опто'] },
-        { id: 'oldIMP1', keywords: ['ИМП 1', 'имп 1', 'ІМП 1'] },
-        { id: 'oldIMP2', keywords: ['ИМП 2', 'имп 2', 'ІМП 2'] },
-        { id: 'oldIMP3', keywords: ['ИМП 3', 'имп 3', 'ІМП 3'] }
+        { id: 'oldIMP1', keywords: ['ИМП 1', 'ІМП 1'] },
+        { id: 'oldIMP2', keywords: ['ИМП 2', 'ІМП 2'] },
+        { id: 'oldIMP3', keywords: ['ИМП 3', 'ІМП 3'] }
     ];
     
     for (let fieldInfo of sealFields) {
@@ -838,36 +894,54 @@ function parseAndFillFields(text) {
         if (field && !field.value) {
             for (let line of lines) {
                 const lowerLine = line.toLowerCase();
+                let foundKeyword = false;
                 for (let keyword of fieldInfo.keywords) {
                     if (lowerLine.includes(keyword.toLowerCase())) {
-                        const sealMatch = line.match(/([A-Za-zА-Яа-яІіЇїЄє]+\d+)/);
-                        if (sealMatch) {
-                            field.value = sealMatch[1].toUpperCase();
-                            foundAny = true;
-                            showToast(`🔒 ${fieldInfo.id}: ${sealMatch[1].toUpperCase()}`);
-                            break;
-                        }
+                        foundKeyword = true;
+                        break;
                     }
                 }
-                if (field.value) break;
+                if (foundKeyword) {
+                    let sealMatch = line.match(/([A-Za-zА-Яа-яІіЇїЄє]+\d+)/);
+                    if (!sealMatch) {
+                        sealMatch = line.match(/\b(\d{6,12})\b/);
+                    }
+                    if (sealMatch) {
+                        field.value = sealMatch[1].toUpperCase();
+                        foundAny = true;
+                        console.log(`🔒 ${fieldInfo.id}: ${sealMatch[1].toUpperCase()}`);
+                        showToast(`🔒 ${fieldInfo.id}: ${sealMatch[1].toUpperCase()}`);
+                        break;
+                    }
+                }
             }
         }
     }
     
-    // 7. Адреса
+    // ===== 7. АДРЕСА =====
     const addressField = document.getElementById('address');
     if (addressField && !addressField.value) {
+        const addressKeywords = ['вул', 'вулиця', 'просп', 'пров', 'буд', 'будинок', 'кв'];
         for (let line of lines) {
-            if (line.includes('вул') || line.includes('вулиця') || line.includes('просп') || line.includes('буд')) {
+            const lowerLine = line.toLowerCase();
+            let foundAddress = false;
+            for (let kw of addressKeywords) {
+                if (lowerLine.includes(kw)) {
+                    foundAddress = true;
+                    break;
+                }
+            }
+            if (foundAddress && line.length > 5) {
                 addressField.value = line;
                 foundAny = true;
+                console.log(`📍 Адреса: ${line}`);
                 showToast(`📍 Адреса: ${line}`);
                 break;
             }
         }
     }
     
-    // 8. Підстава
+    // ===== 8. ПІДСТАВА =====
     const reasonField = document.getElementById('replacementReason');
     if (reasonField && !reasonField.value) {
         const reasonKeywords = ['Непрацюючий', 'Планова', 'IN (PLC)', 'Платна', 'Експертиза'];
@@ -876,6 +950,7 @@ function parseAndFillFields(text) {
                 if (line.includes(kw)) {
                     reasonField.value = kw;
                     foundAny = true;
+                    console.log(`📋 Підстава: ${kw}`);
                     showToast(`📋 Підстава: ${kw}`);
                     break;
                 }
@@ -884,9 +959,8 @@ function parseAndFillFields(text) {
         }
     }
     
-    if (!foundAny) {
-        showToast('⚠️ Не вдалося розпізнати дані. Спробуйте зробити фото чіткіше.');
-    }
+    console.log('✅ Результат парсингу:', foundAny ? 'Знайдено дані' : 'Нічого не знайдено');
+    return foundAny;
 }
 
 // ========== БАЗА ПЛОМБ ==========
