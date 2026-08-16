@@ -1,30 +1,20 @@
 <!DOCTYPE html>
 <html lang="uk">
-
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover"
-    >
+<title>PLS INVEST | Облік лічильників</title>
 
-    <title>PLS INVEST | Облік лічильників та пломб</title>
+<link rel="stylesheet" href="style.css?v=10">
 
-    <link rel="stylesheet" href="style.css?v=4">
-
-    <!-- QR -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
-    <!-- OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 
 <body>
 
-<!-- =====================================================
-     PIN
-===================================================== -->
+<!-- ================= PIN ================= -->
 
 <div id="pinScreen" class="pin-screen">
 
@@ -32,675 +22,637 @@
 
         <div class="pin-lock">🔐</div>
 
-        <h1>PLS INVEST</h1>
+        <h2>PLS INVEST</h2>
 
-        <div class="pin-subtitle">
-            Введіть PIN-код
-        </div>
+        <p>Введіть PIN</p>
 
-        <!-- Точки PIN -->
-        <div id="pinDisplay" class="pin-display">
-
+        <div
+            id="pinDisplay"
+            class="pin-display"
+            aria-label="PIN"
+        >
             <span class="pin-dot"></span>
             <span class="pin-dot"></span>
             <span class="pin-dot"></span>
             <span class="pin-dot"></span>
-
         </div>
 
         <div id="pinError" class="pin-error"></div>
 
-        <!-- Клавиатура -->
-        <div id="pinKeyboard" class="pin-keyboard">
+        <div class="pin-keyboard">
 
-            <button type="button" class="pin-btn" data-num="1">1</button>
-            <button type="button" class="pin-btn" data-num="2">2</button>
-            <button type="button" class="pin-btn" data-num="3">3</button>
+            <div>
+                <button type="button" class="pin-btn" data-num="1">1</button>
+                <button type="button" class="pin-btn" data-num="2">2</button>
+                <button type="button" class="pin-btn" data-num="3">3</button>
+            </div>
 
-            <button type="button" class="pin-btn" data-num="4">4</button>
-            <button type="button" class="pin-btn" data-num="5">5</button>
-            <button type="button" class="pin-btn" data-num="6">6</button>
+            <div>
+                <button type="button" class="pin-btn" data-num="4">4</button>
+                <button type="button" class="pin-btn" data-num="5">5</button>
+                <button type="button" class="pin-btn" data-num="6">6</button>
+            </div>
 
-            <button type="button" class="pin-btn" data-num="7">7</button>
-            <button type="button" class="pin-btn" data-num="8">8</button>
-            <button type="button" class="pin-btn" data-num="9">9</button>
+            <div>
+                <button type="button" class="pin-btn" data-num="7">7</button>
+                <button type="button" class="pin-btn" data-num="8">8</button>
+                <button type="button" class="pin-btn" data-num="9">9</button>
+            </div>
+
+            <div>
+                <button type="button" class="pin-btn pin-clear" id="pinClear">
+                    ⌫
+                </button>
+
+                <button type="button" class="pin-btn" data-num="0">
+                    0
+                </button>
+
+                <button type="button" class="pin-btn pin-enter" id="pinEnter">
+                    ✓
+                </button>
+            </div>
+
+        </div>
+
+        <div id="pinForgot" class="pin-forgot">
+            Показати PIN
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================= ОСНОВНА ПРОГРАМА ================= -->
+
+<main id="mainApp" class="hidden">
+
+<div class="container">
+
+    <div class="card header-card">
+
+        <h1>🏦 PLS ІНВЕСТ ПРОГРАМА</h1>
+
+        <div>
+            Мобільний облік встановлення лічильників та пломб
+        </div>
+
+    </div>
+
+
+    <!-- ================= OCR ================= -->
+
+    <div class="card ocr-card">
+
+        <div class="section-title">
+
+            <span>
+                📸 СКАНУВАННЯ АКТА
+            </span>
+
+            <span id="ocrStatus" class="status">
+                Готово
+            </span>
+
+        </div>
+
+        <p class="hint">
+            Сфотографуйте акт. OCR розпізнає текст
+            і запропонує значення для полів.
+        </p>
+
+        <div class="row">
 
             <button
                 type="button"
-                class="pin-btn pin-clear"
-                data-num="clear"
+                id="ocrPhotoBtn"
+                class="btn primary"
             >
-                ⌫
-            </button>
-
-            <button type="button" class="pin-btn" data-num="0">
-                0
+                📷 Сфотографувати акт
             </button>
 
             <button
                 type="button"
-                class="pin-btn pin-enter"
-                data-num="enter"
+                id="ocrGalleryBtn"
+                class="btn"
             >
-                ✓
+                🖼️ Вибрати фото
             </button>
 
         </div>
 
+        <input
+            id="ocrFileInput"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+        >
+
+        <div
+            id="ocrPreviewWrap"
+            class="hidden"
+        >
+
+            <img
+                id="ocrPreview"
+                class="ocr-preview"
+                alt="Фото акта"
+            >
+
+        </div>
+
+
+        <div
+            id="ocrProgressWrap"
+            class="hidden"
+        >
+
+            <div class="progress">
+
+                <div id="ocrProgressBar"></div>
+
+            </div>
+
+            <div id="ocrProgressText">
+                Підготовка...
+            </div>
+
+        </div>
+
+
+        <div
+            id="ocrCandidates"
+            class="hidden"
+        >
+
+            <h3>
+                🔎 Перевірте розпізнані значення
+            </h3>
+
+            <div id="ocrCandidatesBody"></div>
+
+            <button
+                type="button"
+                id="ocrApplyBtn"
+                class="btn success full"
+            >
+                ✅ Внести вибрані значення
+            </button>
+
+        </div>
+
+
+        <details>
+
+            <summary>
+                Показати розпізнаний текст
+            </summary>
+
+            <pre id="ocrText"></pre>
+
+        </details>
+
+    </div>
+
+
+    <!-- ================= РАБОТА ================= -->
+
+    <div class="card">
+
+        <label>
+            Виконувана робота
+        </label>
+
+        <select
+            id="workType"
+            class="field"
+        >
+
+            <option value="">
+                -- Виберіть --
+            </option>
+
+            <option>
+                Заміна лічильника
+            </option>
+
+            <option>
+                Встановлення лічильника
+            </option>
+
+            <option>
+                Пломбування
+            </option>
+
+            <option>
+                Технічна перевірка
+            </option>
+
+            <option>
+                Інше
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <!-- ================= ТАБЕЛЬНЫЙ ================= -->
+
+    <div class="card">
+
+        <label>
+            👤 Табельний номер
+        </label>
+
+        <input
+            id="employeeId"
+            class="field"
+            inputmode="numeric"
+            placeholder="Табельний номер"
+        >
+
+    </div>
+
+
+    <!-- ================= ОСОБОВОЙ РАХУНОК ================= -->
+
+    <div class="card">
+
+        <label>
+            📋 Особовий рахунок (10 цифр)
+        </label>
+
+        <div class="input-row">
+
+            <input
+                id="accountNumber"
+                class="field"
+                maxlength="10"
+                inputmode="numeric"
+                placeholder="10 цифр"
+            >
+
+            <button
+                type="button"
+                class="scan-btn"
+                data-target="accountNumber"
+                data-mode="digits"
+            >
+                📷
+            </button>
+
+        </div>
+
+        <div
+            id="accountNumberScanner"
+            class="scanner hidden"
+        ></div>
+
+    </div>
+
+
+    <!-- ================= АДРЕС ================= -->
+
+    <div class="card">
+
+        <label>
+            📍 Адреса
+        </label>
+
+        <input
+            id="address"
+            class="field"
+            placeholder="Адреса споживача"
+        >
+
+    </div>
+
+
+    <!-- ================= СНЯТЫЙ СЧЕТЧИК ================= -->
+
+    <div class="card">
+
+        <h2>
+            🔻 Знятий лічильник
+        </h2>
+
+        <label>
+            Тип
+        </label>
+
+        <div class="input-row">
+
+            <select
+                id="oldMeterType"
+                class="field"
+            >
+
+                <option value="">
+                    -- Виберіть --
+                </option>
+
+            </select>
+
+            <button
+                type="button"
+                class="mic-btn btn-mic-select"
+                data-target="oldMeterType"
+            >
+                🎤
+            </button>
+
+        </div>
+
+
+        <label>
+            Номер
+        </label>
+
+        <div class="input-row">
+
+            <input
+                id="oldMeterNumber"
+                class="field meter-input"
+            >
+
+            <button
+                type="button"
+                class="scan-btn"
+                data-target="oldMeterNumber"
+                data-mode="smart"
+            >
+                📷
+            </button>
+
+        </div>
+
+
+        <label>
+            Покази
+        </label>
+
+        <input
+            id="oldMeterReading"
+            class="field"
+            inputmode="numeric"
+        >
+
+    </div>
+
+
+    <!-- ================= СНЯТЫЕ ПЛОМБЫ ================= -->
+
+    <div class="card">
+
+        <h2>
+            🔻 Зняті пломби
+        </h2>
+
+        <div class="grid">
+
+            <div>
+                <label>Клемна кришка</label>
+                <input id="oldSealCover" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ВКП</label>
+                <input id="oldSealVKP" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ШО 1</label>
+                <input id="oldSealSHO1" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ШО 2</label>
+                <input id="oldSealSHO2" class="field seal-input">
+            </div>
+
+            <div>
+                <label>Оптопорт</label>
+                <input id="oldSealOpto" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ИМП 1</label>
+                <input id="oldIMP1" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ИМП 2</label>
+                <input id="oldIMP2" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ИМП 3</label>
+                <input id="oldIMP3" class="field seal-input">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= УСТАНОВЛЕННЫЙ СЧЕТЧИК ================= -->
+
+    <div class="card">
+
+        <h2>
+            🔺 Встановлений лічильник
+        </h2>
+
+        <label>
+            Тип
+        </label>
+
+        <div class="input-row">
+
+            <select
+                id="newMeterType"
+                class="field"
+            >
+
+                <option value="">
+                    -- Виберіть --
+                </option>
+
+            </select>
+
+            <button
+                type="button"
+                class="mic-btn btn-mic-select"
+                data-target="newMeterType"
+            >
+                🎤
+            </button>
+
+        </div>
+
+
+        <label>
+            Номер (8 цифр)
+        </label>
+
+        <div class="input-row">
+
+            <input
+                id="newMeterNumber"
+                class="field meter-input"
+                maxlength="8"
+                inputmode="numeric"
+            >
+
+            <button
+                type="button"
+                class="scan-btn"
+                data-target="newMeterNumber"
+                data-mode="smart"
+            >
+                📷
+            </button>
+
+        </div>
+
+
+        <label>
+            Покази
+        </label>
+
+        <input
+            id="newMeterReading"
+            class="field"
+            inputmode="numeric"
+            value="0000000"
+        >
+
+    </div>
+
+
+    <!-- ================= УСТАНОВЛЕННЫЕ ПЛОМБЫ ================= -->
+
+    <div class="card">
+
+        <h2>
+            🔺 Встановлені пломби
+        </h2>
+
+        <div class="grid">
+
+            <div>
+                <label>Клемна кришка</label>
+                <input id="newSealCover" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ВКП</label>
+                <input id="newSealVKP" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ШО 1</label>
+                <input id="newSealSHO1" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ШО 2</label>
+                <input id="newSealSHO2" class="field seal-input">
+            </div>
+
+            <div>
+                <label>Оптопорт</label>
+                <input id="newSealOpto" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ИМП 1</label>
+                <input id="newIMP1" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ИМП 2</label>
+                <input id="newIMP2" class="field seal-input">
+            </div>
+
+            <div>
+                <label>ИМП 3</label>
+                <input id="newIMP3" class="field seal-input">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= КНОПКИ ================= -->
+
+    <div class="card actions">
+
         <button
             type="button"
-            id="pinForgot"
-            class="pin-forgot"
+            id="saveRecordBtn"
+            class="btn success full"
         >
-            Показати PIN
+            💾 ЗБЕРЕГТИ В ЖУРНАЛ
+        </button>
+
+        <button
+            type="button"
+            id="sendToFormBtn"
+            class="btn primary full"
+        >
+            📤 ВІДКРИТИ GOOGLE FORM З ДАНИМИ
+        </button>
+
+        <button
+            type="button"
+            id="sendAllBtn"
+            class="btn purple full"
+        >
+            📨 ВІДПРАВИТИ ЗВІТ
+        </button>
+
+        <button
+            type="button"
+            id="clearFieldsBtn"
+            class="btn danger full"
+        >
+            🧹 ОЧИСТИТИ ПОЛЯ
         </button>
 
     </div>
 
-</div>
 
+    <!-- ================= ЖУРНАЛ ================= -->
 
-<!-- =====================================================
-     ОСНОВНОЕ ПРИЛОЖЕНИЕ
-===================================================== -->
+    <div class="card">
 
-<div id="mainApp" class="hidden">
+        <div class="section-title">
 
-    <div class="container">
+            <h2>
+                📋 ЖУРНАЛ
+            </h2>
 
-        <!-- HEADER -->
-
-        <div class="card header-card">
-
-            <div class="header-icons">
-                📷
-                📋
-                ⚡
-                🔢
-                🔒
-            </div>
-
-            <h1>PLS ІНВЕСТ ПРОГРАМА</h1>
-
-            <div class="sub">
-                Мобільний облік лічильників та пломб
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             OCR
-        ================================================== -->
-
-        <div class="card ocr-card">
-
-            <div class="section-header">
-
-                <div>
-                    <h2>📸 СКАНУВАННЯ АКТУ</h2>
-
-                    <p class="hint">
-                        Сфотографуйте акт технічної перевірки.
-                        Програма спробує розпізнати текст і
-                        автоматично заповнити поля.
-                    </p>
-                </div>
-
-            </div>
-
-
-            <div class="ocr-buttons">
-
-                <label
-                    for="ocrFile"
-                    class="ocr-upload-btn"
-                >
-                    📷 Вибрати фото
-                </label>
-
-                <input
-                    type="file"
-                    id="ocrFile"
-                    accept="image/*"
-                    capture="environment"
-                    hidden
-                >
+            <div>
 
                 <button
                     type="button"
-                    id="startOcrBtn"
-                    class="btn btn-primary"
+                    id="exportBtn"
+                    class="btn small"
                 >
-                    🔍 Розпізнати фото
-                </button>
-
-            </div>
-
-
-            <div
-                id="ocrStatus"
-                class="ocr-status"
-            >
-                Фото ще не вибрано
-            </div>
-
-
-            <img
-                id="ocrPreview"
-                class="ocr-preview hidden"
-                alt="Попередній перегляд"
-            >
-
-
-            <div
-                id="ocrProgress"
-                class="ocr-progress hidden"
-            >
-                <div
-                    id="ocrProgressBar"
-                    class="ocr-progress-bar"
-                ></div>
-            </div>
-
-
-            <textarea
-                id="ocrText"
-                class="ocr-text"
-                placeholder="Тут з'явиться розпізнаний текст..."
-                readonly
-            ></textarea>
-
-        </div>
-
-
-        <!-- =================================================
-             ОСНОВНІ ДАНІ
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>📋 Основні дані</h2>
-
-            <div class="grid">
-
-                <div class="field-block">
-
-                    <label for="workType">
-                        Виконувана робота
-                    </label>
-
-                    <select
-                        id="workType"
-                        class="field-input"
-                    >
-                        <option value="">
-                            -- Виберіть --
-                        </option>
-
-                        <option>
-                            Заміна лічильника
-                        </option>
-
-                        <option>
-                            Встановлення лічильника
-                        </option>
-
-                        <option>
-                            Технічна перевірка
-                        </option>
-
-                        <option>
-                            Пломбування
-                        </option>
-
-                        <option>
-                            Розпломбування
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="field-block">
-
-                    <label for="employeeId">
-                        Табельний номер
-                    </label>
-
-                    <div class="input-row">
-
-                        <input
-                            type="text"
-                            id="employeeId"
-                            class="field-input"
-                            inputmode="numeric"
-                        >
-
-                        <button
-                            type="button"
-                            class="btn-mic"
-                            data-target="employeeId"
-                        >
-                            🎤
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <div class="field-block">
-
-                    <label for="accountNumber">
-                        Особовий рахунок
-                    </label>
-
-                    <div class="input-row">
-
-                        <input
-                            type="text"
-                            id="accountNumber"
-                            class="field-input"
-                            maxlength="10"
-                            inputmode="numeric"
-                            placeholder="10 цифр"
-                        >
-
-                        <button
-                            type="button"
-                            class="btn-scan"
-                            data-target="accountNumber"
-                            data-mode="digits"
-                        >
-                            📷
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn-mic"
-                            data-target="accountNumber"
-                        >
-                            🎤
-                        </button>
-
-                    </div>
-
-                    <div
-                        id="accountNumberScanner"
-                        class="scanner-container hidden"
-                    ></div>
-
-                </div>
-
-
-                <div class="field-block">
-
-                    <label for="address">
-                        Адреса
-                    </label>
-
-                    <div class="input-row">
-
-                        <input
-                            type="text"
-                            id="address"
-                            class="field-input"
-                            placeholder="Адреса споживача"
-                        >
-
-                        <button
-                            type="button"
-                            class="btn-mic"
-                            data-target="address"
-                        >
-                            🎤
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             ЗНЯТИЙ ЛІЧИЛЬНИК
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>🔻 Знятий лічильник</h2>
-
-            <div class="grid">
-
-                <div class="field-block">
-
-                    <label for="oldMeterType">
-                        Тип лічильника
-                    </label>
-
-                    <select
-                        id="oldMeterType"
-                        class="field-input"
-                    >
-                        <option value="">
-                            -- Виберіть --
-                        </option>
-
-                        <option>НІК 2104 AP2T.1802.MC.11</option>
-                        <option>НІК 2303 AP6T.1802.MC.11</option>
-                        <option>ЛЕО-М1.4</option>
-                        <option>Меркурій 201</option>
-                        <option>Меркурій 200</option>
-                        <option>MTX 1A10.DF.2LO-C04</option>
-                        <option>GAMMA 300</option>
-                        <option>ACE-3000</option>
-                        <option>Інший</option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="field-block">
-
-                    <label for="oldMeterNumber">
-                        Заводський номер
-                    </label>
-
-                    <div class="input-row">
-
-                        <input
-                            type="text"
-                            id="oldMeterNumber"
-                            class="field-input meter-input"
-                        >
-
-                        <button
-                            type="button"
-                            class="btn-scan"
-                            data-target="oldMeterNumber"
-                            data-mode="smart"
-                        >
-                            📷
-                        </button>
-
-                    </div>
-
-                    <div
-                        id="oldMeterNumberScanner"
-                        class="scanner-container hidden"
-                    ></div>
-
-                </div>
-
-
-                <div class="field-block">
-
-                    <label for="oldMeterReading">
-                        Покази
-                    </label>
-
-                    <input
-                        type="text"
-                        id="oldMeterReading"
-                        class="field-input"
-                        inputmode="numeric"
-                    >
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             ЗНЯТІ ПЛОМБИ
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>🔻 Зняті пломби</h2>
-
-            <div class="grid">
-
-                <div class="field-block">
-                    <label>Клемна кришка</label>
-                    <input id="oldSealCover" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ВКП</label>
-                    <input id="oldSealVKP" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ШО 1</label>
-                    <input id="oldSealSHO1" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ШО 2</label>
-                    <input id="oldSealSHO2" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>Оптопорт</label>
-                    <input id="oldSealOpto" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ИМП 1</label>
-                    <input id="oldIMP1" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ИМП 2</label>
-                    <input id="oldIMP2" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ИМП 3</label>
-                    <input id="oldIMP3" class="field-input seal-input">
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>🔺 Встановлений лічильник</h2>
-
-            <div class="grid">
-
-                <div class="field-block">
-
-                    <label for="newMeterType">
-                        Тип лічильника
-                    </label>
-
-                    <select
-                        id="newMeterType"
-                        class="field-input"
-                    >
-
-                        <option value="">
-                            -- Виберіть --
-                        </option>
-
-                        <option>НІК 2104 AP2T.1802.MC.11</option>
-                        <option>НІК 2303 AP6T.1802.MC.11</option>
-                        <option>ЛЕО-М1.4</option>
-                        <option>Меркурій 201</option>
-                        <option>Меркурій 200</option>
-                        <option>MTX 1A10.DF.2LO-C04</option>
-                        <option>GAMMA 300</option>
-                        <option>ACE-3000</option>
-                        <option>Інший</option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="field-block">
-
-                    <label for="newMeterNumber">
-                        Заводський номер
-                    </label>
-
-                    <div class="input-row">
-
-                        <input
-                            type="text"
-                            id="newMeterNumber"
-                            class="field-input meter-input"
-                        >
-
-                        <button
-                            type="button"
-                            class="btn-scan"
-                            data-target="newMeterNumber"
-                            data-mode="smart"
-                        >
-                            📷
-                        </button>
-
-                    </div>
-
-                    <div
-                        id="newMeterNumberScanner"
-                        class="scanner-container hidden"
-                    ></div>
-
-                </div>
-
-
-                <div class="field-block">
-
-                    <label for="newMeterReading">
-                        Покази
-                    </label>
-
-                    <input
-                        type="text"
-                        id="newMeterReading"
-                        class="field-input"
-                        inputmode="numeric"
-                        value="0000000"
-                    >
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             ВСТАНОВЛЕНІ ПЛОМБИ
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>🔺 Встановлені пломби</h2>
-
-            <div class="grid">
-
-                <div class="field-block">
-                    <label>Клемна кришка</label>
-                    <input id="newSealCover" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ВКП</label>
-                    <input id="newSealVKP" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ШО 1</label>
-                    <input id="newSealSHO1" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ШО 2</label>
-                    <input id="newSealSHO2" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>Оптопорт</label>
-                    <input id="newSealOpto" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ИМП 1</label>
-                    <input id="newIMP1" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ИМП 2</label>
-                    <input id="newIMP2" class="field-input seal-input">
-                </div>
-
-                <div class="field-block">
-                    <label>ИМП 3</label>
-                    <input id="newIMP3" class="field-input seal-input">
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             КНОПКИ
-        ================================================== -->
-
-        <div class="card">
-
-            <div class="actions-grid">
-
-                <button
-                    type="button"
-                    id="saveRecordBtn"
-                    class="btn btn-success"
-                >
-                    💾 Зберегти в журнал
+                    📎 CSV
                 </button>
 
                 <button
                     type="button"
-                    id="sendToFormBtn"
-                    class="btn btn-primary"
+                    id="clearLogBtn"
+                    class="btn danger small"
                 >
-                    📋 Відкрити Google Form
-                </button>
-
-                <button
-                    type="button"
-                    id="sendAllBtn"
-                    class="btn btn-purple"
-                >
-                    📤 Відправити звіт
-                </button>
-
-                <button
-                    type="button"
-                    id="clearFieldsBtn"
-                    class="btn btn-danger"
-                >
-                    🗑️ Очистити поля
+                    🗑️ Очистити
                 </button>
 
             </div>
@@ -708,246 +660,38 @@
         </div>
 
 
-        <!-- =================================================
-             БАЗА ПЛОМБ
-        ================================================== -->
+        <div class="table-wrap">
 
-        <div class="card">
+            <table id="logTable">
 
-            <div class="section-header">
+                <tr>
+                    <th>Дата</th>
+                    <th>Робота</th>
+                    <th>Особовий</th>
+                    <th>Знятий</th>
+                    <th>Встановлений</th>
+                    <th>Адреса</th>
+                    <th>Дії</th>
+                </tr>
 
-                <h2>🔒 База пломб</h2>
-
-                <button
-                    type="button"
-                    id="addSealBtn"
-                    class="btn btn-small"
-                >
-                    ➕ Додати
-                </button>
-
-            </div>
-
-
-            <div
-                id="sealAddPanel"
-                class="add-panel hidden"
-            >
-
-                <div class="input-row">
-
-                    <input
-                        id="newSealInput"
-                        class="field-input"
-                        placeholder="Наприклад: А123-130"
-                    >
-
-                    <button
-                        type="button"
-                        id="confirmSealBtn"
-                        class="btn btn-success"
-                    >
-                        ✓
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <input
-                id="sealSearch"
-                class="field-input"
-                placeholder="🔍 Пошук пломби..."
-            >
-
-
-            <div
-                id="sealsList"
-                class="database-list"
-            ></div>
+            </table>
 
         </div>
-
-
-        <!-- =================================================
-             БАЗА ЛІЧИЛЬНИКІВ
-        ================================================== -->
-
-        <div class="card">
-
-            <div class="section-header">
-
-                <h2>🔢 База лічильників</h2>
-
-                <button
-                    type="button"
-                    id="addMeterBtn"
-                    class="btn btn-small"
-                >
-                    ➕ Додати
-                </button>
-
-            </div>
-
-
-            <div
-                id="meterAddPanel"
-                class="add-panel hidden"
-            >
-
-                <div class="input-row">
-
-                    <input
-                        id="newMeterInput"
-                        class="field-input"
-                        placeholder="Номер або діапазон"
-                    >
-
-                    <button
-                        type="button"
-                        id="confirmMeterBtn"
-                        class="btn btn-success"
-                    >
-                        ✓
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <input
-                id="meterSearch"
-                class="field-input"
-                placeholder="🔍 Пошук лічильника..."
-            >
-
-
-            <div
-                id="metersList"
-                class="database-list"
-            ></div>
-
-        </div>
-
-
-        <!-- =================================================
-             ЖУРНАЛ
-        ================================================== -->
-
-        <div class="card">
-
-            <div class="section-header">
-
-                <h2>📋 Журнал виконаних робіт</h2>
-
-                <div class="button-row">
-
-                    <button
-                        type="button"
-                        id="exportBtn"
-                        class="btn btn-small"
-                    >
-                        📎 CSV
-                    </button>
-
-                    <button
-                        type="button"
-                        id="clearLogBtn"
-                        class="btn btn-small btn-danger"
-                    >
-                        🗑️
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <div class="search-log-row">
-
-                <input
-                    type="text"
-                    id="searchAccountInput"
-                    class="field-input"
-                    placeholder="Пошук у журналі..."
-                >
-
-                <button
-                    type="button"
-                    id="searchLogBtn"
-                    class="btn btn-primary"
-                >
-                    🔍
-                </button>
-
-                <button
-                    type="button"
-                    id="resetSearchBtn"
-                    class="btn"
-                >
-                    ✖
-                </button>
-
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table class="log-table">
-
-                    <thead>
-
-                        <tr>
-                            <th>Дата</th>
-                            <th>Робота</th>
-                            <th>Табельний</th>
-                            <th>Особовий</th>
-                            <th>Знятий</th>
-                            <th>Покази</th>
-                            <th>Встановлений</th>
-                            <th>Покази</th>
-                            <th>Адреса</th>
-                            <th>Пломби</th>
-                            <th>Дія</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="logTable">
-
-                        <tr class="empty-row">
-                            <td colspan="11">
-                                Немає записів
-                            </td>
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-        <footer>
-            📱 PLS INVEST |
-            Дані зберігаються локально у браузері
-        </footer>
 
     </div>
 
+
+    <footer>
+        📱 PLS INVEST | Дані зберігаються в браузері
+    </footer>
+
 </div>
 
+</main>
 
-<!-- =====================================================
-     JS
-===================================================== -->
 
-<script src="ocr.js?v=4"></script>
-<script src="script.js?v=4"></script>
+<script src="script.js?v=10"></script>
+<script src="ocr.js?v=10"></script>
 
 </body>
 </html>
