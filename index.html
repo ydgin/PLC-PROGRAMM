@@ -48,7 +48,7 @@
             <div class="sub">Облік лічильників та пломб</div>
         </div>
 
-        <!-- ===== НОВІ ПОЛЯ: ДАТА ТА ПІДСТАВА ===== -->
+        <!-- ===== ПОЛЯ: ДАТА ТА ПІДСТАВА ===== -->
         <div class="card">
             <div class="input-scan-row" style="flex-wrap: wrap; gap: 12px;">
                 <div style="flex: 1; min-width: 160px;">
@@ -246,14 +246,31 @@
             <div class="input-scan-row"><input id="address" class="field-input" type="text" placeholder="Введіть адресу" speech><button class="btn-scan" data-target="address" data-mode="text">📷</button><button class="btn-mic" data-target="address">🎤</button></div>
             <div id="addressScanner" class="scanner-container hidden"></div>
         </div>
-<!-- кнопки 1 -->
+
         <!-- КНОПКИ -->
         <div class="save-container"><button id="sendToFormBtn" class="btn-send-form">📨 ВІДПРАВИТИ ДАНІ В ФОРМУ</button></div>
         <div class="save-container"><button id="openFormBtn" class="btn-open-form">🔗 ПЕРЕЙТИ В ГУГЛ ФОРМУ</button></div>
         <div class="save-container"><button id="sendAllBtn" class="btn-send-all">📨 НАДІСЛАТИ ВСІ ДАНІ ВЛАСНИКУ</button></div>
         <div class="save-container"><button id="saveRecordBtn" class="btn-save-all">💾 ЗБЕРЕГТИ ВСЕ В ЖУРНАЛ</button></div>
         <div class="save-container"><button id="clearFieldsBtn" class="btn-clear-fields">🧹 ОЧИСТИТИ ВСІ ПОЛЯ</button></div>
-        <div class="save-container"><button id="ocrFromPhotoBtn" class="btn-ocr">📷 РОЗПІЗНАТИ ТЕКСТ З ФОТО</button></div>
+
+        <!-- ===== КНОПКИ ДЛЯ ФОТО ===== -->
+        <div class="save-container">
+            <button id="ocrFromPhotoBtn" class="btn-ocr">📷 РОЗПІЗНАТИ З ФОТО</button>
+        </div>
+        <div class="save-container" style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button id="ocrFromGalleryBtn" class="btn-gallery" style="flex:1; min-width:140px;">🖼️ З ГАЛЕРЕЇ</button>
+            <button id="ocrFromCameraBtn" class="btn-camera" style="flex:1; min-width:140px;">📸 З КАМЕРИ</button>
+        </div>
+
+        <!-- ===== КНОПКИ ДЛЯ AI ===== -->
+        <div class="save-container" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <button id="enableAIBtn" class="btn-ai-on" style="flex:1; min-width:120px;">🤖 AI ВКЛ</button>
+            <button id="disableAIBtn" class="btn-ai-off" style="flex:1; min-width:120px;">📝 AI ВИМК</button>
+            <span id="aiStatus" style="display:flex; align-items:center; font-size:14px; color:#64748b; padding:8px 12px; background:#f1f5f9; border-radius:12px;">
+                Статус: <span id="aiStatusText" style="font-weight:700; margin-left:6px; color:#ef4444;">ВИМКНЕНО</span>
+            </span>
+        </div>
 
         <!-- БАЗА ПЛОМБ -->
         <div class="card">
