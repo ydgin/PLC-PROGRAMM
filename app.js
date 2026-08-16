@@ -5,6 +5,7 @@ let sealsDB = [];
 let metersDB = [];
 let activeScanners = {};
 let currentSearchTerm = "";
+let useAI = false;
 
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
@@ -25,7 +26,7 @@ const newMeterType = document.getElementById('newMeterType');
 const oldMeterReading = document.getElementById('oldMeterReading');
 const newMeterReading = document.getElementById('newMeterReading');
 
-// Нові поля (для форми, але НЕ в журналі)
+// Нові поля
 const workDate = document.getElementById('workDate');
 const replacementReason = document.getElementById('replacementReason');
 
@@ -105,6 +106,7 @@ function pinAddNum(num) {
                 setupVoiceSearch();
                 setupVoiceSelect();
                 setupOCR();
+                setupAI();
             } else {
                 if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
@@ -138,6 +140,7 @@ function pinCheck() {
         setupVoiceSearch();
         setupVoiceSelect();
         setupOCR();
+        setupAI();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
@@ -225,7 +228,6 @@ function initMeterTypes() {
         });
     }
     
-    // ===== АВТОМАТИЧНЕ КОПІЮВАННЯ ТИПУ =====
     if (oldMeterType) {
         oldMeterType.addEventListener('change', function() {
             const selectedValue = this.value;
@@ -665,100 +667,333 @@ function setupAutoClean() {
     });
 }
 
+// ========== AI ФУНКЦІЇ ==========
+function setupAI() {
+    const enableBtn = document.getElementById('enableAIBtn');
+    const disableBtn = document.getElementById('disableAIBtn');
+    const statusText = document.getElementById('aiStatusText');
+    
+    if (enableBtn) {
+        enableBtn.addEventListener('click', function() {
+            useAI = true;
+            if (statusText) {
+                statusText.textContent = 'УВІМКНЕНО 🤖';
+                statusText.className = 'ai-on';
+            }
+            showToast('🤖 AI режим увімкнено!');
+        });
+    }
+    
+    if (disableBtn) {
+        disableBtn.addEventListener('click', function() {
+            useAI = false;
+            if (statusText) {
+                statusText.textContent = 'ВИМКНЕНО';
+                statusText.className = 'ai-off';
+            }
+            showToast('📝 Звичайний режим увімкнено');
+        });
+    }
+}
+
+// ========== AI АНАЛІЗ ТЕКСТУ (з вашим API ключем) ==========
+const OPENAI_API_KEY = "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";
+
+async function analyzeWithAI(text) {
+    if (!OPENAI_API_KEY || OPENAI_API_KEY === 'YOUR_OPENAI_API_KEY') {
+        console.warn('⚠️ API ключ не налаштовано. Використовуйте звичайний парсинг.');
+        return null;
+    }
+    
+    const prompt = `
+Проаналізуй текст з акта технічної перевірки лічильника електроенергії.
+Витягни структуровані дані у форматі JSON:
+
+Текст:
+"""
+${text}
+"""
+
+Поверни ТІЛЬКИ JSON без пояснень у такому форматі:
+{
+    "date": "дата виконання роботи (ДД.ММ.РРРР)",
+    "meterType": "тип лічильника",
+    "oldMeterNumber": "номер знятого лічильника",
+    "oldMeterReading": "покази знятого лічильника (тільки цифри)",
+    "newMeterNumber": "номер встановленого лічильника",
+    "newMeterReading": "покази встановленого лічильника (тільки цифри)",
+    "accountNumber": "особовий рахунок (10 цифр)",
+    "address": "адреса",
+    "reason": "підстава для заміни",
+    "oldSealCover": "пломба клемна кришка (знята)",
+    "oldSealVKP": "пломба ВКП (знята)",
+    "newSealCover": "пломба клемна кришка (встановлена)",
+    "newSealVKP": "пломба ВКП (встановлена)"
+}
+
+Якщо якесь поле не знайдено, залиш порожнім.
+`;
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: 'Ти асистент для аналізу технічних документів. Повертай тільки JSON.' },
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.1
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('OpenAI API помилка:', data.error);
+            return null;
+        }
+        
+        const result = data.choices[0].message.content;
+        const jsonMatch = result.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+        return null;
+    } catch (error) {
+        console.error('AI помилка:', error);
+        return null;
+    }
+}
+
+// ========== ЗАПОВНЕННЯ ПОЛІВ З AI ==========
+function fillFieldsFromAI(data) {
+    console.log('📊 Дані від AI:', data);
+    
+    const fieldMap = {
+        'date': 'workDate',
+        'meterType': 'oldMeterType',
+        'oldMeterNumber': 'oldMeterNumber',
+        'oldMeterReading': 'oldMeterReading',
+        'newMeterNumber': 'newMeterNumber',
+        'newMeterReading': 'newMeterReading',
+        'accountNumber': 'accountNumber',
+        'address': 'address',
+        'reason': 'replacementReason',
+        'oldSealCover': 'oldSealCover',
+        'oldSealVKP': 'oldSealVKP',
+        'newSealCover': 'newSealCover',
+        'newSealVKP': 'newSealVKP'
+    };
+    
+    for (const [aiField, appField] of Object.entries(fieldMap)) {
+        const value = data[aiField];
+        if (value) {
+            const field = document.getElementById(appField);
+            if (field && !field.value) {
+                field.value = value;
+                console.log(`✅ Заповнено ${appField}: ${value}`);
+            }
+        }
+    }
+}
+
 // ========== OCR (РОЗПІЗНАВАННЯ ТЕКСТУ З ФОТО) ==========
 function setupOCR() {
     const ocrBtn = document.getElementById('ocrFromPhotoBtn');
-    if (!ocrBtn) return;
+    if (ocrBtn) {
+        ocrBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openFilePicker('*');
+        });
+    }
     
-    ocrBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        if (typeof Tesseract === 'undefined') {
-            alert('❌ Бібліотека Tesseract не завантажена. Перевірте інтернет.');
+    const galleryBtn = document.getElementById('ocrFromGalleryBtn');
+    if (galleryBtn) {
+        galleryBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openFilePicker('image/*');
+        });
+    }
+    
+    const cameraBtn = document.getElementById('ocrFromCameraBtn');
+    if (cameraBtn) {
+        cameraBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openCamera();
+        });
+    }
+}
+
+function openFilePicker(acceptType) {
+    if (typeof Tesseract === 'undefined') {
+        alert('❌ Бібліотека Tesseract не завантажена. Перевірте інтернет.');
+        return;
+    }
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = acceptType || 'image/*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.click();
+    
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            document.body.removeChild(fileInput);
             return;
         }
-        
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.style.display = 'none';
-        document.body.appendChild(fileInput);
-        
-        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            fileInput.capture = 'environment';
+        processImageFile(file);
+        document.body.removeChild(fileInput);
+    };
+}
+
+function openCamera() {
+    if (typeof Tesseract === 'undefined') {
+        alert('❌ Бібліотека Tesseract не завантажена. Перевірте інтернет.');
+        return;
+    }
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.capture = 'environment';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.click();
+    
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            document.body.removeChild(fileInput);
+            return;
         }
-        
-        fileInput.click();
-        
-        fileInput.onchange = function(e) {
-            const file = e.target.files[0];
-            if (!file) {
-                document.body.removeChild(fileInput);
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const imageData = event.target.result;
-                
-                showToast('⏳ Розпізнавання тексту...');
-                ocrBtn.textContent = '⏳ РОЗПІЗНАЄТЬСЯ...';
-                ocrBtn.disabled = true;
-                ocrBtn.style.opacity = '0.6';
-                
-                Tesseract.recognize(
-                    imageData,
-                    'ukr+eng',
-                    {
-                        logger: function(m) {
-                            if (m.status === 'recognizing text') {
-                                console.log(`Прогрес: ${Math.round(m.progress * 100)}%`);
-                            }
-                        }
-                    }
-                ).then(function(result) {
-                    const text = result.data.text;
-                    console.log('=== РОЗПІЗНАНИЙ ТЕКСТ ===');
-                    console.log(text);
-                    
-                    if (text.length < 3) {
-                        showToast('⚠️ Текст не розпізнано. Спробуйте чіткіше фото.');
-                        ocrBtn.textContent = '📷 РОЗПІЗНАТИ З ФОТО';
-                        ocrBtn.disabled = false;
-                        ocrBtn.style.opacity = '1';
-                        document.body.removeChild(fileInput);
-                        return;
-                    }
-                    
-                    showToast(`📝 Текст розпізнано! Довжина: ${text.length} символів`);
-                    
-                    const filled = parseAndFillFields(text);
-                    
-                    if (filled) {
-                        showToast('✅ Поля заповнено!');
-                    } else {
-                        showToast('⚠️ Не вдалося розпізнати дані. Спробуйте чіткіше фото.');
-                    }
-                    
-                    ocrBtn.textContent = '📷 РОЗПІЗНАТИ З ФОТО';
-                    ocrBtn.disabled = false;
-                    ocrBtn.style.opacity = '1';
-                    document.body.removeChild(fileInput);
-                }).catch(function(err) {
-                    console.error('OCR помилка:', err);
-                    alert('❌ Помилка розпізнавання: ' + err.message);
-                    ocrBtn.textContent = '📷 РОЗПІЗНАТИ З ФОТО';
-                    ocrBtn.disabled = false;
-                    ocrBtn.style.opacity = '1';
-                    document.body.removeChild(fileInput);
-                });
-            };
-            reader.readAsDataURL(file);
-        };
+        processImageFile(file);
+        document.body.removeChild(fileInput);
+    };
+}
+
+function processImageFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const imageData = event.target.result;
+        showOCRModal(imageData, function() {
+            startOCRWithAI(imageData);
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function showOCRModal(imageData, onConfirm) {
+    const oldModal = document.querySelector('.ocr-modal');
+    if (oldModal) oldModal.remove();
+    
+    const modal = document.createElement('div');
+    modal.className = 'ocr-modal';
+    modal.innerHTML = `
+        <div class="ocr-modal-content">
+            <h3>📷 Розпізнавання тексту</h3>
+            <p>Перевірте фото та підтвердіть розпізнавання</p>
+            <img src="${imageData}" class="preview-image" alt="Попередній перегляд">
+            <div class="modal-buttons">
+                <button class="btn-modal-confirm">✅ Розпізнати</button>
+                <button class="btn-modal-cancel">❌ Скасувати</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.querySelector('.btn-modal-confirm').addEventListener('click', function() {
+        modal.remove();
+        if (onConfirm) onConfirm();
+    });
+    
+    modal.querySelector('.btn-modal-cancel').addEventListener('click', function() {
+        modal.remove();
+    });
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
     });
 }
 
-// ========== ПАРСИНГ РОЗПІЗНАНОГО ТЕКСТУ (ДЛЯ ВАШИХ ФОТО) ==========
+function startOCRWithAI(imageData) {
+    const ocrBtn = document.getElementById('ocrFromPhotoBtn');
+    const galleryBtn = document.getElementById('ocrFromGalleryBtn');
+    const cameraBtn = document.getElementById('ocrFromCameraBtn');
+    
+    showToast('⏳ Розпізнавання тексту...');
+    
+    if (ocrBtn) { ocrBtn.textContent = '⏳ РОЗПІЗНАЄТЬСЯ...'; ocrBtn.disabled = true; ocrBtn.style.opacity = '0.6'; }
+    if (galleryBtn) { galleryBtn.disabled = true; galleryBtn.style.opacity = '0.6'; }
+    if (cameraBtn) { cameraBtn.disabled = true; cameraBtn.style.opacity = '0.6'; }
+    
+    Tesseract.recognize(imageData, 'ukr+eng', {
+        logger: function(m) {
+            if (m.status === 'recognizing text') {
+                console.log(`Прогрес: ${Math.round(m.progress * 100)}%`);
+            }
+        }
+    }).then(async function(result) {
+        const text = result.data.text;
+        console.log('=== РОЗПІЗНАНИЙ ТЕКСТ ===');
+        console.log(text);
+        
+        if (text.length < 3) {
+            showToast('⚠️ Текст не розпізнано. Спробуйте чіткіше фото.');
+            restoreButtons(ocrBtn, galleryBtn, cameraBtn);
+            return;
+        }
+        
+        let filled = false;
+        
+        if (useAI) {
+            showToast('🤖 AI аналізує текст...');
+            if (ocrBtn) ocrBtn.textContent = '🤖 AI АНАЛІЗУЄ...';
+            
+            const aiData = await analyzeWithAI(text);
+            if (aiData) {
+                fillFieldsFromAI(aiData);
+                filled = true;
+                showToast('✅ Поля заповнено за допомогою AI!');
+            } else {
+                showToast('⚠️ AI не зміг розпізнати. Використовуємо звичайний парсинг.');
+                filled = parseAndFillFields(text);
+            }
+        } else {
+            filled = parseAndFillFields(text);
+        }
+        
+        if (filled) {
+            showToast('✅ Поля заповнено!');
+        } else {
+            showToast('⚠️ Не вдалося розпізнати дані. Спробуйте чіткіше фото.');
+        }
+        
+        restoreButtons(ocrBtn, galleryBtn, cameraBtn);
+    }).catch(function(err) {
+        console.error('OCR помилка:', err);
+        alert('❌ Помилка розпізнавання: ' + err.message);
+        restoreButtons(ocrBtn, galleryBtn, cameraBtn);
+    });
+}
+
+function restoreButtons(ocrBtn, galleryBtn, cameraBtn) {
+    if (ocrBtn) { ocrBtn.textContent = '📷 РОЗПІЗНАТИ З ФОТО'; ocrBtn.disabled = false; ocrBtn.style.opacity = '1'; }
+    if (galleryBtn) { galleryBtn.disabled = false; galleryBtn.style.opacity = '1'; }
+    if (cameraBtn) { cameraBtn.disabled = false; cameraBtn.style.opacity = '1'; }
+}
+
+// ========== ПАРСИНГ РОЗПІЗНАНОГО ТЕКСТУ ==========
 function parseAndFillFields(text) {
     if (!text || text.length < 3) {
         console.log('❌ Текст занадто короткий');
@@ -770,15 +1005,12 @@ function parseAndFillFields(text) {
         .filter(line => line.length > 1);
 
     console.log('📋 Рядки для парсингу:', lines);
-    console.log('Перші 10 рядків:', lines.slice(0, 10));
-
     let foundAny = false;
 
-    // ===== 1. ОСОБОВИЙ РАХУНОК (Фото 1: oye 123138577) =====
+    // 1. Особовий рахунок
     const accountField = document.getElementById('accountNumber');
     if (accountField && !accountField.value) {
         for (let line of lines) {
-            // oye 123138577
             const oyeMatch = line.match(/oye\s*(\d{9,10})/i);
             if (oyeMatch) {
                 accountField.value = oyeMatch[1];
@@ -787,7 +1019,6 @@ function parseAndFillFields(text) {
                 showToast(`📋 Особовий: ${oyeMatch[1]}`);
                 break;
             }
-            // Просто 10 цифр
             const digitsMatch = line.match(/\b(\d{9,10})\b/);
             if (digitsMatch && digitsMatch[1].length >= 9) {
                 accountField.value = digitsMatch[1];
@@ -799,7 +1030,7 @@ function parseAndFillFields(text) {
         }
     }
 
-    // ===== 2. АДРЕСА (Фото 2: Героїв України буд. 4 кв. 145) =====
+    // 2. Адреса
     const addressField = document.getElementById('address');
     if (addressField && !addressField.value) {
         for (let line of lines) {
@@ -814,20 +1045,18 @@ function parseAndFillFields(text) {
         }
     }
 
-    // ===== 3. НОМЕР ЗНЯТОГО ЛІЧИЛЬНИКА (Фото 3: 058854) =====
+    // 3. Номер знятого лічильника
     const oldNumberField = document.getElementById('oldMeterNumber');
     if (oldNumberField && !oldNumberField.value) {
         for (let line of lines) {
-            // Заводський номер/рік випуску 058854
             const numberMatch = line.match(/номер\s*[\s\/]*(\d{6,8})/i);
             if (numberMatch) {
                 oldNumberField.value = numberMatch[1];
                 foundAny = true;
-                console.log(`🔢 Номер знятого (заводський): ${numberMatch[1]}`);
+                console.log(`🔢 Номер знятого: ${numberMatch[1]}`);
                 showToast(`🔢 Номер знятого: ${numberMatch[1]}`);
                 break;
             }
-            // Просто 6 цифр
             const digitsMatch = line.match(/\b(\d{6,8})\b/);
             if (digitsMatch && digitsMatch[1].length >= 6) {
                 oldNumberField.value = digitsMatch[1];
@@ -839,20 +1068,18 @@ function parseAndFillFields(text) {
         }
     }
 
-    // ===== 4. ПОКАЗИ ЗНЯТОГО ЛІЧИЛЬНИКА (Фото 4: 876543210) =====
+    // 4. Покази знятого лічильника
     const readingField = document.getElementById('oldMeterReading');
     if (readingField && !readingField.value) {
         for (let line of lines) {
-            // Покази (876543210)
             const readingMatch = line.match(/показ[иі]\s*[\(\)\-]*\s*(\d{5,10})/i);
             if (readingMatch) {
                 readingField.value = readingMatch[1];
                 foundAny = true;
-                console.log(`📊 Покази знятого (з текстом): ${readingMatch[1]}`);
+                console.log(`📊 Покази знятого: ${readingMatch[1]}`);
                 showToast(`📊 Покази знятого: ${readingMatch[1]}`);
                 break;
             }
-            // Таблиця показів: | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
             const tableMatch = line.match(/[\|\s]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*/);
             if (tableMatch) {
                 const reading = tableMatch.slice(1).join('');
@@ -867,11 +1094,10 @@ function parseAndFillFields(text) {
         }
     }
 
-    // ===== 5. НОМЕР ВСТАНОВЛЕНОГО ЛІЧИЛЬНИКА (Фото 5: 123456789) =====
+    // 5. Номер встановленого лічильника
     const newNumberField = document.getElementById('newMeterNumber');
     if (newNumberField && !newNumberField.value) {
         for (let line of lines) {
-            // Таблиця: | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
             const tableMatch = line.match(/[\|\s]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*/);
             if (tableMatch) {
                 const number = tableMatch.slice(1).join('');
@@ -886,7 +1112,7 @@ function parseAndFillFields(text) {
         }
     }
 
-    // ===== 6. ПЛОМБА КЛЕМНА КРИШКА (ЗНЯТА) (Фото 6: 4985088261) =====
+    // 6. Пломби
     const sealCoverField = document.getElementById('oldSealCover');
     if (sealCoverField && !sealCoverField.value) {
         for (let line of lines) {
@@ -903,7 +1129,6 @@ function parseAndFillFields(text) {
         }
     }
 
-    // ===== 7. ПЛОМБА ВВОДНИЙ АВТОМАТ (ЗНЯТА) (Фото 7: 19975569) =====
     const sealVKPField = document.getElementById('oldSealVKP');
     if (sealVKPField && !sealVKPField.value) {
         for (let line of lines) {
@@ -920,52 +1145,21 @@ function parseAndFillFields(text) {
         }
     }
 
-    // ===== 8. ПЛОМБА КЛЕМНА КРИШКА (ВСТАНОВЛЕНА) =====
+    // 7. Копіюємо пломби для встановлених
     const newSealCoverField = document.getElementById('newSealCover');
-    if (newSealCoverField && !newSealCoverField.value) {
-        if (sealCoverField && sealCoverField.value) {
-            newSealCoverField.value = sealCoverField.value;
-            foundAny = true;
-            console.log(`🔒 Пломба кл. кришка (встановлена): ${sealCoverField.value}`);
-            showToast(`🔒 Пломба кл. кришка встановлена: ${sealCoverField.value}`);
-        }
+    if (newSealCoverField && !newSealCoverField.value && sealCoverField && sealCoverField.value) {
+        newSealCoverField.value = sealCoverField.value;
+        foundAny = true;
+        console.log(`🔒 Пломба кл. кришка (встановлена): ${sealCoverField.value}`);
+        showToast(`🔒 Пломба кл. кришка встановлена: ${sealCoverField.value}`);
     }
 
-    // ===== 9. ПЛОМБА ВВОДНИЙ АВТОМАТ (ВСТАНОВЛЕНА) =====
     const newSealVKPField = document.getElementById('newSealVKP');
-    if (newSealVKPField && !newSealVKPField.value) {
-        if (sealVKPField && sealVKPField.value) {
-            newSealVKPField.value = sealVKPField.value;
-            foundAny = true;
-            console.log(`🔒 Пломба ВКП (встановлена): ${sealVKPField.value}`);
-            showToast(`🔒 Пломба ВКП встановлена: ${sealVKPField.value}`);
-        }
-    }
-
-    // ===== 10. ДАТА =====
-    const dateField = document.getElementById('workDate');
-    if (dateField && !dateField.value) {
-        const datePatterns = [
-            /(\d{2})[.\/](\d{2})[.\/](\d{4})/,
-            /(\d{2})[.\/](\d{2})[.\/](\d{2})/
-        ];
-        for (let line of lines) {
-            for (let pattern of datePatterns) {
-                const match = line.match(pattern);
-                if (match) {
-                    let day = match[1];
-                    let month = match[2];
-                    let year = match[3];
-                    if (year.length === 2) year = '20' + year;
-                    dateField.value = `${day}.${month}.${year}`;
-                    foundAny = true;
-                    console.log(`📅 Дата: ${dateField.value}`);
-                    showToast(`📅 Дата: ${dateField.value}`);
-                    break;
-                }
-            }
-            if (dateField.value) break;
-        }
+    if (newSealVKPField && !newSealVKPField.value && sealVKPField && sealVKPField.value) {
+        newSealVKPField.value = sealVKPField.value;
+        foundAny = true;
+        console.log(`🔒 Пломба ВКП (встановлена): ${sealVKPField.value}`);
+        showToast(`🔒 Пломба ВКП встановлена: ${sealVKPField.value}`);
     }
 
     console.log('✅ Результат парсингу:', foundAny ? 'Знайдено дані' : 'Нічого не знайдено');
@@ -1213,7 +1407,7 @@ function setupSearch() {
     });
 }
 
-// ========== ДАНІ ДЛЯ ЖУРНАЛУ (БЕЗ НОВИХ ПОЛІВ) ==========
+// ========== ДАНІ ДЛЯ ЖУРНАЛУ ==========
 function getFormData() {
     return {
         date: new Date().toLocaleString('uk-UA'),
@@ -1771,4 +1965,5 @@ document.addEventListener("DOMContentLoaded", function() {
     setupVoiceSearch();
     setupVoiceSelect();
     setupOCR();
+    setupAI();
 });
