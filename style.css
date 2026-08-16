@@ -4,881 +4,502 @@
     padding: 0;
 }
 
-html,
 body {
-    min-height: 100%;
-}
-
-body {
-    font-family:
-        "Segoe UI",
-        Arial,
-        sans-serif;
-
-    background:
-        linear-gradient(
-            135deg,
-            #e0f2fe,
-            #bae6fd
-        );
-
+    font-family: Segoe UI, Arial, sans-serif;
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd);
     color: #1e293b;
-
-    padding: 15px;
+    min-height: 100vh;
+    padding: 14px;
 }
 
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
 
-/* =====================================================
-   HIDDEN
-===================================================== */
+.card {
+    background: #fff;
+    border-radius: 22px;
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 7px 20px rgba(0,0,0,.08);
+}
+
+.header-card {
+    background: linear-gradient(135deg,#1d4ed8,#3b82f6);
+    color: #fff;
+    text-align: center;
+}
+
+.header-card h1 {
+    font-size: 1.55rem;
+    margin-bottom: 5px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.section-title h2 {
+    font-size: 1.05rem;
+}
+
+.hint {
+    color: #64748b;
+    font-size: .9rem;
+    margin: 8px 0 12px;
+}
+
+.status {
+    font-size: .78rem;
+    background: #dcfce7;
+    color: #15803d;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.status.busy {
+    background: #fef3c7;
+    color: #a16207;
+}
+
+.status.error {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    font-size: .88rem;
+    margin: 10px 0 6px;
+}
+
+.field {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 13px;
+    background: #f8fafc;
+    font-size: 16px;
+    color: #1e293b;
+    min-height: 46px;
+}
+
+.field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #fff;
+}
+
+.input-row,
+.row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-row .field {
+    flex: 1;
+}
+
+.btn,
+.scan-btn,
+.mic-btn {
+    border: 0;
+    border-radius: 13px;
+    padding: 12px 15px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    min-height: 46px;
+}
+
+.btn {
+    background: #eef2f7;
+    color: #1e293b;
+}
+
+.btn.primary {
+    background: #2563eb;
+    color: #fff;
+}
+
+.btn.success {
+    background: #16a34a;
+    color: #fff;
+}
+
+.btn.purple {
+    background: #7c3aed;
+    color: #fff;
+}
+
+.btn.danger {
+    background: #dc2626;
+    color: #fff;
+}
+
+.btn.small {
+    padding: 8px 11px;
+    min-height: 36px;
+}
+
+.full {
+    width: 100%;
+    margin-top: 9px;
+}
+
+.scan-btn {
+    width: 52px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 2px solid #bfdbfe;
+}
+
+.mic-btn {
+    width: 52px;
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.scanner {
+    margin-top: 10px;
+    background: #111827;
+    color: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.scanner-head {
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-scan {
+    border: 0;
+    border-radius: 50%;
+    background: #dc2626;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+}
 
 .hidden {
     display: none !important;
 }
 
-
-/* =====================================================
-   CONTAINER
-===================================================== */
-
-.container {
-    width: 100%;
-    max-width: 1350px;
-
-    margin: 0 auto;
-}
-
-
-/* =====================================================
-   CARD
-===================================================== */
-
-.card {
-    background: #ffffff;
-
-    border-radius: 24px;
-
-    padding: 20px;
-
-    margin-bottom: 18px;
-
-    box-shadow:
-        0 8px 25px rgba(15, 23, 42, .10);
-}
-
-
-/* =====================================================
-   HEADER
-===================================================== */
-
-.header-card {
-    color: white;
-
-    text-align: center;
-
-    background:
-        linear-gradient(
-            135deg,
-            #1d4ed8,
-            #2563eb,
-            #3b82f6
-        );
-}
-
-.header-icons {
-    font-size: 22px;
-
-    margin-bottom: 8px;
-
-    letter-spacing: 10px;
-}
-
-.header-card h1 {
-    font-size: 28px;
-
-    margin-bottom: 5px;
-}
-
-.header-card .sub {
-    opacity: .9;
-
-    font-size: 14px;
-}
-
-
-/* =====================================================
-   HEADINGS
-===================================================== */
-
-h2 {
-    font-size: 19px;
-
-    margin-bottom: 15px;
-}
-
-h3 {
-    font-size: 17px;
-}
-
-.hint {
-    color: #64748b;
-
-    font-size: 14px;
-
-    line-height: 1.45;
-
-    margin-top: 5px;
-}
-
-.section-header {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 15px;
-
-    margin-bottom: 15px;
-}
-
-
-/* =====================================================
-   GRID
-===================================================== */
-
 .grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 15px;
-}
-
-.field-block {
-    min-width: 0;
-}
-
-
-/* =====================================================
-   LABEL
-===================================================== */
-
-label {
-    display: block;
-
-    font-weight: 700;
-
-    font-size: 14px;
-
-    color: #334155;
-
-    margin-bottom: 7px;
-}
-
-
-/* =====================================================
-   INPUT
-===================================================== */
-
-.field-input {
-    width: 100%;
-
-    min-height: 46px;
-
-    border: 2px solid #e2e8f0;
-
-    border-radius: 14px;
-
-    padding: 11px 13px;
-
-    background: #f8fafc;
-
-    color: #0f172a;
-
-    font-size: 16px;
-
-    outline: none;
-
-    transition: .15s;
-}
-
-.field-input:focus {
-    border-color: #3b82f6;
-
-    background: white;
-
-    box-shadow:
-        0 0 0 3px rgba(59,130,246,.12);
-}
-
-select.field-input {
-    cursor: pointer;
-}
-
-
-/* =====================================================
-   INPUT ROW
-===================================================== */
-
-.input-row {
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-}
-
-.input-row .field-input {
-    flex: 1;
-}
-
-
-/* =====================================================
-   BUTTONS
-===================================================== */
-
-.btn {
-    min-height: 46px;
-
-    border: none;
-
-    border-radius: 14px;
-
-    padding: 10px 16px;
-
-    background: #e2e8f0;
-
-    color: #0f172a;
-
-    font-size: 14px;
-
-    font-weight: 700;
-
-    cursor: pointer;
-
-    touch-action: manipulation;
-
-    -webkit-tap-highlight-color: transparent;
-
-    transition: transform .08s, background .12s;
-}
-
-.btn:active {
-    transform: scale(.95);
-}
-
-.btn-primary {
-    background: #2563eb;
-
-    color: white;
-}
-
-.btn-success {
-    background: #16a34a;
-
-    color: white;
-}
-
-.btn-danger {
-    background: #dc2626;
-
-    color: white;
-}
-
-.btn-purple {
-    background: #7c3aed;
-
-    color: white;
-}
-
-.btn-small {
-    min-height: 38px;
-
-    padding: 7px 12px;
-
-    font-size: 13px;
-}
-
-
-/* =====================================================
-   MIC
-===================================================== */
-
-.btn-mic,
-.btn-scan {
-    width: 48px;
-
-    min-width: 48px;
-
-    height: 46px;
-
-    border: none;
-
-    border-radius: 13px;
-
-    cursor: pointer;
-
-    font-size: 20px;
-
-    background: #eff6ff;
-
-    color: #2563eb;
-
-    touch-action: manipulation;
-
-    -webkit-tap-highlight-color: transparent;
-}
-
-.btn-mic:active,
-.btn-scan:active {
-    transform: scale(.92);
-}
-
-.btn-mic.listening {
-    background: #dc2626;
-
-    color: white;
-}
-
-
-/* =====================================================
-   ACTIONS
-===================================================== */
-
-.actions-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
+    grid-template-columns: repeat(2,1fr);
     gap: 10px;
 }
 
+.grid label {
+    margin-top: 0;
+}
 
-/* =====================================================
-   SCANNER
-===================================================== */
+.actions {
+    padding-top: 12px;
+}
 
-.scanner-container {
+.table-wrap {
+    overflow: auto;
+    margin-top: 12px;
+}
+
+table {
     width: 100%;
-
-    margin-top: 10px;
-
-    background: #020617;
-
-    border-radius: 16px;
-
-    overflow: hidden;
-}
-
-.scanner-header {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    padding: 10px;
-
-    color: white;
-
-    background: #1e293b;
-}
-
-
-/* =====================================================
-   OCR
-===================================================== */
-
-.ocr-card {
-    border: 2px solid #bfdbfe;
-}
-
-.ocr-buttons {
-    display: flex;
-
-    gap: 10px;
-
-    flex-wrap: wrap;
-
-    margin-bottom: 12px;
-}
-
-.ocr-upload-btn {
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    min-height: 46px;
-
-    padding: 10px 16px;
-
-    border-radius: 14px;
-
-    background: #0ea5e9;
-
-    color: white;
-
-    cursor: pointer;
-
-    font-weight: 700;
-
-    touch-action: manipulation;
-}
-
-.ocr-status {
-    padding: 10px;
-
-    background: #f1f5f9;
-
-    border-radius: 12px;
-
-    color: #475569;
-
-    font-size: 14px;
-
-    margin-bottom: 10px;
-}
-
-.ocr-preview {
-    width: 100%;
-
-    max-height: 500px;
-
-    object-fit: contain;
-
-    background: #111827;
-
-    border-radius: 14px;
-
-    margin-top: 10px;
-}
-
-.ocr-progress {
-    width: 100%;
-
-    height: 12px;
-
-    background: #e2e8f0;
-
-    border-radius: 20px;
-
-    overflow: hidden;
-
-    margin: 12px 0;
-}
-
-.ocr-progress-bar {
-    width: 0%;
-
-    height: 100%;
-
-    background: #2563eb;
-
-    transition: width .2s;
-}
-
-.ocr-text {
-    width: 100%;
-
-    min-height: 160px;
-
-    margin-top: 10px;
-
-    padding: 12px;
-
-    border: 2px solid #e2e8f0;
-
-    border-radius: 14px;
-
-    resize: vertical;
-
-    font-family: monospace;
-
-    font-size: 13px;
-}
-
-
-/* =====================================================
-   DATABASE
-===================================================== */
-
-.add-panel {
-    background: #f8fafc;
-
-    border-radius: 14px;
-
-    padding: 12px;
-
-    margin-bottom: 10px;
-}
-
-.database-list {
-    max-height: 280px;
-
-    overflow-y: auto;
-
-    margin-top: 10px;
-
-    border: 1px solid #e2e8f0;
-
-    border-radius: 14px;
-}
-
-.database-item {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    padding: 10px 12px;
-
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.database-item:last-child {
-    border-bottom: none;
-}
-
-.database-number {
-    font-family: monospace;
-
-    font-weight: 600;
-}
-
-.database-delete {
-    border: none;
-
-    background: #fee2e2;
-
-    color: #dc2626;
-
-    width: 34px;
-
-    height: 34px;
-
-    border-radius: 50%;
-
-    cursor: pointer;
-}
-
-
-/* =====================================================
-   SEARCH
-===================================================== */
-
-.search-log-row {
-    display: flex;
-
-    gap: 8px;
-
-    margin-bottom: 12px;
-}
-
-.search-log-row .field-input {
-    flex: 1;
-}
-
-
-/* =====================================================
-   TABLE
-===================================================== */
-
-.table-wrapper {
-    overflow-x: auto;
-
-    width: 100%;
-}
-
-.log-table {
-    width: 100%;
-
-    min-width: 1100px;
-
     border-collapse: collapse;
-
     font-size: 13px;
+    min-width: 720px;
 }
 
-.log-table th,
-.log-table td {
-    padding: 9px;
-
+th,
+td {
+    padding: 10px 8px;
     border-bottom: 1px solid #e2e8f0;
-
     text-align: left;
-
     vertical-align: top;
 }
 
-.log-table th {
+th {
     background: #f8fafc;
-
-    color: #475569;
 }
 
-.empty-row td {
+.empty {
     text-align: center;
-
-    padding: 35px;
-
     color: #94a3b8;
+    padding: 30px;
 }
 
-.delete-log {
-    border: none;
-
-    background: #fee2e2;
-
-    color: #dc2626;
-
-    width: 34px;
-
-    height: 34px;
-
-    border-radius: 50%;
-
+.delete-icon {
+    border: 0;
+    background: transparent;
     cursor: pointer;
+    font-size: 18px;
 }
 
-
-/* =====================================================
-   FOOTER
-===================================================== */
-
-footer {
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 20000;
+    background: #16a34a;
+    color: #fff;
+    padding: 11px 17px;
+    border-radius: 30px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.2);
+    max-width: 90%;
     text-align: center;
-
-    color: #64748b;
-
-    font-size: 13px;
-
-    padding: 15px;
 }
 
 
-/* =====================================================
-   PIN SCREEN
-===================================================== */
+/* ================= PIN ================= */
 
 .pin-screen {
     position: fixed;
-
     inset: 0;
-
-    z-index: 99999;
-
+    z-index: 10000;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     padding: 15px;
-
-    background:
-        radial-gradient(
-            circle at top,
-            #334155,
-            #0f172a 50%,
-            #020617
-        );
 }
 
 .pin-card {
-    width: 330px;
-
-    max-width: 100%;
-
-    background: white;
-
+    background: #fff;
     border-radius: 30px;
-
-    padding: 28px 22px;
-
+    padding: 25px;
+    width: 330px;
     text-align: center;
-
-    box-shadow:
-        0 25px 70px rgba(0,0,0,.5);
+    box-shadow: 0 25px 60px rgba(0,0,0,.4);
 }
 
 .pin-lock {
-    font-size: 45px;
-
-    margin-bottom: 8px;
+    font-size: 42px;
 }
-
-.pin-card h1 {
-    color: #0f172a;
-
-    font-size: 25px;
-}
-
-.pin-subtitle {
-    color: #64748b;
-
-    margin: 7px 0 15px;
-
-    font-size: 14px;
-}
-
-
-/* =====================================================
-   PIN DOTS
-===================================================== */
 
 .pin-display {
     display: flex;
-
     justify-content: center;
-
     align-items: center;
-
-    gap: 15px;
-
-    min-height: 54px;
-
-    padding: 10px;
-
-    margin-bottom: 10px;
-
+    gap: 12px;
     background: #f1f5f9;
-
-    border-radius: 16px;
+    padding: 14px 10px;
+    border-radius: 15px;
+    margin: 15px 0;
+    min-height: 58px;
 }
 
 .pin-dot {
     display: block;
-
     width: 16px;
-
     height: 16px;
-
+    border: 2px solid #64748b;
     border-radius: 50%;
-
-    background: #cbd5e1;
-
-    border: 2px solid #94a3b8;
-
+    background: #fff;
     transition:
-        background .12s,
         transform .12s,
+        background .12s,
         border-color .12s;
 }
 
 .pin-dot.active {
     background: #2563eb;
-
     border-color: #2563eb;
-
-    transform: scale(1.15);
+    transform: scale(1.12);
 }
 
 .pin-error {
-    min-height: 25px;
-
+    min-height: 22px;
     color: #dc2626;
-
     font-size: 13px;
-
-    font-weight: 600;
 }
 
-
-/* =====================================================
-   PIN KEYBOARD
-===================================================== */
-
-.pin-keyboard {
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 10px;
-
-    margin-top: 7px;
+.pin-keyboard > div {
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+    margin: 9px 0;
 }
 
 .pin-btn {
-    width: 100%;
-
-    height: 62px;
-
-    border: none;
-
-    border-radius: 18px;
-
+    width: 65px;
+    height: 58px;
+    border: 0;
+    border-radius: 30px;
     background: #f1f5f9;
-
-    color: #0f172a;
-
-    font-size: 25px;
-
-    font-weight: 700;
-
+    font-size: 24px;
+    font-weight: 600;
     cursor: pointer;
-
-    user-select: none;
-
-    -webkit-user-select: none;
-
-    -webkit-tap-highlight-color: transparent;
-
     touch-action: manipulation;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pin-btn:active {
-    transform: scale(.91);
-
-    background: #cbd5e1;
+    transform: scale(.94);
+    background: #dbeafe;
 }
 
-.pin-clear {
+.pin-clear,
+.pin-enter {
     background: #e2e8f0;
 }
 
-.pin-enter {
-    background: #2563eb;
-
-    color: white;
-}
-
 .pin-forgot {
-    margin-top: 15px;
-
-    border: none;
-
-    background: transparent;
-
+    margin-top: 14px;
     color: #2563eb;
-
     cursor: pointer;
+    font-size: 14px;
+}
 
-    font-weight: 600;
+.pin-shake {
+    animation: pinShake .28s ease-in-out;
+}
 
-    padding: 8px;
+@keyframes pinShake {
+    0%,100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-8px);
+    }
+
+    50% {
+        transform: translateX(8px);
+    }
+
+    75% {
+        transform: translateX(-5px);
+    }
 }
 
 
-/* =====================================================
-   MOBILE
-===================================================== */
+/* ================= OCR ================= */
 
-@media (max-width: 700px) {
+.ocr-preview {
+    display: block;
+    width: 100%;
+    max-height: 430px;
+    object-fit: contain;
+    background: #111827;
+    border-radius: 15px;
+    margin-top: 12px;
+}
+
+.progress {
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.progress div {
+    height: 100%;
+    width: 0;
+    background: #2563eb;
+    transition: width .2s;
+}
+
+.ocr-progress-wrap {
+    margin-bottom: 12px;
+}
+
+.ocr-candidates {
+    margin-top: 14px;
+}
+
+.ocr-field {
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 12px;
+    margin: 9px 0;
+    background: #f8fafc;
+}
+
+.ocr-field-title {
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.ocr-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px;
+    background: #fff;
+    border-radius: 9px;
+    margin: 4px 0;
+}
+
+.ocr-option input {
+    width: 18px;
+    height: 18px;
+}
+
+.ocr-current {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 5px;
+}
+
+.ocr-no-value {
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.ocr-details {
+    margin-top: 12px;
+}
+
+.ocr-details pre {
+    white-space: pre-wrap;
+    max-height: 220px;
+    overflow: auto;
+    background: #0f172a;
+    color: #dbeafe;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+footer {
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+    padding: 12px;
+}
+
+.purple {
+    color: #fff;
+}
+
+
+/* ================= MOBILE ================= */
+
+@media(max-width:650px) {
 
     body {
         padding: 8px;
     }
 
     .card {
-        padding: 15px;
-
+        padding: 14px;
         border-radius: 18px;
     }
 
@@ -886,56 +507,34 @@ footer {
         grid-template-columns: 1fr;
     }
 
-    .actions-grid {
-        grid-template-columns: 1fr;
+    .row {
+        flex-wrap: wrap;
     }
 
-    .section-header {
-        align-items: flex-start;
-
-        flex-direction: column;
-    }
-
-    .ocr-buttons {
-        flex-direction: column;
-    }
-
-    .ocr-upload-btn,
-    .ocr-buttons .btn {
-        width: 100%;
+    .row .btn {
+        flex: 1;
+        min-width: 140px;
     }
 
     .header-card h1 {
-        font-size: 22px;
+        font-size: 1.25rem;
     }
 
     .pin-card {
-        width: 320px;
-
-        padding: 22px 17px;
+        width: 310px;
     }
 
     .pin-btn {
-        height: 58px;
-    }
-}
-
-
-@media (max-width: 380px) {
-
-    .pin-card {
-        width: 295px;
+        width: 60px;
+        height: 56px;
     }
 
-    .pin-btn {
-        height: 54px;
-
-        font-size: 22px;
+    .section-title {
+        align-items: flex-start;
     }
 
-    .pin-dot {
-        width: 14px;
-
-        height: 14px;
+    .section-title > div {
+        display: flex;
+        gap: 5px;
     }
 }
