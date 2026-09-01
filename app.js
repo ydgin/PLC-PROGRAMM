@@ -479,7 +479,7 @@ function setDefaultValues() {
     }
 }
 
-// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ ==========
+// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ (БЕЗ АВТОКОПІЮВАННЯ) ==========
 function initMeterTypes() {
     if (oldMeterType) {
         oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
@@ -499,6 +499,9 @@ function initMeterTypes() {
             newMeterType.appendChild(option);
         });
     }
+    
+    // ===== ВАЖЛИВО: НЕМАЄ АВТОМАТИЧНОГО КОПІЮВАННЯ =====
+    // Користувач самостійно обирає тип для кожного лічильника
 }
 
 // ========== ОБРОБКА ВВЕДЕННЯ ПЛОМБ ==========
@@ -1965,7 +1968,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (З ПІДБОРОМ ДЛЯ ВСТАНОВЛЕНОГО) ==========
+// ========== ВІДПРАВКА В ФОРМУ (ЧЕРЕЗ POST ДЛЯ ТЕЛЕФОНА, БЕЗ КОПІЮВАННЯ) ==========
 function sendToGoogleForm() {
     // Защита от двойного нажатия
     if (isSending) {
@@ -2020,7 +2023,7 @@ function sendToGoogleForm() {
         return; 
     }
 
-    // Валидация пломб и личильников
+    // Валидация
     if (!validateSeals()) return;
     if (!validateMeters()) return;
 
@@ -2039,65 +2042,50 @@ function sendToGoogleForm() {
         let workDateVal = workDateEl ? workDateEl.value : '';
         let replacementReasonVal = replacementReasonEl ? replacementReasonEl.value : '';
         
-        // ===== КЛЮЧЕВАЯ ФУНКЦИЯ: поиск значения для Google Form =====
-        function findGoogleFormValue(value, fieldId) {
+        // ===== ПОИСК ЗНАЧЕНИЙ ДЛЯ GOOGLE FORM =====
+        function findGoogleFormValue(value) {
             if (!value) return '';
             
-            // Нормализуем искомое значение
             const normalizedSearch = normalizeMeterType(value);
-            console.log(`🔍 Поиск для Google Form (${fieldId}): "${value}" → нормализовано: "${normalizedSearch}"`);
+            console.log(`🔍 Поиск для Google Form: "${value}" → нормализовано: "${normalizedSearch}"`);
             
-            // Ищем точное совпадение (нормализованное)
+            // Точное совпадение
             for (let i = 0; i < meterTypesList.length; i++) {
-                const optionValue = meterTypesList[i];
-                const normalizedOption = normalizeMeterType(optionValue);
-                if (normalizedOption === normalizedSearch) {
-                    console.log(`✅ Найдено точное совпадение: "${optionValue}"`);
-                    return optionValue;
+                if (normalizeMeterType(meterTypesList[i]) === normalizedSearch) {
+                    console.log(`✅ Найдено точное совпадение: "${meterTypesList[i]}"`);
+                    return meterTypesList[i];
                 }
             }
             
-            // Ищем частичное совпадение
+            // Частичное совпадение
             for (let i = 0; i < meterTypesList.length; i++) {
-                const optionValue = meterTypesList[i];
-                const normalizedOption = normalizeMeterType(optionValue);
+                const normalizedOption = normalizeMeterType(meterTypesList[i]);
                 if (normalizedOption.includes(normalizedSearch) || normalizedSearch.includes(normalizedOption)) {
-                    console.log(`✅ Найдено частичное совпадение: "${optionValue}"`);
-                    return optionValue;
+                    console.log(`✅ Найдено частичное совпадение: "${meterTypesList[i]}"`);
+                    return meterTypesList[i];
                 }
             }
             
-            // Ищем по первым символам
+            // По первым символам
             const shortSearch = normalizedSearch.substring(0, 8);
             for (let i = 0; i < meterTypesList.length; i++) {
-                const optionValue = meterTypesList[i];
-                const normalizedOption = normalizeMeterType(optionValue);
+                const normalizedOption = normalizeMeterType(meterTypesList[i]);
                 if (normalizedOption.includes(shortSearch) || shortSearch.includes(normalizedOption.substring(0, 8))) {
-                    console.log(`✅ Найдено по первым символам: "${optionValue}"`);
-                    return optionValue;
+                    console.log(`✅ Найдено по первым символам: "${meterTypesList[i]}"`);
+                    return meterTypesList[i];
                 }
             }
             
-            // Если ничего не нашли - возвращаем как есть
-            console.log(`⚠️ Совпадение не найдено, используем: "${value}"`);
             return value;
         }
         
-        // Применяем поиск для обоих полей
-        let oldMeterTypeForForm = findGoogleFormValue(oldMeterTypeVal, 'entry.155422969');
-        let newMeterTypeForForm = findGoogleFormValue(newMeterTypeVal, 'entry.1958360409');
-        
-        // Если встановленный пустой - пробуем скопировать из знятого
-        if (!newMeterTypeVal && oldMeterTypeVal) {
-            newMeterTypeForForm = findGoogleFormValue(oldMeterTypeVal, 'entry.1958360409');
-            if (newMeterTypeForForm) {
-                console.log(`🔄 Скопировано тип знятого → встановлений: "${newMeterTypeForForm}"`);
-            }
-        }
+        // Применяем поиск для каждого поля отдельно (БЕЗ КОПИРОВАНИЯ)
+        oldMeterTypeVal = findGoogleFormValue(oldMeterTypeVal);
+        newMeterTypeVal = findGoogleFormValue(newMeterTypeVal);
         
         console.log('📤 Отправка в Google Form:');
-        console.log('  Тип знятого (entry.155422969):', oldMeterTypeForForm);
-        console.log('  Тип встановленого (entry.1958360409):', newMeterTypeForForm);
+        console.log('  Тип знятого (entry.155422969):', oldMeterTypeVal);
+        console.log('  Тип встановленого (entry.1958360409):', newMeterTypeVal);
         
         // Маппинг причин
         const reasonMap = {
@@ -2109,7 +2097,7 @@ function sendToGoogleForm() {
         };
         replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
         
-        // Форматируем дату для Google Form
+        // Форматируем дату
         if (workDateVal) {
             const parts = workDateVal.split('.');
             if (parts.length === 3) {
@@ -2117,65 +2105,90 @@ function sendToGoogleForm() {
             }
         }
         
-        // Собираем параметры для Google Form
-        const params = new URLSearchParams();
+        // ===== СОБИРАЕМ ДАННЫЕ ДЛЯ POST =====
+        const formData = new FormData();
         
         // Основные поля
-        if (workDateVal) params.append('entry.814427514', workDateVal);
-        if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
-        params.append('entry.1609399626', workTypeEl.value);
-        params.append('entry.244962092', accountNumberEl.value);
-        params.append('entry.1583379400', employeeIdEl.value);
+        if (workDateVal) formData.append('entry.814427514', workDateVal);
+        if (replacementReasonVal) formData.append('entry.2001364225', replacementReasonVal);
+        formData.append('entry.1609399626', workTypeEl.value);
+        formData.append('entry.244962092', accountNumberEl.value);
+        formData.append('entry.1583379400', employeeIdEl.value);
         
-        // ===== ВАЖЛИВО: отправляем ТИП ВСТАНОВЛЕНОГО =====
-        if (oldMeterTypeForForm) params.append('entry.155422969', oldMeterTypeForForm);
-        if (newMeterTypeForForm) params.append('entry.1958360409', newMeterTypeForForm);
+        // Типы - каждый отдельно, без копирования
+        if (oldMeterTypeVal) formData.append('entry.155422969', oldMeterTypeVal);
+        if (newMeterTypeVal) formData.append('entry.1958360409', newMeterTypeVal);
         
         // Номера и показания
-        if (oldMeterNumberEl && oldMeterNumberEl.value) params.append('entry.1262021573', oldMeterNumberEl.value);
-        if (oldMeterReadingEl && oldMeterReadingEl.value) params.append('entry.1666715724', oldMeterReadingEl.value);
-        if (newMeterNumberEl && newMeterNumberEl.value) params.append('entry.591456354', newMeterNumberEl.value);
-        if (newMeterReadingEl && newMeterReadingEl.value) params.append('entry.686446183', newMeterReadingEl.value);
+        if (oldMeterNumberEl && oldMeterNumberEl.value) formData.append('entry.1262021573', oldMeterNumberEl.value);
+        if (oldMeterReadingEl && oldMeterReadingEl.value) formData.append('entry.1666715724', oldMeterReadingEl.value);
+        if (newMeterNumberEl && newMeterNumberEl.value) formData.append('entry.591456354', newMeterNumberEl.value);
+        if (newMeterReadingEl && newMeterReadingEl.value) formData.append('entry.686446183', newMeterReadingEl.value);
         
         // Пломбы (знятые)
-        if (oldSealCoverEl && oldSealCoverEl.value) params.append('entry.980914247', oldSealCoverEl.value);
-        if (oldSealVKPEl && oldSealVKPEl.value) params.append('entry.1281985427', oldSealVKPEl.value);
-        if (oldSealSHO1El && oldSealSHO1El.value) params.append('entry.1571141896', oldSealSHO1El.value);
-        if (oldSealSHO2El && oldSealSHO2El.value) params.append('entry.950038743', oldSealSHO2El.value);
-        if (oldSealOptoEl && oldSealOptoEl.value) params.append('entry.1825187506', oldSealOptoEl.value);
-        if (oldIMP1El && oldIMP1El.value) params.append('entry.851707833', oldIMP1El.value);
-        if (oldIMP2El && oldIMP2El.value) params.append('entry.1653188291', oldIMP2El.value);
-        if (oldIMP3El && oldIMP3El.value) params.append('entry.174981808', oldIMP3El.value);
+        if (oldSealCoverEl && oldSealCoverEl.value) formData.append('entry.980914247', oldSealCoverEl.value);
+        if (oldSealVKPEl && oldSealVKPEl.value) formData.append('entry.1281985427', oldSealVKPEl.value);
+        if (oldSealSHO1El && oldSealSHO1El.value) formData.append('entry.1571141896', oldSealSHO1El.value);
+        if (oldSealSHO2El && oldSealSHO2El.value) formData.append('entry.950038743', oldSealSHO2El.value);
+        if (oldSealOptoEl && oldSealOptoEl.value) formData.append('entry.1825187506', oldSealOptoEl.value);
+        if (oldIMP1El && oldIMP1El.value) formData.append('entry.851707833', oldIMP1El.value);
+        if (oldIMP2El && oldIMP2El.value) formData.append('entry.1653188291', oldIMP2El.value);
+        if (oldIMP3El && oldIMP3El.value) formData.append('entry.174981808', oldIMP3El.value);
         
         // Пломбы (встановленные)
-        if (newSealCoverEl && newSealCoverEl.value) params.append('entry.1577377109', newSealCoverEl.value);
-        if (newSealVKPEl && newSealVKPEl.value) params.append('entry.1292803469', newSealVKPEl.value);
-        if (newSealSHO1El && newSealSHO1El.value) params.append('entry.1309070612', newSealSHO1El.value);
-        if (newSealSHO2El && newSealSHO2El.value) params.append('entry.1176747559', newSealSHO2El.value);
-        if (newSealOptoEl && newSealOptoEl.value) params.append('entry.67142835', newSealOptoEl.value);
-        if (newIMP1El && newIMP1El.value) params.append('entry.245114888', newIMP1El.value);
-        if (newIMP2El && newIMP2El.value) params.append('entry.1581321253', newIMP2El.value);
-        if (newIMP3El && newIMP3El.value) params.append('entry.865785872', newIMP3El.value);
+        if (newSealCoverEl && newSealCoverEl.value) formData.append('entry.1577377109', newSealCoverEl.value);
+        if (newSealVKPEl && newSealVKPEl.value) formData.append('entry.1292803469', newSealVKPEl.value);
+        if (newSealSHO1El && newSealSHO1El.value) formData.append('entry.1309070612', newSealSHO1El.value);
+        if (newSealSHO2El && newSealSHO2El.value) formData.append('entry.1176747559', newSealSHO2El.value);
+        if (newSealOptoEl && newSealOptoEl.value) formData.append('entry.67142835', newSealOptoEl.value);
+        if (newIMP1El && newIMP1El.value) formData.append('entry.245114888', newIMP1El.value);
+        if (newIMP2El && newIMP2El.value) formData.append('entry.1581321253', newIMP2El.value);
+        if (newIMP3El && newIMP3El.value) formData.append('entry.865785872', newIMP3El.value);
         
         // Адреса
-        if (addressEl && addressEl.value) params.append('entry.1234567890', addressEl.value);
+        if (addressEl && addressEl.value) formData.append('entry.1234567890', addressEl.value);
         
-        // Формируем URL
-        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
+        // ===== ОТПРАВЛЯЕМ POST ЗАПРОС =====
+        const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse';
         
-        console.log('📤 URL форми (довжина):', formUrl.length);
-        console.log('📤 Параметри:', params.toString());
+        console.log('📤 Отправка POST запроса на:', formUrl);
+        console.log('📤 Данные:', Object.fromEntries(formData));
         
-        // Открываем форму
-        window.open(formUrl, '_blank');
+        // Создаем скрытую форму и отправляем
+        const hiddenForm = document.createElement('form');
+        hiddenForm.method = 'POST';
+        hiddenForm.action = formUrl;
+        hiddenForm.target = '_blank';
+        hiddenForm.style.display = 'none';
+        
+        // Копируем все данные в скрытую форму
+        for (let [key, value] of formData.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            hiddenForm.appendChild(input);
+        }
+        
+        document.body.appendChild(hiddenForm);
+        
+        // Отправляем форму
+        hiddenForm.submit();
+        
+        // Удаляем форму через секунду
+        setTimeout(() => {
+            if (document.body.contains(hiddenForm)) {
+                document.body.removeChild(hiddenForm);
+            }
+        }, 1000);
         
         // Сохраняем в журнал
         const data = getFormData();
         workLog.unshift(data);
         saveData();
         
-        showToast('✅ Google Form відкрито!');
-        alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
+        showToast('✅ Форму відправлено!');
+        alert('✅ Дані відправлено до Google Form!\n\nЯкщо форма не відкрилась автоматично, перевірте нову вкладку.');
         
     } catch (error) {
         console.error('Помилка відправки:', error);
@@ -2191,8 +2204,10 @@ function sendToGoogleForm() {
     }
 }
 
+// ========== ОТКРЫТИЕ ФОРМЫ ==========
 function openGoogleForm() {
     window.open('https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform', '_blank');
+    showToast('📋 Форму відкрито для ручного заповнення');
 }
 
 // ========== ВІДПРАВКА ВСІХ ДАНИХ ВЛАСНИКУ ==========
