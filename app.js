@@ -231,6 +231,8 @@ function pinAddNum(num) {
                 setupOCR();
                 setupAI();
                 setupSealInputs();
+                setupMeterInputs();
+                setupAutoMeterTypeDetection();
             } else {
                 if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
                 enteredPin = "";
@@ -266,6 +268,8 @@ function pinCheck() {
         setupOCR();
         setupAI();
         setupSealInputs();
+        setupMeterInputs();
+        setupAutoMeterTypeDetection();
     } else {
         if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
         enteredPin = "";
@@ -293,8 +297,9 @@ function setDefaultValues() {
     }
 }
 
-// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ ==========
+// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ (БЕЗ АВТОКОПІЮВАННЯ) ==========
 function initMeterTypes() {
+    // Заполняем список "знятий лічильник"
     if (oldMeterType) {
         oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
@@ -304,6 +309,8 @@ function initMeterTypes() {
             oldMeterType.appendChild(option);
         });
     }
+    
+    // Заполняем список "встановлений лічильник"
     if (newMeterType) {
         newMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
         meterTypesList.forEach(type => {
@@ -314,37 +321,37 @@ function initMeterTypes() {
         });
     }
     
-    // Автокопирование типа с нормализацией
-    if (oldMeterType) {
-        oldMeterType.addEventListener('change', function() {
-            const selectedValue = this.value;
-            const newTypeSelect = document.getElementById('newMeterType');
-            if (!newTypeSelect) return;
-            
-            if (!selectedValue) {
-                newTypeSelect.value = '';
+    // ===== ВАЖЛИВО: НЕМАЄ АВТОМАТИЧНОГО КОПІЮВАННЯ =====
+    // Користувач самостійно обирає тип для кожного лічильника
+    
+    // Додаємо кнопку для ручного копіювання (якщо потрібно)
+    const copyTypeBtn = document.getElementById('copyTypeToNewBtn');
+    if (copyTypeBtn) {
+        copyTypeBtn.addEventListener('click', function() {
+            const oldValue = oldMeterType?.value;
+            if (!oldValue) {
+                showToast('⚠️ Спочатку виберіть тип знятого лічильника');
                 return;
             }
             
-            const found = findMeterInSelect(newTypeSelect, selectedValue);
+            const found = findMeterInSelect(newMeterType, oldValue);
             if (found) {
-                newTypeSelect.selectedIndex = found.index;
-                newTypeSelect.value = found.value;
-                newTypeSelect.style.borderColor = '#22c55e';
-                newTypeSelect.style.backgroundColor = '#f0fdf4';
+                newMeterType.selectedIndex = found.index;
+                newMeterType.value = found.value;
+                newMeterType.style.borderColor = '#22c55e';
+                newMeterType.style.backgroundColor = '#f0fdf4';
                 setTimeout(() => {
-                    newTypeSelect.style.borderColor = '#e2e8f0';
-                    newTypeSelect.style.backgroundColor = '#f8fafc';
+                    newMeterType.style.borderColor = '#e2e8f0';
+                    newMeterType.style.backgroundColor = '#f8fafc';
                 }, 1000);
-                showToast(`✅ Тип автоматично скопійовано: ${found.text}`);
-            } else if (selectedValue) {
-                // Добавляем новый тип если его нет
+                showToast(`✅ Тип скопійовано: ${found.text}`);
+            } else {
                 const newOption = document.createElement('option');
-                newOption.value = selectedValue;
-                newOption.textContent = selectedValue;
-                newTypeSelect.appendChild(newOption);
-                newTypeSelect.value = selectedValue;
-                showToast(`⚠️ Тип "${selectedValue}" додано до списку встановлених`);
+                newOption.value = oldValue;
+                newOption.textContent = oldValue;
+                newMeterType.appendChild(newOption);
+                newMeterType.value = oldValue;
+                showToast(`⚠️ Тип "${oldValue}" додано до списку встановлених`);
             }
         });
     }
@@ -443,28 +450,54 @@ function toUpperCaseByLanguage(text) {
     return text.toUpperCase();
 }
 
+// ========== НОРМАЛІЗАЦІЯ ЛІЧИЛЬНИКІВ ==========
+function normalizeMeterNumber(meter) {
+    if (!meter) return '';
+    
+    meter = meter.trim();
+    meter = meter.replace(/\s/g, '');
+    meter = toUpperCaseByLanguage(meter);
+    
+    const replacements = {
+        'А': 'A', 'В': 'B', 'С': 'C', 'Е': 'E', 'Н': 'H',
+        'К': 'K', 'М': 'M', 'О': 'O', 'Р': 'P', 'Т': 'T',
+        'Х': 'X', 'У': 'Y', 'І': 'I', 'Ї': 'I', 'Є': 'E',
+        'а': 'a', 'в': 'b', 'с': 'c', 'е': 'e', 'н': 'h',
+        'к': 'k', 'м': 'm', 'о': 'o', 'р': 'p', 'т': 't',
+        'х': 'x', 'у': 'y', 'і': 'i', 'ї': 'i', 'є': 'e'
+    };
+    
+    let normalized = '';
+    for (let char of meter) {
+        normalized += replacements[char] || char;
+    }
+    
+    normalized = normalized.replace(/\.{2,}/g, '.');
+    normalized = normalized.replace(/-{2,}/g, '-');
+    normalized = normalized.replace(/\.-/g, '.');
+    normalized = normalized.replace(/-\./g, '.');
+    
+    return normalized;
+}
+
 // ========== ПАРСИНГ ДІАПАЗОНІВ ПЛОМБ ==========
 function parseSealRange(input) {
     input = input.trim();
     if (!input) return [];
     
-    // Проверяем, является ли ввод диапазоном (содержит дефис)
     if (!input.includes('-')) {
         return [input];
     }
     
-    // Разделяем на префикс и числа
     const lastDashIndex = input.lastIndexOf('-');
     if (lastDashIndex === -1) return [input];
     
     const firstPart = input.substring(0, lastDashIndex);
     const lastPart = input.substring(lastDashIndex + 1);
     
-    // Находим начало чисел в первой части
     let prefix = '';
     let startNumStr = '';
     
-    // Идем с конца firstPart в поисках цифр
     for (let i = firstPart.length - 1; i >= 0; i--) {
         if (firstPart[i] >= '0' && firstPart[i] <= '9') {
             startNumStr = firstPart[i] + startNumStr;
@@ -474,7 +507,6 @@ function parseSealRange(input) {
         }
     }
     
-    // Если не нашли цифр в первой части
     if (!startNumStr) {
         const numMatch = firstPart.match(/(\d+)$/);
         if (numMatch) {
@@ -485,28 +517,22 @@ function parseSealRange(input) {
         }
     }
     
-    // Получаем конечное число
-    let endNumStr = lastPart.trim();
-    endNumStr = endNumStr.replace(/\D/g, '');
-    
+    let endNumStr = lastPart.trim().replace(/\D/g, '');
     if (!endNumStr) return [input];
     
     const startNum = parseInt(startNumStr, 10);
     let endNum = parseInt(endNumStr, 10);
     
-    // Если конечное число короче начального, корректируем
     if (endNumStr.length < startNumStr.length) {
         const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
         const diff = endNum - startEndPart;
         endNum = startNum + diff;
     }
     
-    // Проверяем, что диапазон корректен
     if (startNum > endNum || endNum - startNum > 10000) {
         return [input];
     }
     
-    // Генерируем пломбы
     const seals = [];
     const numLength = startNumStr.length;
     
@@ -516,6 +542,70 @@ function parseSealRange(input) {
     }
     
     return seals;
+}
+
+// ========== ПАРСИНГ ДІАПАЗОНІВ ЛІЧИЛЬНИКІВ ==========
+function parseMeterRange(input) {
+    input = input.trim();
+    if (!input) return [];
+    
+    if (!input.includes('-')) {
+        return [input];
+    }
+    
+    const lastDashIndex = input.lastIndexOf('-');
+    if (lastDashIndex === -1) return [input];
+    
+    const firstPart = input.substring(0, lastDashIndex);
+    const lastPart = input.substring(lastDashIndex + 1);
+    
+    let prefix = '';
+    let startNumStr = '';
+    
+    for (let i = firstPart.length - 1; i >= 0; i--) {
+        if (firstPart[i] >= '0' && firstPart[i] <= '9') {
+            startNumStr = firstPart[i] + startNumStr;
+        } else {
+            prefix = firstPart.substring(0, i + 1);
+            break;
+        }
+    }
+    
+    if (!startNumStr) {
+        const numMatch = firstPart.match(/(\d+)$/);
+        if (numMatch) {
+            startNumStr = numMatch[1];
+            prefix = firstPart.substring(0, firstPart.length - startNumStr.length);
+        } else {
+            return [input];
+        }
+    }
+    
+    let endNumStr = lastPart.trim().replace(/\D/g, '');
+    if (!endNumStr) return [input];
+    
+    const startNum = parseInt(startNumStr, 10);
+    let endNum = parseInt(endNumStr, 10);
+    
+    if (endNumStr.length < startNumStr.length) {
+        const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
+        const diff = endNum - startEndPart;
+        endNum = startNum + diff;
+    }
+    
+    if (startNum > endNum || endNum - startNum > 10000) {
+        return [input];
+    }
+    
+    const meters = [];
+    const numLength = startNumStr.length;
+    
+    for (let i = startNum; i <= endNum; i++) {
+        const numStr = String(i).padStart(numLength, '0');
+        meters.push(prefix + numStr);
+    }
+    
+    return meters;
 }
 
 // ========== НОРМАЛІЗАЦІЯ ПЛОМБ ==========
@@ -881,6 +971,7 @@ function setupAutoClean() {
                 this.value = normalizeSealNumber(this.value);
             } else if (this.classList.contains('meter-input')) {
                 this.value = this.value.replace(/\s/g, '');
+                this.value = normalizeMeterNumber(this.value);
             } else {
                 this.value = this.value.replace(/\s/g, '');
             }
@@ -915,6 +1006,199 @@ function setupSealInputs() {
             });
         }
     });
+}
+
+// ========== ОБРОБКА ВВЕДЕННЯ ЛІЧИЛЬНИКІВ ==========
+function setupMeterInputs() {
+    const meterInputs = document.querySelectorAll('.meter-input');
+    meterInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', function() {
+                const cursorPos = this.selectionStart;
+                const oldValue = this.value;
+                const normalized = normalizeMeterNumber(oldValue);
+                if (normalized !== oldValue) {
+                    this.value = normalized;
+                    this.setSelectionRange(cursorPos, cursorPos);
+                }
+                showMeterSearchResults(this.id, this.value);
+            });
+            
+            input.addEventListener('blur', function() {
+                setTimeout(() => hideSearchResults(this.id), 300);
+            });
+            
+            input.addEventListener('focusout', function() {
+                if (this.value) {
+                    this.value = normalizeMeterNumber(this.value);
+                    fillMeterFromDB(this, this.value);
+                }
+            });
+        }
+    });
+}
+
+// ========== АВТОМАТИЧНЕ ВИЗНАЧЕННЯ ТИПУ ЛІЧИЛЬНИКА ==========
+function autoDetectMeterType(meterNumber) {
+    if (!meterNumber) return null;
+    
+    const normalized = normalizeMeterNumber(meterNumber);
+    
+    const found = meterTypesList.find(type => {
+        const normType = normalizeMeterType(type);
+        return normalized.includes(normType) || normType.includes(normalized);
+    });
+    
+    return found || null;
+}
+
+function setupAutoMeterTypeDetection() {
+    const meterNumberFields = ['oldMeterNumber', 'newMeterNumber'];
+    const meterTypeFields = ['oldMeterType', 'newMeterType'];
+    
+    meterNumberFields.forEach((numField, index) => {
+        const input = document.getElementById(numField);
+        if (!input) return;
+        
+        input.addEventListener('blur', function() {
+            const typeField = document.getElementById(meterTypeFields[index]);
+            if (!typeField || typeField.value) return;
+            if (!this.value) return;
+            
+            const detectedType = autoDetectMeterType(this.value);
+            if (detectedType) {
+                setMeterTypeValue(typeField, detectedType);
+                showToast(`✅ Визначено тип: ${detectedType}`);
+            }
+        });
+    });
+}
+
+// ========== ПОШУК ПЛОМБ ==========
+function showSearchResults(fieldId, query) {
+    const container = document.getElementById(`${fieldId}Results`);
+    if (!container) return;
+    if (!query || query.length < 1) { 
+        container.classList.add('hidden'); 
+        container.innerHTML = ''; 
+        return; 
+    }
+    
+    const normalizedQuery = normalizeSealNumber(query).toLowerCase();
+    const filtered = sealsDB.filter(s => {
+        const normalizedSeal = normalizeSealNumber(s).toLowerCase();
+        return normalizedSeal.includes(normalizedQuery);
+    });
+    
+    if (!filtered.length) { 
+        container.classList.add('hidden'); 
+        return; 
+    }
+    
+    container.classList.remove('hidden');
+    let html = '';
+    filtered.forEach(seal => { 
+        html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
+    });
+    container.innerHTML = html;
+    
+    const items = container.querySelectorAll('.search-result-item');
+    items.forEach(item => {
+        const oldHandler = item._clickHandler;
+        if (oldHandler) item.removeEventListener('click', oldHandler);
+        const handler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sealValue = this.getAttribute('data-seal');
+            const targetInput = document.getElementById(fieldId);
+            if (targetInput) {
+                targetInput.value = sealValue;
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                showToast(`✅ Пломбу додано: ${sealValue}`);
+            }
+        };
+        item._clickHandler = handler;
+        item.addEventListener('click', handler);
+    });
+}
+
+function hideSearchResults(fieldId) {
+    const container = document.getElementById(`${fieldId}Results`);
+    if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 300);
+}
+
+// ========== ПОШУК ЛІЧИЛЬНИКІВ ==========
+function showMeterSearchResults(fieldId, query) {
+    const container = document.getElementById(`${fieldId}Results`);
+    if (!container) return;
+    if (!query || query.length < 1) { 
+        container.classList.add('hidden'); 
+        container.innerHTML = ''; 
+        return; 
+    }
+    
+    const normalizedQuery = normalizeMeterNumber(query).toLowerCase();
+    const filtered = metersDB.filter(m => {
+        const normalizedMeter = normalizeMeterNumber(m).toLowerCase();
+        return normalizedMeter.includes(normalizedQuery);
+    });
+    
+    if (!filtered.length) { 
+        container.classList.add('hidden'); 
+        return; 
+    }
+    
+    container.classList.remove('hidden');
+    let html = '';
+    filtered.forEach(meter => { 
+        html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
+    });
+    container.innerHTML = html;
+    
+    const items = container.querySelectorAll('.search-result-item');
+    items.forEach(item => {
+        const oldHandler = item._clickHandler;
+        if (oldHandler) item.removeEventListener('click', oldHandler);
+        const handler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const meterValue = this.getAttribute('data-meter');
+            const targetInput = document.getElementById(fieldId);
+            if (targetInput) {
+                targetInput.value = meterValue;
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                showToast(`✅ Лічильник додано: ${meterValue}`);
+            }
+        };
+        item._clickHandler = handler;
+        item.addEventListener('click', handler);
+    });
+}
+
+// ========== ЗАПОВНЕННЯ З БАЗИ ЛІЧИЛЬНИКІВ ==========
+function fillMeterFromDB(inputField, searchTerm) {
+    if (!inputField || !searchTerm) return false;
+    
+    const normalizedSearch = normalizeMeterNumber(searchTerm);
+    const found = metersDB.find(m => 
+        normalizeMeterNumber(m) === normalizedSearch ||
+        normalizeMeterNumber(m).includes(normalizedSearch)
+    );
+    
+    if (found) {
+        inputField.value = found;
+        inputField.style.borderColor = '#22c55e';
+        inputField.style.backgroundColor = '#f0fdf4';
+        setTimeout(() => {
+            inputField.style.borderColor = '#e2e8f0';
+            inputField.style.backgroundColor = '#f8fafc';
+        }, 1000);
+        showToast(`✅ Знайдено в базі: ${found}`);
+        return true;
+    }
+    return false;
 }
 
 // ========== AI ФУНКЦІЇ ==========
@@ -1447,60 +1731,6 @@ function addNewSeal() {
     }
 }
 
-// ========== ПОШУК ПЛОМБ ==========
-function showSearchResults(fieldId, query) {
-    const container = document.getElementById(`${fieldId}Results`);
-    if (!container) return;
-    if (!query || query.length < 1) { 
-        container.classList.add('hidden'); 
-        container.innerHTML = ''; 
-        return; 
-    }
-    
-    const normalizedQuery = normalizeSealNumber(query).toLowerCase();
-    const filtered = sealsDB.filter(s => {
-        const normalizedSeal = normalizeSealNumber(s).toLowerCase();
-        return normalizedSeal.includes(normalizedQuery);
-    });
-    
-    if (!filtered.length) { 
-        container.classList.add('hidden'); 
-        return; 
-    }
-    
-    container.classList.remove('hidden');
-    let html = '';
-    filtered.forEach(seal => { 
-        html += `<div class="search-result-item" data-seal="${escapeHtml(seal)}">🔒 ${escapeHtml(seal)}</div>`; 
-    });
-    container.innerHTML = html;
-    
-    const items = container.querySelectorAll('.search-result-item');
-    items.forEach(item => {
-        const oldHandler = item._clickHandler;
-        if (oldHandler) item.removeEventListener('click', oldHandler);
-        const handler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const sealValue = this.getAttribute('data-seal');
-            const targetInput = document.getElementById(fieldId);
-            if (targetInput) {
-                targetInput.value = sealValue;
-                container.classList.add('hidden');
-                container.innerHTML = '';
-                showToast(`✅ Пломбу додано: ${sealValue}`);
-            }
-        };
-        item._clickHandler = handler;
-        item.addEventListener('click', handler);
-    });
-}
-
-function hideSearchResults(fieldId) {
-    const container = document.getElementById(`${fieldId}Results`);
-    if (container) setTimeout(() => { container.classList.add('hidden'); container.innerHTML = ''; }, 300);
-}
-
 // ========== БАЗА ЛІЧИЛЬНИКІВ ==========
 function loadMeters() {
     const stored = localStorage.getItem('pls_meters');
@@ -1550,81 +1780,129 @@ function renderMetersList(filter = '') {
 
 function addNewMeter() {
     const newMeter = newMeterInput.value.trim();
-    if (!newMeter) { alert('Введіть номер лічильника'); return; }
+    if (!newMeter) { 
+        alert('Введіть номер лічильника'); 
+        return; 
+    }
     
-    const metersToAdd = parseSealRange(newMeter);
-    let addedCount = 0, addedMeters = [];
+    const normalizedMeter = normalizeMeterNumber(newMeter);
+    newMeterInput.value = normalizedMeter;
+    
+    const metersToAdd = parseMeterRange(normalizedMeter);
+    
+    if (!metersToAdd.length || metersToAdd[0] === normalizedMeter) {
+        if (!metersDB.includes(normalizedMeter)) {
+            metersDB.push(normalizedMeter);
+            saveMeters();
+            newMeterInput.value = '';
+            meterAddPanel.classList.add('hidden');
+            if (meterSearch) meterSearch.value = '';
+            renderMetersList('');
+            showToast(`✅ Додано лічильник: ${normalizedMeter}`);
+        } else {
+            showToast(`⚠️ Лічильник вже існує: ${normalizedMeter}`);
+        }
+        return;
+    }
+    
+    let addedCount = 0;
+    let addedMeters = [];
+    
     metersToAdd.forEach(meter => {
-        if (!metersDB.includes(meter)) {
-            metersDB.push(meter);
+        const normMeter = normalizeMeterNumber(meter);
+        if (!metersDB.includes(normMeter)) {
+            metersDB.push(normMeter);
             addedCount++;
-            addedMeters.push(meter);
+            addedMeters.push(normMeter);
         }
     });
+    
     saveMeters();
     newMeterInput.value = '';
     meterAddPanel.classList.add('hidden');
     if (meterSearch) meterSearch.value = '';
     renderMetersList('');
+    
     if (addedCount > 0) {
-        showToast(`✅ Додано лічильників: ${addedCount} (${addedMeters[0]} ... ${addedMeters[addedMeters.length-1]})`);
+        const displayMeters = addedMeters.slice(0, 5);
+        const more = addedMeters.length > 5 ? `... +${addedMeters.length - 5}` : '';
+        showToast(`✅ Додано лічильників: ${addedCount} (${displayMeters.join(', ')}${more})`);
     } else {
         showToast(`⚠️ Всі лічильники вже існують`);
     }
 }
 
-function showMeterSearchResults(fieldId, query) {
-    const container = document.getElementById(`${fieldId}Results`);
-    if (!container) return;
-    if (!query || query.length < 1) { 
-        container.classList.add('hidden'); 
-        container.innerHTML = ''; 
-        return; 
+// ========== ВАЛІДАЦІЯ ==========
+function validateSeals() {
+    const sealFields = [
+        oldSealCover, oldSealVKP, oldSealSHO1, oldSealSHO2, oldSealOpto,
+        oldIMP1, oldIMP2, oldIMP3,
+        newSealCover, newSealVKP, newSealSHO1, newSealSHO2, newSealOpto,
+        newIMP1, newIMP2, newIMP3
+    ];
+    
+    let hasError = false;
+    const errors = [];
+    
+    sealFields.forEach(field => {
+        if (!field) return;
+        const value = field.value.trim();
+        if (!value) return;
+        
+        if (value.length < 4 || value.length > 20) {
+            errors.push(`⚠️ Пломба "${value}" має некоректну довжину (${value.length} символів)`);
+            hasError = true;
+        }
+        
+        if (!/^[A-Za-zА-Яа-яЇїЄєІі0-9\-]+$/.test(value)) {
+            errors.push(`⚠️ Пломба "${value}" містить недопустимі символи`);
+            hasError = true;
+        }
+    });
+    
+    if (hasError) {
+        alert('❌ Знайдено помилки в пломбах:\n\n' + errors.join('\n'));
+        return false;
     }
-    const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
-    if (!filtered.length) { container.classList.add('hidden'); return; }
-    container.classList.remove('hidden');
-    let html = '';
-    filtered.forEach(meter => { 
-        html += `<div class="search-result-item" data-meter="${escapeHtml(meter)}">📟 ${escapeHtml(meter)}</div>`; 
-    });
-    container.innerHTML = html;
-    const items = container.querySelectorAll('.search-result-item');
-    items.forEach(item => {
-        const oldHandler = item._clickHandler;
-        if (oldHandler) item.removeEventListener('click', oldHandler);
-        const handler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const meterValue = this.getAttribute('data-meter');
-            const targetInput = document.getElementById(fieldId);
-            if (targetInput) {
-                targetInput.value = meterValue;
-                container.classList.add('hidden');
-                container.innerHTML = '';
-                showToast(`✅ Лічильник додано: ${meterValue}`);
-            }
-        };
-        item._clickHandler = handler;
-        item.addEventListener('click', handler);
-    });
+    
+    return true;
 }
 
-function setupSearch() {
-    const sealInputs = document.querySelectorAll('.seal-input');
-    sealInputs.forEach(input => {
-        if (input) {
-            input.addEventListener('input', function() { showSearchResults(this.id, this.value); });
-            input.addEventListener('blur', function() { setTimeout(() => hideSearchResults(this.id), 300); });
+function validateMeters() {
+    const meterFields = [
+        { field: oldMeterNumber, name: 'Знятий лічильник' },
+        { field: newMeterNumber, name: 'Встановлений лічильник' }
+    ];
+    
+    let hasError = false;
+    const errors = [];
+    
+    meterFields.forEach(({ field, name }) => {
+        if (!field) return;
+        const value = field.value.trim();
+        if (!value) {
+            errors.push(`⚠️ Поле "${name}" не заповнене`);
+            hasError = true;
+            return;
+        }
+        
+        if (value.length < 4 || value.length > 20) {
+            errors.push(`⚠️ "${name}" має некоректну довжину (${value.length} символів): ${value}`);
+            hasError = true;
+        }
+        
+        if (!/^[A-Za-zА-Яа-яЇїЄєІі0-9\.\-]+$/.test(value)) {
+            errors.push(`⚠️ "${name}" містить недопустимі символи: ${value}`);
+            hasError = true;
         }
     });
-    const meterInputs = document.querySelectorAll('.meter-input');
-    meterInputs.forEach(input => {
-        if (input) {
-            input.addEventListener('input', function() { showMeterSearchResults(this.id, this.value); });
-            input.addEventListener('blur', function() { setTimeout(() => hideSearchResults(this.id), 300); });
-        }
-    });
+    
+    if (hasError) {
+        alert('❌ Знайдено помилки в лічильниках:\n\n' + errors.join('\n'));
+        return false;
+    }
+    
+    return true;
 }
 
 // ========== ДАНІ ДЛЯ ЖУРНАЛУ ==========
@@ -1788,6 +2066,8 @@ function sendToGoogleForm() {
         return; 
     }
     
+    if (!validateSeals() || !validateMeters()) return;
+    
     const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
     const newMeterTypeVal = newMeterType ? newMeterType.value : '';
     let workDateVal = workDate ? workDate.value : '';
@@ -1883,6 +2163,8 @@ function sendAllDataToOwner() {
         accountNumber.focus();
         return;
     }
+    
+    if (!validateSeals() || !validateMeters()) return;
     
     const data = getFormData();
     let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
@@ -1999,44 +2281,6 @@ function clearLog() {
     if (confirm('⚠️ Видалити ВСІ записи? Це не можна скасувати.')) { workLog = []; saveData(); alert('✅ Журнал очищено'); }
 }
 
-// ========== ВАЛІДАЦІЯ ПЛОМБ ==========
-function validateSeals() {
-    const sealFields = [
-        oldSealCover, oldSealVKP, oldSealSHO1, oldSealSHO2, oldSealOpto,
-        oldIMP1, oldIMP2, oldIMP3,
-        newSealCover, newSealVKP, newSealSHO1, newSealSHO2, newSealOpto,
-        newIMP1, newIMP2, newIMP3
-    ];
-    
-    let hasError = false;
-    const errors = [];
-    
-    sealFields.forEach(field => {
-        if (!field) return;
-        const value = field.value.trim();
-        if (!value) return;
-        
-        // Проверяем длину пломбы (обычно 6-12 символов)
-        if (value.length < 4 || value.length > 20) {
-            errors.push(`⚠️ Пломба "${value}" має некоректну довжину (${value.length} символів)`);
-            hasError = true;
-        }
-        
-        // Проверяем наличие недопустимых символов
-        if (!/^[A-Za-zА-Яа-яЇїЄєІі0-9\-]+$/.test(value)) {
-            errors.push(`⚠️ Пломба "${value}" містить недопустимі символи`);
-            hasError = true;
-        }
-    });
-    
-    if (hasError) {
-        alert('❌ Знайдено помилки в пломбах:\n\n' + errors.join('\n'));
-        return false;
-    }
-    
-    return true;
-}
-
 // ========== ІНІЦІАЛІЗАЦІЯ ==========
 document.addEventListener("DOMContentLoaded", function() {
     updatePinDisplay();
@@ -2055,14 +2299,14 @@ document.addEventListener("DOMContentLoaded", function() {
     if (pinForgot) pinForgot.onclick = pinReset;
     
     if (saveBtn) saveBtn.onclick = function() {
-        if (validateSeals()) {
+        if (validateSeals() && validateMeters()) {
             saveAllFieldsToLog();
         }
     };
     if (exportBtn) exportBtn.onclick = exportCSV;
     if (clearLogBtn) clearLogBtn.onclick = clearLog;
     if (sendToFormBtn) sendToFormBtn.onclick = function() {
-        if (validateSeals()) {
+        if (validateSeals() && validateMeters()) {
             sendToGoogleForm();
         }
     };
@@ -2073,7 +2317,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const sendAllBtn = document.getElementById('sendAllBtn');
     if (sendAllBtn) {
         sendAllBtn.addEventListener('click', function() {
-            if (validateSeals()) {
+            if (validateSeals() && validateMeters()) {
                 sendAllDataToOwner();
             }
         });
@@ -2238,4 +2482,6 @@ document.addEventListener("DOMContentLoaded", function() {
     setupOCR();
     setupAI();
     setupSealInputs();
+    setupMeterInputs();
+    setupAutoMeterTypeDetection();
 });
