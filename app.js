@@ -117,6 +117,140 @@ const meterTypesList = [
     "CO-Э96705", "CO-Э96706", "СТ-ЭА05", "ЦЭ6807Бк", "ЭНЕРГОМЕРА СЕ 102М"
 ];
 
+// ========== ГОЛОВНІ ТИПИ ДЛЯ GOOGLE FORM ==========
+const GOOGLE_FORM_METER_TYPES = [
+    "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
+    "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis ZCG110ATt", "Landis310",
+    "MCS301-CE51B 30MIS-004 000", "MTX 1A10.DF.2LO-C04", "MTX 1A10.DF.2LO-Y04",
+    "MTX 1A10.DF.2ZO-CD4", "MTX 1A10.DF.2ZO-C04", "MTX 3A 10.DF.4Z1-C4",
+    "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", "NIK 2100 AP2.0000.0.11",
+    "NIK 2100 AP2T.1000.C.11", "NIK 2100 AP2T.1002.MC.11", "NIK 2100 AP2T.1002.C.11",
+    "NIK 2100 AP6T.1002.MC.11", "NIK 2100 AP6T.2000.MC.11", "NIK 2100 AP6T.2002.MC.11",
+    "NIK 2100 AP2T.2802.MC.11", "NIK 2100 AP6T.2802.MC.11", "NIK 2100 AP6T.2902.MC.11",
+    "NIK 2104 AP2T.1000.M.11", "NIK 2104 AP2T.1000.C.11", "NIK 2104 AP2T.1002.MC.11",
+    "NIK 2104 AP2T.1802.MC.11", "NIK 2104 AP2TB.1802.M.11", "NIK 2104 AP6T.2602.MC.21",
+    "NIK 2300 AP6T.1000.C.11", "NIK 2300 ARP3T.2900 MC 21", "NIK 2300 ATT.2900 MC 21",
+    "NIK 2300 ARTT.2902.MC.11", "NIK 2300 AP3.2000.MC.11", "NIK 2300 AP3T.2000.MC.11",
+    "NIK 2300 AP6T.2002.MC.11", "NIK 2300 AP6T.2802.MC.11", "NIK 2300 AP6T.2902.MC.11",
+    "NIK 2301 AP3.0 0000.0.11", "NIK 2303 ARP3T.1202.MC.11", "NIK 2303 ARP3T.1802.MC.11",
+    "NIK 2303 ARP6T.1002.MC.11", "NIK 2303 ARP6T.1800.MC.11", "NIK 2303 ART T.1800.MC.11",
+    "NIK 2303 AT T.1800.MC.21", "NIK 2303 ARP3T.1802.MC.11", "NIK 2303 ARP3T.1802.MC.21",
+    "NIK 2303 ARP6T.1802.MC.11", "NIK 2303 AP3T.1000.MC.11", "NIK 2303 AP3T.1002.MC.11",
+    "NIK 2303 AP3T.1802.MC.11", "NIK 2303 AP3T.2000.MC.11", "NIK 2303 AP6T.1000.MC.11",
+    "NIK 2303 AP6T.1000.C.11", "NIK 2303 AP6T.1002.MC.11", "NIK 2303 AP6T.1802.MC.11",
+    "NIK 2303 AP6T.1802MC.21", "NIK 2303 AP6T.2000.MC.11", "NIK 2307 0.5s ARTT.1600.MC.21",
+    "NIK 2307 ARP3T.1602.M.21", "NIK 2307 ARP3T.1602.MC.21", "NP-06 TD MME 1F 2S-U",
+    "NP-06 TD MME 1F 3S-U", "ACE-3000", "ЛЭО", "ЛЭО-М1.4", "МЕРИДИАН ЛТЕ-1.03",
+    "МЕРИДИАН ЛТЕ-1.03Т", "МЕРИДИАН ЛТЕ-1.03ТУ", "Меркурій 200", "Меркурій 200.02",
+    "Меркурій 201", "Меркурій 206", "МЕРКУРІЙ 231 АТ-01", "НИК 2102-01.E2МСТ",
+    "НИК 2102-01.E2МТ", "НИК 2102-01.E2МТ1", "НИК 2102-01.E2Р1", "НИК 2102-01.E2СТ",
+    "НИК 2102-01.E2Т", "НИК 2102-01.E2ТР1", "НИК 2102-02.M1", "НИК 2102-02.M1В",
+    "НИК 2102-02.M2", "НИК 2102-02.M2В", "НИК 2301 АП1", "НИК 2303 АП2",
+    "НИК 2301 АП2В", "HIK 2102-01.E2T", "HIK 2102-01.E2TP1", "HIK 2102-02.M1",
+    "HIK 2102-02.M1B", "HIK 2102-02.M2", "HIK 2102-02.M2B", "HIK 2301 AP1",
+    "HIK 2303 AP2", "HIK 2301 AP2B", "HIK 2301 AP3", "HIK 2301 AP3B",
+    "HIK 2303 AP2T", "HIK 2303 AP3T", "HIK 2303L AP1T", "HIK 2303L AP6",
+    "HIK 2303L AP6T", "CA4-195", "CA4-И672п", "CO-193", "CO-197", "CO-197М",
+    "CO-2", "CO-2М", "COEA09М", "CO-И446", "CO-И446М", "CO-И449",
+    "CO-И449М1", "CO-И449М1-1", "CO-И449М1-2", "CO9-1.02/2", "CO9-1.02/2KPT",
+    "CO9-1.02/2KT", "CO9-1.02/2T", "CO9-1.02/5KPTД", "CO-ЭА10Д",
+    "CO-Э96705", "CO-Э96706", "СТ-ЭА05", "ЦЭ6807Бк", "ЭНЕРГОМЕРА СЕ 102М"
+];
+
+// Словник ручних винятків
+const METER_TYPE_ALIASES = {
+    'ЛЕО': 'ЛЭО',
+    'ЛЕО-М1.4': 'ЛЭО-М1.4',
+    'НІК': 'НИК',
+    'НІК 2102-01.Е2МСТ': 'НИК 2102-01.E2МСТ',
+    'НІК 2102-01.Е2МТ': 'НИК 2102-01.E2МТ',
+    'НІК 2102-01.Е2МТ1': 'НИК 2102-01.E2МТ1',
+    'НІК 2102-01.Е2Р1': 'НИК 2102-01.E2Р1',
+    'НІК 2102-01.Е2СТ': 'НИК 2102-01.E2СТ',
+    'НІК 2102-01.Е2Т': 'НИК 2102-01.E2Т',
+    'НІК 2102-01.Е2ТР1': 'НИК 2102-01.E2ТР1',
+    'НІК 2102-02.М1': 'НИК 2102-02.M1',
+    'НІК 2102-02.М1В': 'НИК 2102-02.M1В',
+    'НІК 2102-02.М2': 'НИК 2102-02.M2',
+    'НІК 2102-02.М2В': 'НИК 2102-02.M2В',
+    'НІК 2301 АП1': 'НИК 2301 АП1',
+    'НІК 2301 АП2В': 'НИК 2301 АП2В',
+    'НІК 2301 АП3': 'НИК 2301 АП3',
+    'НІК 2301 АП3В': 'НИК 2301 АП3В',
+    'НІК 2303 АП2': 'НИК 2303 АП2',
+    'НІК 2303 АП2Т': 'НИК 2303 АП2Т',
+    'НІК 2303 АП3Т': 'НИК 2303 АП3Т',
+    'НІК 2303L АП1Т': 'НИК 2303L АП1Т',
+    'НІК 2303L АП6': 'НИК 2303L АП6',
+    'НІК 2303L АП6Т': 'НИК 2303L АП6Т',
+    'МЕРИДІАН': 'МЕРИДИАН'
+};
+
+// ========== НОРМАЛІЗАЦІЯ ДЛЯ GOOGLE FORM ==========
+function canonicalizeMeterType(s) {
+    if (!s) return '';
+    let str = s.toUpperCase().replace(/\s+/g, '');
+    const map = {
+        'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M',
+        'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T',
+        'Х': 'X', 'У': 'Y', 'І': 'I', 'Ї': 'I', 'Є': 'E',
+        'Ґ': 'G'
+    };
+    return str.split('').map(ch => map[ch] || ch).join('');
+}
+
+function normalizeMeterTypeForGoogleForm(rawType) {
+    if (!rawType) return '';
+    const trimmed = rawType.trim();
+
+    console.log('🔍 Нормалізація типу для Google Form:', JSON.stringify(trimmed));
+
+    // 1. Спершу перевіряємо ручний словник
+    if (METER_TYPE_ALIASES[trimmed]) {
+        console.log('✅ Знайдено в словнику:', METER_TYPE_ALIASES[trimmed]);
+        return METER_TYPE_ALIASES[trimmed];
+    }
+    
+    const targetCanon = canonicalizeMeterType(trimmed);
+    for (const key in METER_TYPE_ALIASES) {
+        if (canonicalizeMeterType(key) === targetCanon) {
+            console.log('✅ Знайдено в словнику (канонізовано):', METER_TYPE_ALIASES[key]);
+            return METER_TYPE_ALIASES[key];
+        }
+    }
+
+    // 2. Точний збіг зі списком форми
+    if (GOOGLE_FORM_METER_TYPES.includes(trimmed)) {
+        console.log('✅ Точний збіг:', trimmed);
+        return trimmed;
+    }
+
+    // 3. Автоматичний пошук через уніфікацію кирилиця/латиниця
+    const exact = GOOGLE_FORM_METER_TYPES.find(t => canonicalizeMeterType(t) === targetCanon);
+    if (exact) {
+        console.log('✅ Знайдено через канонізацію:', exact);
+        return exact;
+    }
+
+    // 4. Частичний збіг
+    const candidates = GOOGLE_FORM_METER_TYPES.filter(t => {
+        const c = canonicalizeMeterType(t);
+        return c.includes(targetCanon) || targetCanon.includes(c);
+    });
+    
+    if (candidates.length === 1) {
+        console.log('✅ Єдиний кандидат:', candidates[0]);
+        return candidates[0];
+    }
+    if (candidates.length > 1) {
+        console.log('⚠️ Декілька кандидатів:', candidates);
+        return candidates[0];
+    }
+
+    console.log('❌ Нічого не знайдено, використовуємо оригінал:', trimmed);
+    return trimmed;
+}
+
 // ========== НОРМАЛІЗАЦІЯ ==========
 function normalizeMeterType(value) {
     if (!value) return '';
@@ -2042,50 +2176,16 @@ function sendToGoogleForm() {
         let workDateVal = workDateEl ? workDateEl.value : '';
         let replacementReasonVal = replacementReasonEl ? replacementReasonEl.value : '';
         
-        // ===== ПОИСК ЗНАЧЕНИЙ ДЛЯ GOOGLE FORM =====
-        function findGoogleFormValue(value) {
-            if (!value) return '';
-            
-            const normalizedSearch = normalizeMeterType(value);
-            console.log(`🔍 Поиск для Google Form: "${value}" → нормализовано: "${normalizedSearch}"`);
-            
-            // Точное совпадение
-            for (let i = 0; i < meterTypesList.length; i++) {
-                if (normalizeMeterType(meterTypesList[i]) === normalizedSearch) {
-                    console.log(`✅ Найдено точное совпадение: "${meterTypesList[i]}"`);
-                    return meterTypesList[i];
-                }
-            }
-            
-            // Частичное совпадение
-            for (let i = 0; i < meterTypesList.length; i++) {
-                const normalizedOption = normalizeMeterType(meterTypesList[i]);
-                if (normalizedOption.includes(normalizedSearch) || normalizedSearch.includes(normalizedOption)) {
-                    console.log(`✅ Найдено частичное совпадение: "${meterTypesList[i]}"`);
-                    return meterTypesList[i];
-                }
-            }
-            
-            // По первым символам
-            const shortSearch = normalizedSearch.substring(0, 8);
-            for (let i = 0; i < meterTypesList.length; i++) {
-                const normalizedOption = normalizeMeterType(meterTypesList[i]);
-                if (normalizedOption.includes(shortSearch) || shortSearch.includes(normalizedOption.substring(0, 8))) {
-                    console.log(`✅ Найдено по первым символам: "${meterTypesList[i]}"`);
-                    return meterTypesList[i];
-                }
-            }
-            
-            return value;
-        }
+        // ===== НОРМАЛІЗАЦІЯ ДЛЯ GOOGLE FORM =====
+        console.log('📤 Нормалізація типів для Google Form:');
+        console.log('  Оригінал знятого:', oldMeterTypeVal);
+        console.log('  Оригінал встановленого:', newMeterTypeVal);
         
-        // Применяем поиск для каждого поля отдельно (БЕЗ КОПИРОВАНИЯ)
-        oldMeterTypeVal = findGoogleFormValue(oldMeterTypeVal);
-        newMeterTypeVal = findGoogleFormValue(newMeterTypeVal);
+        oldMeterTypeVal = normalizeMeterTypeForGoogleForm(oldMeterTypeVal);
+        newMeterTypeVal = normalizeMeterTypeForGoogleForm(newMeterTypeVal);
         
-        console.log('📤 Отправка в Google Form:');
-        console.log('  Тип знятого (entry.155422969):', oldMeterTypeVal);
-        console.log('  Тип встановленого (entry.1958360409):', newMeterTypeVal);
+        console.log('  Нормалізовано знятого:', oldMeterTypeVal);
+        console.log('  Нормалізовано встановленого:', newMeterTypeVal);
         
         // Маппинг причин
         const reasonMap = {
