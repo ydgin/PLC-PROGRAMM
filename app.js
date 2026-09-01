@@ -479,7 +479,7 @@ function setDefaultValues() {
     }
 }
 
-// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ (БЕЗ АВТОКОПІЮВАННЯ) ==========
+// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ ==========
 function initMeterTypes() {
     if (oldMeterType) {
         oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
@@ -1965,7 +1965,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (ИСПРАВЛЕННАЯ) ==========
+// ========== ВІДПРАВКА В ФОРМУ (З ПІДБОРОМ ДЛЯ ВСТАНОВЛЕНОГО) ==========
 function sendToGoogleForm() {
     // Защита от двойного нажатия
     if (isSending) {
@@ -1973,7 +1973,7 @@ function sendToGoogleForm() {
         return;
     }
     
-    // Получаем актуальные элементы DOM каждый раз при вызове
+    // Получаем актуальные элементы DOM
     const workTypeEl = document.getElementById('workType');
     const employeeIdEl = document.getElementById('employeeId');
     const accountNumberEl = document.getElementById('accountNumber');
@@ -2033,11 +2033,73 @@ function sendToGoogleForm() {
     }
 
     try {
-        const oldMeterTypeVal = oldMeterTypeEl ? oldMeterTypeEl.value : '';
-        const newMeterTypeVal = newMeterTypeEl ? newMeterTypeEl.value : '';
+        // Получаем значения
+        let oldMeterTypeVal = oldMeterTypeEl ? oldMeterTypeEl.value : '';
+        let newMeterTypeVal = newMeterTypeEl ? newMeterTypeEl.value : '';
         let workDateVal = workDateEl ? workDateEl.value : '';
         let replacementReasonVal = replacementReasonEl ? replacementReasonEl.value : '';
         
+        // ===== КЛЮЧЕВАЯ ФУНКЦИЯ: поиск значения для Google Form =====
+        function findGoogleFormValue(value, fieldId) {
+            if (!value) return '';
+            
+            // Нормализуем искомое значение
+            const normalizedSearch = normalizeMeterType(value);
+            console.log(`🔍 Поиск для Google Form (${fieldId}): "${value}" → нормализовано: "${normalizedSearch}"`);
+            
+            // Ищем точное совпадение (нормализованное)
+            for (let i = 0; i < meterTypesList.length; i++) {
+                const optionValue = meterTypesList[i];
+                const normalizedOption = normalizeMeterType(optionValue);
+                if (normalizedOption === normalizedSearch) {
+                    console.log(`✅ Найдено точное совпадение: "${optionValue}"`);
+                    return optionValue;
+                }
+            }
+            
+            // Ищем частичное совпадение
+            for (let i = 0; i < meterTypesList.length; i++) {
+                const optionValue = meterTypesList[i];
+                const normalizedOption = normalizeMeterType(optionValue);
+                if (normalizedOption.includes(normalizedSearch) || normalizedSearch.includes(normalizedOption)) {
+                    console.log(`✅ Найдено частичное совпадение: "${optionValue}"`);
+                    return optionValue;
+                }
+            }
+            
+            // Ищем по первым символам
+            const shortSearch = normalizedSearch.substring(0, 8);
+            for (let i = 0; i < meterTypesList.length; i++) {
+                const optionValue = meterTypesList[i];
+                const normalizedOption = normalizeMeterType(optionValue);
+                if (normalizedOption.includes(shortSearch) || shortSearch.includes(normalizedOption.substring(0, 8))) {
+                    console.log(`✅ Найдено по первым символам: "${optionValue}"`);
+                    return optionValue;
+                }
+            }
+            
+            // Если ничего не нашли - возвращаем как есть
+            console.log(`⚠️ Совпадение не найдено, используем: "${value}"`);
+            return value;
+        }
+        
+        // Применяем поиск для обоих полей
+        let oldMeterTypeForForm = findGoogleFormValue(oldMeterTypeVal, 'entry.155422969');
+        let newMeterTypeForForm = findGoogleFormValue(newMeterTypeVal, 'entry.1958360409');
+        
+        // Если встановленный пустой - пробуем скопировать из знятого
+        if (!newMeterTypeVal && oldMeterTypeVal) {
+            newMeterTypeForForm = findGoogleFormValue(oldMeterTypeVal, 'entry.1958360409');
+            if (newMeterTypeForForm) {
+                console.log(`🔄 Скопировано тип знятого → встановлений: "${newMeterTypeForForm}"`);
+            }
+        }
+        
+        console.log('📤 Отправка в Google Form:');
+        console.log('  Тип знятого (entry.155422969):', oldMeterTypeForForm);
+        console.log('  Тип встановленого (entry.1958360409):', newMeterTypeForForm);
+        
+        // Маппинг причин
         const reasonMap = {
             'ІП (PLC)': 'IN (PLC)',
             'Непрацюючий лічильник': 'Непрацюючий лічильник',
@@ -2047,6 +2109,7 @@ function sendToGoogleForm() {
         };
         replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
         
+        // Форматируем дату для Google Form
         if (workDateVal) {
             const parts = workDateVal.split('.');
             if (parts.length === 3) {
@@ -2054,25 +2117,27 @@ function sendToGoogleForm() {
             }
         }
         
-        console.log('=== ВІДПРАВКА В ФОРМУ ===');
-        console.log('Дата:', workDateVal);
-        console.log('Підстава:', replacementReasonVal);
-        console.log('Тип знятого:', oldMeterTypeVal);
-        console.log('Тип встановленого:', newMeterTypeVal);
-        
+        // Собираем параметры для Google Form
         const params = new URLSearchParams();
         
+        // Основные поля
         if (workDateVal) params.append('entry.814427514', workDateVal);
         if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
-        
         params.append('entry.1609399626', workTypeEl.value);
         params.append('entry.244962092', accountNumberEl.value);
         params.append('entry.1583379400', employeeIdEl.value);
         
-        if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
+        // ===== ВАЖЛИВО: отправляем ТИП ВСТАНОВЛЕНОГО =====
+        if (oldMeterTypeForForm) params.append('entry.155422969', oldMeterTypeForForm);
+        if (newMeterTypeForForm) params.append('entry.1958360409', newMeterTypeForForm);
+        
+        // Номера и показания
         if (oldMeterNumberEl && oldMeterNumberEl.value) params.append('entry.1262021573', oldMeterNumberEl.value);
         if (oldMeterReadingEl && oldMeterReadingEl.value) params.append('entry.1666715724', oldMeterReadingEl.value);
+        if (newMeterNumberEl && newMeterNumberEl.value) params.append('entry.591456354', newMeterNumberEl.value);
+        if (newMeterReadingEl && newMeterReadingEl.value) params.append('entry.686446183', newMeterReadingEl.value);
         
+        // Пломбы (знятые)
         if (oldSealCoverEl && oldSealCoverEl.value) params.append('entry.980914247', oldSealCoverEl.value);
         if (oldSealVKPEl && oldSealVKPEl.value) params.append('entry.1281985427', oldSealVKPEl.value);
         if (oldSealSHO1El && oldSealSHO1El.value) params.append('entry.1571141896', oldSealSHO1El.value);
@@ -2082,10 +2147,7 @@ function sendToGoogleForm() {
         if (oldIMP2El && oldIMP2El.value) params.append('entry.1653188291', oldIMP2El.value);
         if (oldIMP3El && oldIMP3El.value) params.append('entry.174981808', oldIMP3El.value);
         
-        if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
-        if (newMeterNumberEl && newMeterNumberEl.value) params.append('entry.591456354', newMeterNumberEl.value);
-        if (newMeterReadingEl && newMeterReadingEl.value) params.append('entry.686446183', newMeterReadingEl.value);
-        
+        // Пломбы (встановленные)
         if (newSealCoverEl && newSealCoverEl.value) params.append('entry.1577377109', newSealCoverEl.value);
         if (newSealVKPEl && newSealVKPEl.value) params.append('entry.1292803469', newSealVKPEl.value);
         if (newSealSHO1El && newSealSHO1El.value) params.append('entry.1309070612', newSealSHO1El.value);
@@ -2095,12 +2157,16 @@ function sendToGoogleForm() {
         if (newIMP2El && newIMP2El.value) params.append('entry.1581321253', newIMP2El.value);
         if (newIMP3El && newIMP3El.value) params.append('entry.865785872', newIMP3El.value);
         
+        // Адреса
         if (addressEl && addressEl.value) params.append('entry.1234567890', addressEl.value);
         
+        // Формируем URL
         const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
-        console.log('URL форми (довжина):', formUrl.length);
         
-        // Открываем форму в новой вкладке
+        console.log('📤 URL форми (довжина):', formUrl.length);
+        console.log('📤 Параметри:', params.toString());
+        
+        // Открываем форму
         window.open(formUrl, '_blank');
         
         // Сохраняем в журнал
