@@ -186,71 +186,6 @@ const METER_TYPE_ALIASES = {
     'МЕРИДІАН': 'МЕРИДИАН'
 };
 
-// ========== НОРМАЛІЗАЦІЯ ДЛЯ GOOGLE FORM ==========
-function canonicalizeMeterType(s) {
-    if (!s) return '';
-    let str = s.toUpperCase().replace(/\s+/g, '');
-    const map = {
-        'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M',
-        'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T',
-        'Х': 'X', 'У': 'Y', 'І': 'I', 'Ї': 'I', 'Є': 'E',
-        'Ґ': 'G'
-    };
-    return str.split('').map(ch => map[ch] || ch).join('');
-}
-
-function normalizeMeterTypeForGoogleForm(rawType) {
-    if (!rawType) return '';
-    const trimmed = rawType.trim();
-
-    console.log('🔍 Нормалізація типу для Google Form:', JSON.stringify(trimmed));
-
-    // 1. Спершу перевіряємо ручний словник
-    if (METER_TYPE_ALIASES[trimmed]) {
-        console.log('✅ Знайдено в словнику:', METER_TYPE_ALIASES[trimmed]);
-        return METER_TYPE_ALIASES[trimmed];
-    }
-    
-    const targetCanon = canonicalizeMeterType(trimmed);
-    for (const key in METER_TYPE_ALIASES) {
-        if (canonicalizeMeterType(key) === targetCanon) {
-            console.log('✅ Знайдено в словнику (канонізовано):', METER_TYPE_ALIASES[key]);
-            return METER_TYPE_ALIASES[key];
-        }
-    }
-
-    // 2. Точний збіг зі списком форми
-    if (GOOGLE_FORM_METER_TYPES.includes(trimmed)) {
-        console.log('✅ Точний збіг:', trimmed);
-        return trimmed;
-    }
-
-    // 3. Автоматичний пошук через уніфікацію кирилиця/латиниця
-    const exact = GOOGLE_FORM_METER_TYPES.find(t => canonicalizeMeterType(t) === targetCanon);
-    if (exact) {
-        console.log('✅ Знайдено через канонізацію:', exact);
-        return exact;
-    }
-
-    // 4. Частичний збіг
-    const candidates = GOOGLE_FORM_METER_TYPES.filter(t => {
-        const c = canonicalizeMeterType(t);
-        return c.includes(targetCanon) || targetCanon.includes(c);
-    });
-    
-    if (candidates.length === 1) {
-        console.log('✅ Єдиний кандидат:', candidates[0]);
-        return candidates[0];
-    }
-    if (candidates.length > 1) {
-        console.log('⚠️ Декілька кандидатів:', candidates);
-        return candidates[0];
-    }
-
-    console.log('❌ Нічого не знайдено, використовуємо оригінал:', trimmed);
-    return trimmed;
-}
-
 // ========== НОРМАЛІЗАЦІЯ ==========
 function normalizeMeterType(value) {
     if (!value) return '';
@@ -386,6 +321,140 @@ function setMeterTypeValue(selectElement, value) {
     
     showToast(`⚠️ Тип "${value}" додано до списку (не знайдено в базі)`);
     return true;
+}
+
+// ========== НОРМАЛІЗАЦІЯ ДЛЯ GOOGLE FORM ==========
+function canonicalizeMeterType(s) {
+    if (!s) return '';
+    let str = s.toUpperCase().replace(/\s+/g, '');
+    const map = {
+        'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M',
+        'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T',
+        'Х': 'X', 'У': 'Y', 'І': 'I', 'Ї': 'I', 'Є': 'E',
+        'Ґ': 'G'
+    };
+    return str.split('').map(ch => map[ch] || ch).join('');
+}
+
+function normalizeMeterTypeForGoogleForm(rawType) {
+    if (!rawType) return '';
+    const trimmed = rawType.trim();
+
+    console.log('🔍 Нормалізація типу для Google Form:', JSON.stringify(trimmed));
+
+    // 1. Спершу перевіряємо ручний словник
+    if (METER_TYPE_ALIASES[trimmed]) {
+        console.log('✅ Знайдено в словнику:', METER_TYPE_ALIASES[trimmed]);
+        return METER_TYPE_ALIASES[trimmed];
+    }
+    
+    const targetCanon = canonicalizeMeterType(trimmed);
+    for (const key in METER_TYPE_ALIASES) {
+        if (canonicalizeMeterType(key) === targetCanon) {
+            console.log('✅ Знайдено в словнику (канонізовано):', METER_TYPE_ALIASES[key]);
+            return METER_TYPE_ALIASES[key];
+        }
+    }
+
+    // 2. Точний збіг зі списком форми
+    if (GOOGLE_FORM_METER_TYPES.includes(trimmed)) {
+        console.log('✅ Точний збіг:', trimmed);
+        return trimmed;
+    }
+
+    // 3. Автоматичний пошук через уніфікацію кирилиця/латиниця
+    const exact = GOOGLE_FORM_METER_TYPES.find(t => canonicalizeMeterType(t) === targetCanon);
+    if (exact) {
+        console.log('✅ Знайдено через канонізацію:', exact);
+        return exact;
+    }
+
+    // 4. Частичний збіг
+    const candidates = GOOGLE_FORM_METER_TYPES.filter(t => {
+        const c = canonicalizeMeterType(t);
+        return c.includes(targetCanon) || targetCanon.includes(c);
+    });
+    
+    if (candidates.length === 1) {
+        console.log('✅ Єдиний кандидат:', candidates[0]);
+        return candidates[0];
+    }
+    if (candidates.length > 1) {
+        console.log('⚠️ Декілька кандидатів:', candidates);
+        return candidates[0];
+    }
+
+    console.log('❌ Нічого не знайдено, використовуємо оригінал:', trimmed);
+    return trimmed;
+}
+
+// ========== КОНВЕРТАЦІЯ ДАТИ ДЛЯ GOOGLE FORM ==========
+function convertDateToGoogleFormat(dateStr) {
+    if (!dateStr) return '';
+    
+    console.log('📅 Оригінальна дата:', dateStr);
+    
+    dateStr = dateStr.trim();
+    
+    // Формат ДД.ММ.РРРР (з точками)
+    let match = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (match) {
+        const result = `${match[3]}-${match[2]}-${match[1]}`;
+        console.log('✅ Конвертовано (ДД.ММ.РРРР):', result);
+        return result;
+    }
+    
+    // Формат ДД.ММ.РР (з точками, рік 2 цифри)
+    match = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);
+    if (match) {
+        let year = match[3];
+        year = parseInt(year) >= 30 ? '19' + year : '20' + year;
+        const result = `${year}-${match[2]}-${match[1]}`;
+        console.log('✅ Конвертовано (ДД.ММ.РР):', result);
+        return result;
+    }
+    
+    // Формат ДД/ММ/РРРР (з слешами)
+    match = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (match) {
+        const result = `${match[3]}-${match[2]}-${match[1]}`;
+        console.log('✅ Конвертовано (ДД/ММ/РРРР):', result);
+        return result;
+    }
+    
+    // Формат ДД-ММ-РРРР (з дефісами)
+    match = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (match) {
+        const result = `${match[3]}-${match[2]}-${match[1]}`;
+        console.log('✅ Конвертовано (ДД-ММ-РРРР):', result);
+        return result;
+    }
+    
+    // Вже у форматі YYYY-MM-DD
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        console.log('✅ Вже у правильному форматі:', dateStr);
+        return dateStr;
+    }
+    
+    // Просто цифри (ДДММРРРР або ДДММРР)
+    const digits = dateStr.replace(/\D/g, '');
+    if (digits.length === 8) {
+        const result = `${digits.substring(4, 8)}-${digits.substring(2, 4)}-${digits.substring(0, 2)}`;
+        console.log('✅ Конвертовано (ДДММРРРР):', result);
+        return result;
+    }
+    if (digits.length === 6) {
+        let year = digits.substring(4, 6);
+        year = parseInt(year) >= 30 ? '19' + year : '20' + year;
+        const result = `${year}-${digits.substring(2, 4)}-${digits.substring(0, 2)}`;
+        console.log('✅ Конвертовано (ДДММРР):', result);
+        return result;
+    }
+    
+    // Якщо нічого не вийшло - використовуємо сьогоднішню дату
+    console.warn('⚠️ Не вдалося розпізнати дату, використовуємо сьогоднішню');
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 }
 
 // ========== ПАРСИНГ ДІАПАЗОНІВ ==========
@@ -613,7 +682,7 @@ function setDefaultValues() {
     }
 }
 
-// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ (БЕЗ АВТОКОПІЮВАННЯ) ==========
+// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ ==========
 function initMeterTypes() {
     if (oldMeterType) {
         oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
@@ -633,9 +702,6 @@ function initMeterTypes() {
             newMeterType.appendChild(option);
         });
     }
-    
-    // ===== ВАЖЛИВО: НЕМАЄ АВТОМАТИЧНОГО КОПІЮВАННЯ =====
-    // Користувач самостійно обирає тип для кожного лічильника
 }
 
 // ========== ОБРОБКА ВВЕДЕННЯ ПЛОМБ ==========
@@ -2102,7 +2168,7 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ (ЧЕРЕЗ POST ДЛЯ ТЕЛЕФОНА, БЕЗ КОПІЮВАННЯ) ==========
+// ========== ВІДПРАВКА В ФОРМУ ==========
 function sendToGoogleForm() {
     // Защита от двойного нажатия
     if (isSending) {
@@ -2171,88 +2237,121 @@ function sendToGoogleForm() {
 
     try {
         // Получаем значения
+        let workTypeVal = workTypeEl ? workTypeEl.value : '';
         let oldMeterTypeVal = oldMeterTypeEl ? oldMeterTypeEl.value : '';
         let newMeterTypeVal = newMeterTypeEl ? newMeterTypeEl.value : '';
         let workDateVal = workDateEl ? workDateEl.value : '';
         let replacementReasonVal = replacementReasonEl ? replacementReasonEl.value : '';
+        let employeeIdVal = employeeIdEl ? employeeIdEl.value : '';
+        let accountNumberVal = accountNumberEl ? accountNumberEl.value : '';
+        let addressVal = addressEl ? addressEl.value : '';
+        let oldMeterNumberVal = oldMeterNumberEl ? oldMeterNumberEl.value : '';
+        let newMeterNumberVal = newMeterNumberEl ? newMeterNumberEl.value : '';
+        let oldMeterReadingVal = oldMeterReadingEl ? oldMeterReadingEl.value : '';
+        let newMeterReadingVal = newMeterReadingEl ? newMeterReadingEl.value : '';
         
-        // ===== НОРМАЛІЗАЦІЯ ДЛЯ GOOGLE FORM =====
-        console.log('📤 Нормалізація типів для Google Form:');
-        console.log('  Оригінал знятого:', oldMeterTypeVal);
-        console.log('  Оригінал встановленого:', newMeterTypeVal);
+        // Пломбы
+        let oldSealCoverVal = oldSealCoverEl ? oldSealCoverEl.value : '';
+        let oldSealVKPVal = oldSealVKPEl ? oldSealVKPEl.value : '';
+        let oldSealSHO1Val = oldSealSHO1El ? oldSealSHO1El.value : '';
+        let oldSealSHO2Val = oldSealSHO2El ? oldSealSHO2El.value : '';
+        let oldSealOptoVal = oldSealOptoEl ? oldSealOptoEl.value : '';
+        let oldIMP1Val = oldIMP1El ? oldIMP1El.value : '';
+        let oldIMP2Val = oldIMP2El ? oldIMP2El.value : '';
+        let oldIMP3Val = oldIMP3El ? oldIMP3El.value : '';
+        let newSealCoverVal = newSealCoverEl ? newSealCoverEl.value : '';
+        let newSealVKPVal = newSealVKPEl ? newSealVKPEl.value : '';
+        let newSealSHO1Val = newSealSHO1El ? newSealSHO1El.value : '';
+        let newSealSHO2Val = newSealSHO2El ? newSealSHO2El.value : '';
+        let newSealOptoVal = newSealOptoEl ? newSealOptoEl.value : '';
+        let newIMP1Val = newIMP1El ? newIMP1El.value : '';
+        let newIMP2Val = newIMP2El ? newIMP2El.value : '';
+        let newIMP3Val = newIMP3El ? newIMP3El.value : '';
         
-        oldMeterTypeVal = normalizeMeterTypeForGoogleForm(oldMeterTypeVal);
-        newMeterTypeVal = normalizeMeterTypeForGoogleForm(newMeterTypeVal);
+        // ===== КОНВЕРТУЄМО ДАТУ ДЛЯ GOOGLE FORM =====
+        const googleFormDate = convertDateToGoogleFormat(workDateVal);
         
-        console.log('  Нормалізовано знятого:', oldMeterTypeVal);
-        console.log('  Нормалізовано встановленого:', newMeterTypeVal);
+        // ===== НОРМАЛІЗУЄМО ТИП ЗНЯТОГО ЛІЧИЛЬНИКА =====
+        const normalizedOldMeterType = normalizeMeterTypeForGoogleForm(oldMeterTypeVal);
+        const normalizedNewMeterType = normalizeMeterTypeForGoogleForm(newMeterTypeVal);
         
         // Маппинг причин
         const reasonMap = {
             'ІП (PLC)': 'IN (PLC)',
             'Непрацюючий лічильник': 'Непрацюючий лічильник',
             'Планова заміна (протермінований)': 'Планова заміна (протермінований)',
+            'Позапланова заміна (підгорілі клеми і т.д.)': 'Позапланова заміна (підгорілі клеми і т.д.)',
             'Платна заміна (б/т)': 'Платна заміна (б/т)',
             'Експертиза': 'Експертиза'
         };
         replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
         
-        // Форматируем дату
-        if (workDateVal) {
-            const parts = workDateVal.split('.');
-            if (parts.length === 3) {
-                workDateVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-        }
+        console.log('📤 Отправка в Google Form:');
+        console.log('  Дата (entry.814427514):', googleFormDate);
+        console.log('  Робота (entry.1609399626):', workTypeVal);
+        console.log('  Підстава (entry.2001364225):', replacementReasonVal);
+        console.log('  ТИП ЗНЯТОГО (entry.155422969):', normalizedOldMeterType);
+        console.log('  ТИП ВСТАНОВЛЕНОГО (entry.1958360409):', normalizedNewMeterType);
+        console.log('  Номер знятого (entry.1262021573):', oldMeterNumberVal);
+        console.log('  Покази знятого (entry.1666715724):', oldMeterReadingVal);
         
         // ===== СОБИРАЕМ ДАННЫЕ ДЛЯ POST =====
         const formData = new FormData();
         
         // Основные поля
-        if (workDateVal) formData.append('entry.814427514', workDateVal);
+        if (googleFormDate) formData.append('entry.814427514', googleFormDate);
         if (replacementReasonVal) formData.append('entry.2001364225', replacementReasonVal);
-        formData.append('entry.1609399626', workTypeEl.value);
-        formData.append('entry.244962092', accountNumberEl.value);
-        formData.append('entry.1583379400', employeeIdEl.value);
+        if (workTypeVal) formData.append('entry.1609399626', workTypeVal);
+        if (accountNumberVal) formData.append('entry.244962092', accountNumberVal);
+        if (employeeIdVal) formData.append('entry.1583379400', employeeIdVal);
         
-        // Типы - каждый отдельно, без копирования
-        if (oldMeterTypeVal) formData.append('entry.155422969', oldMeterTypeVal);
-        if (newMeterTypeVal) formData.append('entry.1958360409', newMeterTypeVal);
+        // ===== ТИП ЗНЯТОГО ЛІЧИЛЬНИКА =====
+        if (normalizedOldMeterType) {
+            formData.append('entry.155422969', normalizedOldMeterType);
+            console.log('✅ Відправляємо тип знятого:', normalizedOldMeterType);
+        } else {
+            console.warn('⚠️ Тип знятого не вибрано!');
+        }
+        
+        // Тип встановленого
+        if (normalizedNewMeterType) {
+            formData.append('entry.1958360409', normalizedNewMeterType);
+        }
         
         // Номера и показания
-        if (oldMeterNumberEl && oldMeterNumberEl.value) formData.append('entry.1262021573', oldMeterNumberEl.value);
-        if (oldMeterReadingEl && oldMeterReadingEl.value) formData.append('entry.1666715724', oldMeterReadingEl.value);
-        if (newMeterNumberEl && newMeterNumberEl.value) formData.append('entry.591456354', newMeterNumberEl.value);
-        if (newMeterReadingEl && newMeterReadingEl.value) formData.append('entry.686446183', newMeterReadingEl.value);
+        if (oldMeterNumberVal) formData.append('entry.1262021573', oldMeterNumberVal);
+        if (oldMeterReadingVal) formData.append('entry.1666715724', oldMeterReadingVal);
+        if (newMeterNumberVal) formData.append('entry.591456354', newMeterNumberVal);
+        if (newMeterReadingVal) formData.append('entry.686446183', newMeterReadingVal);
         
         // Пломбы (знятые)
-        if (oldSealCoverEl && oldSealCoverEl.value) formData.append('entry.980914247', oldSealCoverEl.value);
-        if (oldSealVKPEl && oldSealVKPEl.value) formData.append('entry.1281985427', oldSealVKPEl.value);
-        if (oldSealSHO1El && oldSealSHO1El.value) formData.append('entry.1571141896', oldSealSHO1El.value);
-        if (oldSealSHO2El && oldSealSHO2El.value) formData.append('entry.950038743', oldSealSHO2El.value);
-        if (oldSealOptoEl && oldSealOptoEl.value) formData.append('entry.1825187506', oldSealOptoEl.value);
-        if (oldIMP1El && oldIMP1El.value) formData.append('entry.851707833', oldIMP1El.value);
-        if (oldIMP2El && oldIMP2El.value) formData.append('entry.1653188291', oldIMP2El.value);
-        if (oldIMP3El && oldIMP3El.value) formData.append('entry.174981808', oldIMP3El.value);
+        if (oldSealCoverVal) formData.append('entry.980914247', oldSealCoverVal);
+        if (oldSealVKPVal) formData.append('entry.1281985427', oldSealVKPVal);
+        if (oldSealSHO1Val) formData.append('entry.1571141896', oldSealSHO1Val);
+        if (oldSealSHO2Val) formData.append('entry.950038743', oldSealSHO2Val);
+        if (oldSealOptoVal) formData.append('entry.1825187506', oldSealOptoVal);
+        if (oldIMP1Val) formData.append('entry.851707833', oldIMP1Val);
+        if (oldIMP2Val) formData.append('entry.1653188291', oldIMP2Val);
+        if (oldIMP3Val) formData.append('entry.174981808', oldIMP3Val);
         
         // Пломбы (встановленные)
-        if (newSealCoverEl && newSealCoverEl.value) formData.append('entry.1577377109', newSealCoverEl.value);
-        if (newSealVKPEl && newSealVKPEl.value) formData.append('entry.1292803469', newSealVKPEl.value);
-        if (newSealSHO1El && newSealSHO1El.value) formData.append('entry.1309070612', newSealSHO1El.value);
-        if (newSealSHO2El && newSealSHO2El.value) formData.append('entry.1176747559', newSealSHO2El.value);
-        if (newSealOptoEl && newSealOptoEl.value) formData.append('entry.67142835', newSealOptoEl.value);
-        if (newIMP1El && newIMP1El.value) formData.append('entry.245114888', newIMP1El.value);
-        if (newIMP2El && newIMP2El.value) formData.append('entry.1581321253', newIMP2El.value);
-        if (newIMP3El && newIMP3El.value) formData.append('entry.865785872', newIMP3El.value);
+        if (newSealCoverVal) formData.append('entry.1577377109', newSealCoverVal);
+        if (newSealVKPVal) formData.append('entry.1292803469', newSealVKPVal);
+        if (newSealSHO1Val) formData.append('entry.1309070612', newSealSHO1Val);
+        if (newSealSHO2Val) formData.append('entry.1176747559', newSealSHO2Val);
+        if (newSealOptoVal) formData.append('entry.67142835', newSealOptoVal);
+        if (newIMP1Val) formData.append('entry.245114888', newIMP1Val);
+        if (newIMP2Val) formData.append('entry.1581321253', newIMP2Val);
+        if (newIMP3Val) formData.append('entry.865785872', newIMP3Val);
         
         // Адреса
-        if (addressEl && addressEl.value) formData.append('entry.1234567890', addressEl.value);
+        if (addressVal) formData.append('entry.1234567890', addressVal);
         
         // ===== ОТПРАВЛЯЕМ POST ЗАПРОС =====
         const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse';
         
         console.log('📤 Отправка POST запроса на:', formUrl);
-        console.log('📤 Данные:', Object.fromEntries(formData));
+        console.log('📤 Все данные:', Object.fromEntries(formData));
         
         // Создаем скрытую форму и отправляем
         const hiddenForm = document.createElement('form');
