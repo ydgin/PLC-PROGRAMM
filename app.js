@@ -6,7 +6,6 @@ let metersDB = [];
 let activeScanners = {};
 let currentSearchTerm = "";
 let useAI = false;
-let isSending = false;
 
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
@@ -77,6 +76,98 @@ const meterAddPanel = document.getElementById('meterAddPanel');
 const newMeterInput = document.getElementById('newMeterInput');
 const confirmMeterBtn = document.getElementById('confirmMeterBtn');
 
+// ========== PIN ФУНКЦІЇ ==========
+const CORRECT_PIN = "3268";
+
+function updatePinDisplay() {
+    if (!pinDisplay) return;
+    let masked = "";
+    for (let i = 0; i < enteredPin.length; i++) masked += "●";
+    for (let i = enteredPin.length; i < 4; i++) masked += "○";
+    pinDisplay.innerText = masked;
+}
+
+function pinAddNum(num) {
+    if (enteredPin.length < 4) {
+        enteredPin += num;
+        updatePinDisplay();
+        if (pinError) pinError.innerText = '';
+        if (enteredPin.length === 4) {
+            if (enteredPin === CORRECT_PIN) {
+                pinScreen.style.display = 'none';
+                mainApp.classList.remove('hidden');
+                loadData();
+                loadSeals();
+                loadMeters();
+                initMeterTypes();
+                setDefaultValues();
+                setupVoiceInput();
+                setupAutoClean();
+                setupVoiceSearch();
+                setupVoiceSelect();
+                setupOCR();
+                setupAI();
+            } else {
+                if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
+                enteredPin = "";
+                updatePinDisplay();
+            }
+        }
+    }
+}
+
+function pinClear() { 
+    enteredPin = ""; 
+    updatePinDisplay(); 
+    if (pinError) pinError.innerText = ''; 
+}
+
+function pinCheck() {
+    if (enteredPin.length !== 4) { 
+        if (pinError) pinError.innerText = '❌ Введіть 4 цифри'; 
+        return; 
+    }
+    if (enteredPin === CORRECT_PIN) {
+        pinScreen.style.display = 'none';
+        mainApp.classList.remove('hidden');
+        loadData();
+        loadSeals();
+        loadMeters();
+        initMeterTypes();
+        setDefaultValues();
+        setupVoiceInput();
+        setupAutoClean();
+        setupVoiceSearch();
+        setupVoiceSelect();
+        setupOCR();
+        setupAI();
+    } else {
+        if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
+        enteredPin = "";
+        updatePinDisplay();
+    }
+}
+
+function pinReset() { 
+    enteredPin = ""; 
+    updatePinDisplay(); 
+    if (pinError) pinError.innerText = '✅ PIN: 3268'; 
+    setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
+}
+
+function setDefaultValues() {
+    if (newMeterReading && !newMeterReading.value) {
+        newMeterReading.value = "0000000";
+    }
+    if (workDate && !workDate.value) {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        workDate.value = `${dd}.${mm}.${yyyy}`;
+    }
+}
+
 // ========== ВСІ ТИПИ ЛІЧИЛЬНИКІВ ==========
 const meterTypesList = [
     "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
@@ -117,572 +208,6 @@ const meterTypesList = [
     "CO-Э96705", "CO-Э96706", "СТ-ЭА05", "ЦЭ6807Бк", "ЭНЕРГОМЕРА СЕ 102М"
 ];
 
-// ========== ГОЛОВНІ ТИПИ ДЛЯ GOOGLE FORM ==========
-const GOOGLE_FORM_METER_TYPES = [
-    "AD11A.1-5-1", "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "GROSS DDS-UA",
-    "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", "Landis ZCG110ATt", "Landis310",
-    "MCS301-CE51B 30MIS-004 000", "MTX 1A10.DF.2LO-C04", "MTX 1A10.DF.2LO-Y04",
-    "MTX 1A10.DF.2ZO-CD4", "MTX 1A10.DF.2ZO-C04", "MTX 3A 10.DF.4Z1-C4",
-    "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", "NIK 2100 AP2.0000.0.11",
-    "NIK 2100 AP2T.1000.C.11", "NIK 2100 AP2T.1002.MC.11", "NIK 2100 AP2T.1002.C.11",
-    "NIK 2100 AP6T.1002.MC.11", "NIK 2100 AP6T.2000.MC.11", "NIK 2100 AP6T.2002.MC.11",
-    "NIK 2100 AP2T.2802.MC.11", "NIK 2100 AP6T.2802.MC.11", "NIK 2100 AP6T.2902.MC.11",
-    "NIK 2104 AP2T.1000.M.11", "NIK 2104 AP2T.1000.C.11", "NIK 2104 AP2T.1002.MC.11",
-    "NIK 2104 AP2T.1802.MC.11", "NIK 2104 AP2TB.1802.M.11", "NIK 2104 AP6T.2602.MC.21",
-    "NIK 2300 AP6T.1000.C.11", "NIK 2300 ARP3T.2900 MC 21", "NIK 2300 ATT.2900 MC 21",
-    "NIK 2300 ARTT.2902.MC.11", "NIK 2300 AP3.2000.MC.11", "NIK 2300 AP3T.2000.MC.11",
-    "NIK 2300 AP6T.2002.MC.11", "NIK 2300 AP6T.2802.MC.11", "NIK 2300 AP6T.2902.MC.11",
-    "NIK 2301 AP3.0 0000.0.11", "NIK 2303 ARP3T.1202.MC.11", "NIK 2303 ARP3T.1802.MC.11",
-    "NIK 2303 ARP6T.1002.MC.11", "NIK 2303 ARP6T.1800.MC.11", "NIK 2303 ART T.1800.MC.11",
-    "NIK 2303 AT T.1800.MC.21", "NIK 2303 ARP3T.1802.MC.11", "NIK 2303 ARP3T.1802.MC.21",
-    "NIK 2303 ARP6T.1802.MC.11", "NIK 2303 AP3T.1000.MC.11", "NIK 2303 AP3T.1002.MC.11",
-    "NIK 2303 AP3T.1802.MC.11", "NIK 2303 AP3T.2000.MC.11", "NIK 2303 AP6T.1000.MC.11",
-    "NIK 2303 AP6T.1000.C.11", "NIK 2303 AP6T.1002.MC.11", "NIK 2303 AP6T.1802.MC.11",
-    "NIK 2303 AP6T.1802MC.21", "NIK 2303 AP6T.2000.MC.11", "NIK 2307 0.5s ARTT.1600.MC.21",
-    "NIK 2307 ARP3T.1602.M.21", "NIK 2307 ARP3T.1602.MC.21", "NP-06 TD MME 1F 2S-U",
-    "NP-06 TD MME 1F 3S-U", "ACE-3000", "ЛЭО", "ЛЭО-М1.4", "МЕРИДИАН ЛТЕ-1.03",
-    "МЕРИДИАН ЛТЕ-1.03Т", "МЕРИДИАН ЛТЕ-1.03ТУ", "Меркурій 200", "Меркурій 200.02",
-    "Меркурій 201", "Меркурій 206", "МЕРКУРІЙ 231 АТ-01", "НИК 2102-01.E2МСТ",
-    "НИК 2102-01.E2МТ", "НИК 2102-01.E2МТ1", "НИК 2102-01.E2Р1", "НИК 2102-01.E2СТ",
-    "НИК 2102-01.E2Т", "НИК 2102-01.E2ТР1", "НИК 2102-02.M1", "НИК 2102-02.M1В",
-    "НИК 2102-02.M2", "НИК 2102-02.M2В", "НИК 2301 АП1", "НИК 2303 АП2",
-    "НИК 2301 АП2В", "HIK 2102-01.E2T", "HIK 2102-01.E2TP1", "HIK 2102-02.M1",
-    "HIK 2102-02.M1B", "HIK 2102-02.M2", "HIK 2102-02.M2B", "HIK 2301 AP1",
-    "HIK 2303 AP2", "HIK 2301 AP2B", "HIK 2301 AP3", "HIK 2301 AP3B",
-    "HIK 2303 AP2T", "HIK 2303 AP3T", "HIK 2303L AP1T", "HIK 2303L AP6",
-    "HIK 2303L AP6T", "CA4-195", "CA4-И672п", "CO-193", "CO-197", "CO-197М",
-    "CO-2", "CO-2М", "COEA09М", "CO-И446", "CO-И446М", "CO-И449",
-    "CO-И449М1", "CO-И449М1-1", "CO-И449М1-2", "CO9-1.02/2", "CO9-1.02/2KPT",
-    "CO9-1.02/2KT", "CO9-1.02/2T", "CO9-1.02/5KPTД", "CO-ЭА10Д",
-    "CO-Э96705", "CO-Э96706", "СТ-ЭА05", "ЦЭ6807Бк", "ЭНЕРГОМЕРА СЕ 102М"
-];
-
-// Словник ручних винятків
-const METER_TYPE_ALIASES = {
-    'ЛЕО': 'ЛЭО',
-    'ЛЕО-М1.4': 'ЛЭО-М1.4',
-    'НІК': 'НИК',
-    'НІК 2102-01.Е2МСТ': 'НИК 2102-01.E2МСТ',
-    'НІК 2102-01.Е2МТ': 'НИК 2102-01.E2МТ',
-    'НІК 2102-01.Е2МТ1': 'НИК 2102-01.E2МТ1',
-    'НІК 2102-01.Е2Р1': 'НИК 2102-01.E2Р1',
-    'НІК 2102-01.Е2СТ': 'НИК 2102-01.E2СТ',
-    'НІК 2102-01.Е2Т': 'НИК 2102-01.E2Т',
-    'НІК 2102-01.Е2ТР1': 'НИК 2102-01.E2ТР1',
-    'НІК 2102-02.М1': 'НИК 2102-02.M1',
-    'НІК 2102-02.М1В': 'НИК 2102-02.M1В',
-    'НІК 2102-02.М2': 'НИК 2102-02.M2',
-    'НІК 2102-02.М2В': 'НИК 2102-02.M2В',
-    'НІК 2301 АП1': 'НИК 2301 АП1',
-    'НІК 2301 АП2В': 'НИК 2301 АП2В',
-    'НІК 2301 АП3': 'НИК 2301 АП3',
-    'НІК 2301 АП3В': 'НИК 2301 АП3В',
-    'НІК 2303 АП2': 'НИК 2303 АП2',
-    'НІК 2303 АП2Т': 'НИК 2303 АП2Т',
-    'НІК 2303 АП3Т': 'НИК 2303 АП3Т',
-    'НІК 2303L АП1Т': 'НИК 2303L АП1Т',
-    'НІК 2303L АП6': 'НИК 2303L АП6',
-    'НІК 2303L АП6Т': 'НИК 2303L АП6Т',
-    'МЕРИДІАН': 'МЕРИДИАН'
-};
-
-// ========== НОРМАЛІЗАЦІЯ ==========
-function normalizeMeterType(value) {
-    if (!value) return '';
-    
-    const cyrillicToLatin = {
-        'А': 'A', 'В': 'B', 'С': 'C', 'Е': 'E', 'Н': 'H',
-        'К': 'K', 'М': 'M', 'О': 'O', 'Р': 'P', 'Т': 'T',
-        'Х': 'X', 'У': 'Y', 'І': 'I', 'Ї': 'I', 'Є': 'E',
-        'а': 'a', 'в': 'b', 'с': 'c', 'е': 'e', 'н': 'h',
-        'к': 'k', 'м': 'm', 'о': 'o', 'р': 'p', 'т': 't',
-        'х': 'x', 'у': 'y', 'і': 'i', 'ї': 'i', 'є': 'e'
-    };
-    
-    return value
-        .trim()
-        .replace(/\s+/g, ' ')
-        .replace(/[А-Яа-яЇїЄєІі]/g, match => cyrillicToLatin[match] || match)
-        .replace(/[–—]/g, '-')
-        .replace(/\s*\.\s*/g, '.')
-        .replace(/\s*-\s*/g, '-')
-        .replace(/\s*\/\s*/g, '/')
-        .replace(/[OО]/g, (match) => match === '0' ? '0' : 'O');
-}
-
-function normalizeMeterNumber(meter) {
-    if (!meter) return '';
-    
-    meter = meter.trim();
-    meter = meter.replace(/\s/g, '');
-    meter = toUpperCaseByLanguage(meter);
-    
-    const replacements = {
-        'А': 'A', 'В': 'B', 'С': 'C', 'Е': 'E', 'Н': 'H',
-        'К': 'K', 'М': 'M', 'О': 'O', 'Р': 'P', 'Т': 'T',
-        'Х': 'X', 'У': 'Y', 'І': 'I', 'Ї': 'I', 'Є': 'E',
-        'а': 'a', 'в': 'b', 'с': 'c', 'е': 'e', 'н': 'h',
-        'к': 'k', 'м': 'm', 'о': 'o', 'р': 'p', 'т': 't',
-        'х': 'x', 'у': 'y', 'і': 'i', 'ї': 'i', 'є': 'e'
-    };
-    
-    let normalized = '';
-    for (let char of meter) {
-        normalized += replacements[char] || char;
-    }
-    
-    normalized = normalized.replace(/\.{2,}/g, '.');
-    normalized = normalized.replace(/-{2,}/g, '-');
-    normalized = normalized.replace(/\.-/g, '.');
-    normalized = normalized.replace(/-\./g, '.');
-    
-    return normalized;
-}
-
-function normalizeSealNumber(seal) {
-    if (!seal) return '';
-    
-    seal = seal.trim();
-    seal = toUpperCaseByLanguage(seal);
-    
-    const replacements = {
-        'К': 'K', 'к': 'k',
-        'С': 'C', 'с': 'c',
-        'Е': 'E', 'е': 'e',
-        'Н': 'H', 'н': 'h',
-        'В': 'B', 'в': 'b',
-        'А': 'A', 'а': 'a',
-        'Р': 'P', 'р': 'p',
-        'О': 'O', 'о': 'o',
-        'Т': 'T', 'т': 't',
-        'М': 'M', 'м': 'm',
-        'Х': 'X', 'х': 'x',
-        'У': 'Y', 'у': 'y',
-        'І': 'I', 'і': 'i'
-    };
-    
-    let normalized = '';
-    for (let char of seal) {
-        normalized += replacements[char] || char;
-    }
-    
-    return normalized;
-}
-
-function findMeterInSelect(selectElement, value) {
-    if (!selectElement || !value) return null;
-    const normalizedSearch = normalizeMeterType(value);
-    
-    for (let i = 0; i < selectElement.options.length; i++) {
-        const optionValue = selectElement.options[i].value;
-        if (!optionValue) continue;
-        if (normalizeMeterType(optionValue) === normalizedSearch) {
-            return {
-                index: i,
-                value: optionValue,
-                text: selectElement.options[i].text
-            };
-        }
-    }
-    return null;
-}
-
-function setMeterTypeValue(selectElement, value) {
-    if (!selectElement) return false;
-    
-    if (!value) {
-        selectElement.value = '';
-        return true;
-    }
-    
-    const found = findMeterInSelect(selectElement, value);
-    if (found) {
-        selectElement.selectedIndex = found.index;
-        selectElement.value = found.value;
-        
-        const changeEvent = new Event('change', { bubbles: true });
-        selectElement.dispatchEvent(changeEvent);
-        
-        selectElement.style.borderColor = '#22c55e';
-        selectElement.style.backgroundColor = '#f0fdf4';
-        setTimeout(() => {
-            selectElement.style.borderColor = '#e2e8f0';
-            selectElement.style.backgroundColor = '#f8fafc';
-        }, 1000);
-        
-        return true;
-    }
-    
-    const newOption = document.createElement('option');
-    newOption.value = value;
-    newOption.textContent = value;
-    selectElement.appendChild(newOption);
-    selectElement.value = value;
-    
-    showToast(`⚠️ Тип "${value}" додано до списку (не знайдено в базі)`);
-    return true;
-}
-
-// ========== НОРМАЛІЗАЦІЯ ДЛЯ GOOGLE FORM ==========
-function canonicalizeMeterType(s) {
-    if (!s) return '';
-    let str = s.toUpperCase().replace(/\s+/g, '');
-    const map = {
-        'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M',
-        'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T',
-        'Х': 'X', 'У': 'Y', 'І': 'I', 'Ї': 'I', 'Є': 'E',
-        'Ґ': 'G'
-    };
-    return str.split('').map(ch => map[ch] || ch).join('');
-}
-
-function normalizeMeterTypeForGoogleForm(rawType) {
-    if (!rawType) return '';
-    const trimmed = rawType.trim();
-
-    console.log('🔍 Нормалізація типу для Google Form:', JSON.stringify(trimmed));
-
-    // 1. Спершу перевіряємо ручний словник
-    if (METER_TYPE_ALIASES[trimmed]) {
-        console.log('✅ Знайдено в словнику:', METER_TYPE_ALIASES[trimmed]);
-        return METER_TYPE_ALIASES[trimmed];
-    }
-    
-    const targetCanon = canonicalizeMeterType(trimmed);
-    for (const key in METER_TYPE_ALIASES) {
-        if (canonicalizeMeterType(key) === targetCanon) {
-            console.log('✅ Знайдено в словнику (канонізовано):', METER_TYPE_ALIASES[key]);
-            return METER_TYPE_ALIASES[key];
-        }
-    }
-
-    // 2. Точний збіг зі списком форми
-    if (GOOGLE_FORM_METER_TYPES.includes(trimmed)) {
-        console.log('✅ Точний збіг:', trimmed);
-        return trimmed;
-    }
-
-    // 3. Автоматичний пошук через уніфікацію кирилиця/латиниця
-    const exact = GOOGLE_FORM_METER_TYPES.find(t => canonicalizeMeterType(t) === targetCanon);
-    if (exact) {
-        console.log('✅ Знайдено через канонізацію:', exact);
-        return exact;
-    }
-
-    // 4. Частичний збіг
-    const candidates = GOOGLE_FORM_METER_TYPES.filter(t => {
-        const c = canonicalizeMeterType(t);
-        return c.includes(targetCanon) || targetCanon.includes(c);
-    });
-    
-    if (candidates.length === 1) {
-        console.log('✅ Єдиний кандидат:', candidates[0]);
-        return candidates[0];
-    }
-    if (candidates.length > 1) {
-        console.log('⚠️ Декілька кандидатів:', candidates);
-        return candidates[0];
-    }
-
-    console.log('❌ Нічого не знайдено, використовуємо оригінал:', trimmed);
-    return trimmed;
-}
-
-// ========== КОНВЕРТАЦІЯ ДАТИ ДЛЯ GOOGLE FORM ==========
-function convertDateToGoogleFormat(dateStr) {
-    if (!dateStr) return '';
-    
-    console.log('📅 Оригінальна дата:', dateStr);
-    
-    dateStr = dateStr.trim();
-    
-    // Формат ДД.ММ.РРРР (з точками)
-    let match = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    if (match) {
-        const result = `${match[3]}-${match[2]}-${match[1]}`;
-        console.log('✅ Конвертовано (ДД.ММ.РРРР):', result);
-        return result;
-    }
-    
-    // Формат ДД.ММ.РР (з точками, рік 2 цифри)
-    match = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);
-    if (match) {
-        let year = match[3];
-        year = parseInt(year) >= 30 ? '19' + year : '20' + year;
-        const result = `${year}-${match[2]}-${match[1]}`;
-        console.log('✅ Конвертовано (ДД.ММ.РР):', result);
-        return result;
-    }
-    
-    // Формат ДД/ММ/РРРР (з слешами)
-    match = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (match) {
-        const result = `${match[3]}-${match[2]}-${match[1]}`;
-        console.log('✅ Конвертовано (ДД/ММ/РРРР):', result);
-        return result;
-    }
-    
-    // Формат ДД-ММ-РРРР (з дефісами)
-    match = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-    if (match) {
-        const result = `${match[3]}-${match[2]}-${match[1]}`;
-        console.log('✅ Конвертовано (ДД-ММ-РРРР):', result);
-        return result;
-    }
-    
-    // Вже у форматі YYYY-MM-DD
-    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        console.log('✅ Вже у правильному форматі:', dateStr);
-        return dateStr;
-    }
-    
-    // Просто цифри (ДДММРРРР або ДДММРР)
-    const digits = dateStr.replace(/\D/g, '');
-    if (digits.length === 8) {
-        const result = `${digits.substring(4, 8)}-${digits.substring(2, 4)}-${digits.substring(0, 2)}`;
-        console.log('✅ Конвертовано (ДДММРРРР):', result);
-        return result;
-    }
-    if (digits.length === 6) {
-        let year = digits.substring(4, 6);
-        year = parseInt(year) >= 30 ? '19' + year : '20' + year;
-        const result = `${year}-${digits.substring(2, 4)}-${digits.substring(0, 2)}`;
-        console.log('✅ Конвертовано (ДДММРР):', result);
-        return result;
-    }
-    
-    // Якщо нічого не вийшло - використовуємо сьогоднішню дату
-    console.warn('⚠️ Не вдалося розпізнати дату, використовуємо сьогоднішню');
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-}
-
-// ========== ПАРСИНГ ДІАПАЗОНІВ ==========
-function parseSealRange(input) {
-    input = input.trim();
-    if (!input) return [];
-    
-    if (!input.includes('-')) {
-        return [input];
-    }
-    
-    const lastDashIndex = input.lastIndexOf('-');
-    if (lastDashIndex === -1) return [input];
-    
-    const firstPart = input.substring(0, lastDashIndex);
-    const lastPart = input.substring(lastDashIndex + 1);
-    
-    let prefix = '';
-    let startNumStr = '';
-    
-    for (let i = firstPart.length - 1; i >= 0; i--) {
-        if (firstPart[i] >= '0' && firstPart[i] <= '9') {
-            startNumStr = firstPart[i] + startNumStr;
-        } else {
-            prefix = firstPart.substring(0, i + 1);
-            break;
-        }
-    }
-    
-    if (!startNumStr) {
-        const numMatch = firstPart.match(/(\d+)$/);
-        if (numMatch) {
-            startNumStr = numMatch[1];
-            prefix = firstPart.substring(0, firstPart.length - startNumStr.length);
-        } else {
-            return [input];
-        }
-    }
-    
-    let endNumStr = lastPart.trim().replace(/\D/g, '');
-    if (!endNumStr) return [input];
-    
-    const startNum = parseInt(startNumStr, 10);
-    let endNum = parseInt(endNumStr, 10);
-    
-    if (endNumStr.length < startNumStr.length) {
-        const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
-        const diff = endNum - startEndPart;
-        endNum = startNum + diff;
-    }
-    
-    if (startNum > endNum || endNum - startNum > 10000) {
-        return [input];
-    }
-    
-    const seals = [];
-    const numLength = startNumStr.length;
-    
-    for (let i = startNum; i <= endNum; i++) {
-        const numStr = String(i).padStart(numLength, '0');
-        seals.push(prefix + numStr);
-    }
-    
-    return seals;
-}
-
-function parseMeterRange(input) {
-    input = input.trim();
-    if (!input) return [];
-    
-    if (!input.includes('-')) {
-        return [input];
-    }
-    
-    const lastDashIndex = input.lastIndexOf('-');
-    if (lastDashIndex === -1) return [input];
-    
-    const firstPart = input.substring(0, lastDashIndex);
-    const lastPart = input.substring(lastDashIndex + 1);
-    
-    let prefix = '';
-    let startNumStr = '';
-    
-    for (let i = firstPart.length - 1; i >= 0; i--) {
-        if (firstPart[i] >= '0' && firstPart[i] <= '9') {
-            startNumStr = firstPart[i] + startNumStr;
-        } else {
-            prefix = firstPart.substring(0, i + 1);
-            break;
-        }
-    }
-    
-    if (!startNumStr) {
-        const numMatch = firstPart.match(/(\d+)$/);
-        if (numMatch) {
-            startNumStr = numMatch[1];
-            prefix = firstPart.substring(0, firstPart.length - startNumStr.length);
-        } else {
-            return [input];
-        }
-    }
-    
-    let endNumStr = lastPart.trim().replace(/\D/g, '');
-    if (!endNumStr) return [input];
-    
-    const startNum = parseInt(startNumStr, 10);
-    let endNum = parseInt(endNumStr, 10);
-    
-    if (endNumStr.length < startNumStr.length) {
-        const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
-        const diff = endNum - startEndPart;
-        endNum = startNum + diff;
-    }
-    
-    if (startNum > endNum || endNum - startNum > 10000) {
-        return [input];
-    }
-    
-    const meters = [];
-    const numLength = startNumStr.length;
-    
-    for (let i = startNum; i <= endNum; i++) {
-        const numStr = String(i).padStart(numLength, '0');
-        meters.push(prefix + numStr);
-    }
-    
-    return meters;
-}
-
-// ========== PIN ФУНКЦІЇ ==========
-const CORRECT_PIN = "3268";
-
-function updatePinDisplay() {
-    if (!pinDisplay) return;
-    let masked = "";
-    for (let i = 0; i < enteredPin.length; i++) masked += "●";
-    for (let i = enteredPin.length; i < 4; i++) masked += "○";
-    pinDisplay.innerText = masked;
-}
-
-function pinAddNum(num) {
-    if (enteredPin.length < 4) {
-        enteredPin += num;
-        updatePinDisplay();
-        if (pinError) pinError.innerText = '';
-        if (enteredPin.length === 4) {
-            if (enteredPin === CORRECT_PIN) {
-                pinScreen.style.display = 'none';
-                mainApp.classList.remove('hidden');
-                loadData();
-                loadSeals();
-                loadMeters();
-                initMeterTypes();
-                setDefaultValues();
-                setupVoiceInput();
-                setupAutoClean();
-                setupVoiceSearch();
-                setupVoiceSelect();
-                setupOCR();
-                setupAI();
-                setupSealInputs();
-                setupMeterInputs();
-                setupAutoMeterTypeDetection();
-            } else {
-                if (pinError) pinError.innerText = '❌ Невірний PIN. Спробуйте 3268';
-                enteredPin = "";
-                updatePinDisplay();
-            }
-        }
-    }
-}
-
-function pinClear() { 
-    enteredPin = ""; 
-    updatePinDisplay(); 
-    if (pinError) pinError.innerText = ''; 
-}
-
-function pinCheck() {
-    if (enteredPin.length !== 4) { 
-        if (pinError) pinError.innerText = '❌ Введіть 4 цифри'; 
-        return; 
-    }
-    if (enteredPin === CORRECT_PIN) {
-        pinScreen.style.display = 'none';
-        mainApp.classList.remove('hidden');
-        loadData();
-        loadSeals();
-        loadMeters();
-        initMeterTypes();
-        setDefaultValues();
-        setupVoiceInput();
-        setupAutoClean();
-        setupVoiceSearch();
-        setupVoiceSelect();
-        setupOCR();
-        setupAI();
-        setupSealInputs();
-        setupMeterInputs();
-        setupAutoMeterTypeDetection();
-    } else {
-        if (pinError) pinError.innerText = '❌ Невірний PIN. Правильний PIN: 3268';
-        enteredPin = "";
-        updatePinDisplay();
-    }
-}
-
-function pinReset() { 
-    enteredPin = ""; 
-    updatePinDisplay(); 
-    if (pinError) pinError.innerText = '✅ PIN: 3268'; 
-    setTimeout(() => { if (pinError) pinError.innerText = ''; }, 3000); 
-}
-
-function setDefaultValues() {
-    if (newMeterReading && !newMeterReading.value) {
-        newMeterReading.value = "0000000";
-    }
-    if (workDate && !workDate.value) {
-        const today = new Date();
-        const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const yyyy = today.getFullYear();
-        workDate.value = `${dd}.${mm}.${yyyy}`;
-    }
-}
-
-// ========== ІНІЦІАЛІЗАЦІЯ ТИПІВ ЛІЧИЛЬНИКІВ ==========
 function initMeterTypes() {
     if (oldMeterType) {
         oldMeterType.innerHTML = '<option value="">-- Виберіть --</option>';
@@ -702,198 +227,39 @@ function initMeterTypes() {
             newMeterType.appendChild(option);
         });
     }
-}
-
-// ========== ОБРОБКА ВВЕДЕННЯ ПЛОМБ ==========
-function setupSealInputs() {
-    const sealInputs = document.querySelectorAll('.seal-input');
-    sealInputs.forEach(input => {
-        if (input) {
-            input.addEventListener('input', function() {
-                const cursorPos = this.selectionStart;
-                const oldValue = this.value;
-                const normalized = normalizeSealNumber(oldValue);
-                if (normalized !== oldValue) {
-                    this.value = normalized;
-                    this.setSelectionRange(cursorPos, cursorPos);
-                }
-                showSearchResults(this.id, this.value);
-            });
-            
-            input.addEventListener('blur', function() {
-                setTimeout(() => hideSearchResults(this.id), 300);
-            });
-            
-            input.addEventListener('focusout', function() {
-                if (this.value) {
-                    this.value = normalizeSealNumber(this.value);
-                }
-            });
-        }
-    });
-}
-
-// ========== ОБРОБКА ВВЕДЕННЯ ЛІЧИЛЬНИКІВ ==========
-function setupMeterInputs() {
-    const meterInputs = document.querySelectorAll('.meter-input');
-    meterInputs.forEach(input => {
-        if (input) {
-            input.addEventListener('input', function() {
-                const cursorPos = this.selectionStart;
-                const oldValue = this.value;
-                const normalized = normalizeMeterNumber(oldValue);
-                if (normalized !== oldValue) {
-                    this.value = normalized;
-                    this.setSelectionRange(cursorPos, cursorPos);
-                }
-                showMeterSearchResults(this.id, this.value);
-            });
-            
-            input.addEventListener('blur', function() {
-                setTimeout(() => hideSearchResults(this.id), 300);
-            });
-            
-            input.addEventListener('focusout', function() {
-                if (this.value) {
-                    this.value = normalizeMeterNumber(this.value);
-                    fillMeterFromDB(this, this.value);
-                }
-            });
-        }
-    });
-}
-
-// ========== АВТОМАТИЧНЕ ВИЗНАЧЕННЯ ТИПУ ЛІЧИЛЬНИКА ==========
-function autoDetectMeterType(meterNumber) {
-    if (!meterNumber) return null;
     
-    const normalized = normalizeMeterNumber(meterNumber);
-    
-    const found = meterTypesList.find(type => {
-        const normType = normalizeMeterType(type);
-        return normalized.includes(normType) || normType.includes(normalized);
-    });
-    
-    return found || null;
-}
-
-function setupAutoMeterTypeDetection() {
-    const meterNumberFields = ['oldMeterNumber', 'newMeterNumber'];
-    const meterTypeFields = ['oldMeterType', 'newMeterType'];
-    
-    meterNumberFields.forEach((numField, index) => {
-        const input = document.getElementById(numField);
-        if (!input) return;
-        
-        input.addEventListener('blur', function() {
-            const typeField = document.getElementById(meterTypeFields[index]);
-            if (!typeField || typeField.value) return;
-            if (!this.value) return;
-            
-            const detectedType = autoDetectMeterType(this.value);
-            if (detectedType) {
-                setMeterTypeValue(typeField, detectedType);
-                showToast(`✅ Визначено тип: ${detectedType}`);
+    if (oldMeterType) {
+        oldMeterType.addEventListener('change', function() {
+            const selectedValue = this.value;
+            const newTypeSelect = document.getElementById('newMeterType');
+            if (!newTypeSelect) return;
+            if (!selectedValue) {
+                newTypeSelect.value = '';
+                return;
+            }
+            let found = false;
+            for (let i = 0; i < newTypeSelect.options.length; i++) {
+                if (newTypeSelect.options[i].value === selectedValue) {
+                    newTypeSelect.selectedIndex = i;
+                    newTypeSelect.value = selectedValue;
+                    found = true;
+                    const changeEvent = new Event('change', { bubbles: true });
+                    newTypeSelect.dispatchEvent(changeEvent);
+                    newTypeSelect.style.borderColor = '#22c55e';
+                    newTypeSelect.style.backgroundColor = '#f0fdf4';
+                    setTimeout(() => {
+                        newTypeSelect.style.borderColor = '#e2e8f0';
+                        newTypeSelect.style.backgroundColor = '#f8fafc';
+                    }, 1000);
+                    showToast(`✅ Тип автоматично скопійовано: ${selectedValue}`);
+                    break;
+                }
+            }
+            if (!found && selectedValue) {
+                showToast(`⚠️ Тип "${selectedValue}" відсутній у списку встановлених`);
             }
         });
-    });
-}
-
-// ========== ЗАПОВНЕННЯ З БАЗИ ЛІЧИЛЬНИКІВ ==========
-function fillMeterFromDB(inputField, searchTerm) {
-    if (!inputField || !searchTerm) return false;
-    
-    const normalizedSearch = normalizeMeterNumber(searchTerm);
-    const found = metersDB.find(m => 
-        normalizeMeterNumber(m) === normalizedSearch ||
-        normalizeMeterNumber(m).includes(normalizedSearch)
-    );
-    
-    if (found) {
-        inputField.value = found;
-        inputField.style.borderColor = '#22c55e';
-        inputField.style.backgroundColor = '#f0fdf4';
-        setTimeout(() => {
-            inputField.style.borderColor = '#e2e8f0';
-            inputField.style.backgroundColor = '#f8fafc';
-        }, 1000);
-        showToast(`✅ Знайдено в базі: ${found}`);
-        return true;
     }
-    return false;
-}
-
-// ========== ВАЛІДАЦІЯ ==========
-function validateSeals() {
-    const sealFields = [
-        oldSealCover, oldSealVKP, oldSealSHO1, oldSealSHO2, oldSealOpto,
-        oldIMP1, oldIMP2, oldIMP3,
-        newSealCover, newSealVKP, newSealSHO1, newSealSHO2, newSealOpto,
-        newIMP1, newIMP2, newIMP3
-    ];
-    
-    let hasError = false;
-    const errors = [];
-    
-    sealFields.forEach(field => {
-        if (!field) return;
-        const value = field.value.trim();
-        if (!value) return;
-        
-        if (value.length < 4 || value.length > 20) {
-            errors.push(`⚠️ Пломба "${value}" має некоректну довжину (${value.length} символів)`);
-            hasError = true;
-        }
-        
-        if (!/^[A-Za-zА-Яа-яЇїЄєІі0-9\-]+$/.test(value)) {
-            errors.push(`⚠️ Пломба "${value}" містить недопустимі символи`);
-            hasError = true;
-        }
-    });
-    
-    if (hasError) {
-        alert('❌ Знайдено помилки в пломбах:\n\n' + errors.join('\n'));
-        return false;
-    }
-    
-    return true;
-}
-
-function validateMeters() {
-    const meterFields = [
-        { field: oldMeterNumber, name: 'Знятий лічильник' },
-        { field: newMeterNumber, name: 'Встановлений лічильник' }
-    ];
-    
-    let hasError = false;
-    const errors = [];
-    
-    meterFields.forEach(({ field, name }) => {
-        if (!field) return;
-        const value = field.value.trim();
-        if (!value) {
-            errors.push(`⚠️ Поле "${name}" не заповнене`);
-            hasError = true;
-            return;
-        }
-        
-        if (value.length < 4 || value.length > 20) {
-            errors.push(`⚠️ "${name}" має некоректну довжину (${value.length} символів): ${value}`);
-            hasError = true;
-        }
-        
-        if (!/^[A-Za-zА-Яа-яЇїЄєІі0-9\.\-]+$/.test(value)) {
-            errors.push(`⚠️ "${name}" містить недопустимі символи: ${value}`);
-            hasError = true;
-        }
-    });
-    
-    if (hasError) {
-        alert('❌ Знайдено помилки в лічильниках:\n\n' + errors.join('\n'));
-        return false;
-    }
-    
-    return true;
 }
 
 // ========== ДОПОМІЖНІ ФУНКЦІЇ ==========
@@ -917,6 +283,32 @@ function smartMeterExtract(text) {
         return digits.substring(4, digits.length - 4);
     }
     return digits;
+}
+
+function parseSealRange(input) {
+    input = input.trim();
+    const rangePattern = /^([A-Za-zА-Яа-яІіЇїЄє0-9]*?)(\d+)-(\d+)$/i;
+    const match = input.match(rangePattern);
+    if (match) {
+        const prefix = match[1];
+        const startNum = parseInt(match[2], 10);
+        let endNum = parseInt(match[3], 10);
+        const startNumStr = match[2];
+        const endNumStr = match[3];
+        if (endNumStr.length < startNumStr.length) {
+            const startEndPart = parseInt(startNumStr.slice(-endNumStr.length), 10);
+            const diff = endNum - startEndPart;
+            endNum = startNum + diff;
+        }
+        if (startNum <= endNum) {
+            const seals = [];
+            for (let i = startNum; i <= endNum; i++) {
+                seals.push(prefix + i);
+            }
+            return seals;
+        }
+    }
+    return [input];
 }
 
 function detectKeyboardLanguage(text) {
@@ -1265,10 +657,9 @@ function setupAutoClean() {
                 this.value = this.value.replace(/\s/g, '').replace(/\D/g, '');
             } else if (this.classList.contains('seal-input')) {
                 this.value = this.value.replace(/\s/g, '');
-                this.value = normalizeSealNumber(this.value);
+                this.value = toUpperCaseByLanguage(this.value);
             } else if (this.classList.contains('meter-input')) {
                 this.value = this.value.replace(/\s/g, '');
-                this.value = normalizeMeterNumber(this.value);
             } else {
                 this.value = this.value.replace(/\s/g, '');
             }
@@ -1305,7 +696,7 @@ function setupAI() {
     }
 }
 
-// ========== AI АНАЛІЗ ТЕКСТУ ==========
+// ========== AI АНАЛІЗ ТЕКСТУ (з вашим API ключем) ==========
 const OPENAI_API_KEY = "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";
 
 async function analyzeWithAI(text) {
@@ -1326,8 +717,7 @@ ${text}
 Поверни ТІЛЬКИ JSON без пояснень у такому форматі:
 {
     "date": "дата виконання роботи (ДД.ММ.РРРР)",
-    "oldMeterType": "тип знятого лічильника",
-    "newMeterType": "тип встановленого лічильника",
+    "meterType": "тип лічильника",
     "oldMeterNumber": "номер знятого лічильника",
     "oldMeterReading": "покази знятого лічильника (тільки цифри)",
     "newMeterNumber": "номер встановленого лічильника",
@@ -1386,8 +776,7 @@ function fillFieldsFromAI(data) {
     
     const fieldMap = {
         'date': 'workDate',
-        'oldMeterType': 'oldMeterType',
-        'newMeterType': 'newMeterType',
+        'meterType': 'oldMeterType',
         'oldMeterNumber': 'oldMeterNumber',
         'oldMeterReading': 'oldMeterReading',
         'newMeterNumber': 'newMeterNumber',
@@ -1619,11 +1008,12 @@ function parseAndFillFields(text) {
     let foundAny = false;
 
     // 1. Особовий рахунок
-    if (accountNumber && !accountNumber.value) {
+    const accountField = document.getElementById('accountNumber');
+    if (accountField && !accountField.value) {
         for (let line of lines) {
             const oyeMatch = line.match(/oye\s*(\d{9,10})/i);
             if (oyeMatch) {
-                accountNumber.value = oyeMatch[1];
+                accountField.value = oyeMatch[1];
                 foundAny = true;
                 console.log(`📋 Особовий (oye): ${oyeMatch[1]}`);
                 showToast(`📋 Особовий: ${oyeMatch[1]}`);
@@ -1631,7 +1021,7 @@ function parseAndFillFields(text) {
             }
             const digitsMatch = line.match(/\b(\d{9,10})\b/);
             if (digitsMatch && digitsMatch[1].length >= 9) {
-                accountNumber.value = digitsMatch[1];
+                accountField.value = digitsMatch[1];
                 foundAny = true;
                 console.log(`📋 Особовий (цифри): ${digitsMatch[1]}`);
                 showToast(`📋 Особовий: ${digitsMatch[1]}`);
@@ -1641,11 +1031,12 @@ function parseAndFillFields(text) {
     }
 
     // 2. Адреса
-    if (address && !address.value) {
+    const addressField = document.getElementById('address');
+    if (addressField && !addressField.value) {
         for (let line of lines) {
             if (line.includes('Героїв') || line.includes('вул') || line.includes('буд') || line.includes('кв') || 
                 line.includes('просп') || line.includes('пров') || line.includes('будинок')) {
-                address.value = line;
+                addressField.value = line;
                 foundAny = true;
                 console.log(`📍 Адреса: ${line}`);
                 showToast(`📍 Адреса: ${line}`);
@@ -1655,11 +1046,12 @@ function parseAndFillFields(text) {
     }
 
     // 3. Номер знятого лічильника
-    if (oldMeterNumber && !oldMeterNumber.value) {
+    const oldNumberField = document.getElementById('oldMeterNumber');
+    if (oldNumberField && !oldNumberField.value) {
         for (let line of lines) {
             const numberMatch = line.match(/номер\s*[\s\/]*(\d{6,8})/i);
             if (numberMatch) {
-                oldMeterNumber.value = numberMatch[1];
+                oldNumberField.value = numberMatch[1];
                 foundAny = true;
                 console.log(`🔢 Номер знятого: ${numberMatch[1]}`);
                 showToast(`🔢 Номер знятого: ${numberMatch[1]}`);
@@ -1667,7 +1059,7 @@ function parseAndFillFields(text) {
             }
             const digitsMatch = line.match(/\b(\d{6,8})\b/);
             if (digitsMatch && digitsMatch[1].length >= 6) {
-                oldMeterNumber.value = digitsMatch[1];
+                oldNumberField.value = digitsMatch[1];
                 foundAny = true;
                 console.log(`🔢 Номер знятого (цифри): ${digitsMatch[1]}`);
                 showToast(`🔢 Номер знятого: ${digitsMatch[1]}`);
@@ -1677,11 +1069,12 @@ function parseAndFillFields(text) {
     }
 
     // 4. Покази знятого лічильника
-    if (oldMeterReading && !oldMeterReading.value) {
+    const readingField = document.getElementById('oldMeterReading');
+    if (readingField && !readingField.value) {
         for (let line of lines) {
             const readingMatch = line.match(/показ[иі]\s*[\(\)\-]*\s*(\d{5,10})/i);
             if (readingMatch) {
-                oldMeterReading.value = readingMatch[1];
+                readingField.value = readingMatch[1];
                 foundAny = true;
                 console.log(`📊 Покази знятого: ${readingMatch[1]}`);
                 showToast(`📊 Покази знятого: ${readingMatch[1]}`);
@@ -1691,7 +1084,7 @@ function parseAndFillFields(text) {
             if (tableMatch) {
                 const reading = tableMatch.slice(1).join('');
                 if (reading.length >= 5) {
-                    oldMeterReading.value = reading;
+                    readingField.value = reading;
                     foundAny = true;
                     console.log(`📊 Покази знятого (таблиця): ${reading}`);
                     showToast(`📊 Покази знятого: ${reading}`);
@@ -1702,13 +1095,14 @@ function parseAndFillFields(text) {
     }
 
     // 5. Номер встановленого лічильника
-    if (newMeterNumber && !newMeterNumber.value) {
+    const newNumberField = document.getElementById('newMeterNumber');
+    if (newNumberField && !newNumberField.value) {
         for (let line of lines) {
             const tableMatch = line.match(/[\|\s]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*(\d)[\s\|]*/);
             if (tableMatch) {
                 const number = tableMatch.slice(1).join('');
                 if (number.length >= 5) {
-                    newMeterNumber.value = number;
+                    newNumberField.value = number;
                     foundAny = true;
                     console.log(`🔢 Номер встановленого (таблиця): ${number}`);
                     showToast(`🔢 Номер встановленого: ${number}`);
@@ -1719,12 +1113,13 @@ function parseAndFillFields(text) {
     }
 
     // 6. Пломби
-    if (oldSealCover && !oldSealCover.value) {
+    const sealCoverField = document.getElementById('oldSealCover');
+    if (sealCoverField && !sealCoverField.value) {
         for (let line of lines) {
             if (line.includes('Держспоживстандарту') || line.includes('відбиток') || line.includes('пломби')) {
                 const sealMatch = line.match(/\b(\d{6,12})\b/);
                 if (sealMatch) {
-                    oldSealCover.value = sealMatch[1];
+                    sealCoverField.value = sealMatch[1];
                     foundAny = true;
                     console.log(`🔒 Пломба кл. кришка (знята): ${sealMatch[1]}`);
                     showToast(`🔒 Пломба кл. кришка: ${sealMatch[1]}`);
@@ -1734,12 +1129,13 @@ function parseAndFillFields(text) {
         }
     }
 
-    if (oldSealVKP && !oldSealVKP.value) {
+    const sealVKPField = document.getElementById('oldSealVKP');
+    if (sealVKPField && !sealVKPField.value) {
         for (let line of lines) {
             if (line.includes('Шафа') || line.includes('облику') || line.includes('вводний') || line.includes('автомат')) {
                 const sealMatch = line.match(/\b(\d{6,12})\b/);
                 if (sealMatch) {
-                    oldSealVKP.value = sealMatch[1];
+                    sealVKPField.value = sealMatch[1];
                     foundAny = true;
                     console.log(`🔒 Пломба ВКП (знята): ${sealMatch[1]}`);
                     showToast(`🔒 Пломба ВКП: ${sealMatch[1]}`);
@@ -1750,18 +1146,20 @@ function parseAndFillFields(text) {
     }
 
     // 7. Копіюємо пломби для встановлених
-    if (newSealCover && !newSealCover.value && oldSealCover && oldSealCover.value) {
-        newSealCover.value = oldSealCover.value;
+    const newSealCoverField = document.getElementById('newSealCover');
+    if (newSealCoverField && !newSealCoverField.value && sealCoverField && sealCoverField.value) {
+        newSealCoverField.value = sealCoverField.value;
         foundAny = true;
-        console.log(`🔒 Пломба кл. кришка (встановлена): ${oldSealCover.value}`);
-        showToast(`🔒 Пломба кл. кришка встановлена: ${oldSealCover.value}`);
+        console.log(`🔒 Пломба кл. кришка (встановлена): ${sealCoverField.value}`);
+        showToast(`🔒 Пломба кл. кришка встановлена: ${sealCoverField.value}`);
     }
 
-    if (newSealVKP && !newSealVKP.value && oldSealVKP && oldSealVKP.value) {
-        newSealVKP.value = oldSealVKP.value;
+    const newSealVKPField = document.getElementById('newSealVKP');
+    if (newSealVKPField && !newSealVKPField.value && sealVKPField && sealVKPField.value) {
+        newSealVKPField.value = sealVKPField.value;
         foundAny = true;
-        console.log(`🔒 Пломба ВКП (встановлена): ${oldSealVKP.value}`);
-        showToast(`🔒 Пломба ВКП встановлена: ${oldSealVKP.value}`);
+        console.log(`🔒 Пломба ВКП (встановлена): ${sealVKPField.value}`);
+        showToast(`🔒 Пломба ВКП встановлена: ${sealVKPField.value}`);
     }
 
     console.log('✅ Результат парсингу:', foundAny ? 'Знайдено дані' : 'Нічого не знайдено');
@@ -1818,7 +1216,7 @@ function renderSealsList(filter = '') {
 function addNewSeal() {
     let newSeal = newSealInput.value.trim();
     if (!newSeal) { alert('Введіть номер пломби'); return; }
-    newSeal = normalizeSealNumber(newSeal);
+    newSeal = toUpperCaseByLanguage(newSeal);
     newSealInput.value = newSeal;
     const sealsToAdd = parseSealRange(newSeal);
     let addedCount = 0, addedSeals = [];
@@ -1835,9 +1233,7 @@ function addNewSeal() {
     if (sealSearch) sealSearch.value = '';
     renderSealsList('');
     if (addedCount > 0) {
-        const displaySeals = addedSeals.slice(0, 5);
-        const more = addedSeals.length > 5 ? `... +${addedSeals.length - 5}` : '';
-        showToast(`✅ Додано пломб: ${addedCount} (${displaySeals.join(', ')}${more})`);
+        showToast(`✅ Додано пломб: ${addedCount} (${addedSeals[0]} ... ${addedSeals[addedSeals.length-1]})`);
     } else {
         showToast(`⚠️ Всі пломби вже існують`);
     }
@@ -1893,16 +1289,13 @@ function renderMetersList(filter = '') {
 function addNewMeter() {
     const newMeter = newMeterInput.value.trim();
     if (!newMeter) { alert('Введіть номер лічильника'); return; }
-    const normalizedMeter = normalizeMeterNumber(newMeter);
-    newMeterInput.value = normalizedMeter;
-    const metersToAdd = parseMeterRange(normalizedMeter);
+    const metersToAdd = parseSealRange(newMeter);
     let addedCount = 0, addedMeters = [];
     metersToAdd.forEach(meter => {
-        const normMeter = normalizeMeterNumber(meter);
-        if (!metersDB.includes(normMeter)) {
-            metersDB.push(normMeter);
+        if (!metersDB.includes(meter)) {
+            metersDB.push(meter);
             addedCount++;
-            addedMeters.push(normMeter);
+            addedMeters.push(meter);
         }
     });
     saveMeters();
@@ -1911,9 +1304,7 @@ function addNewMeter() {
     if (meterSearch) meterSearch.value = '';
     renderMetersList('');
     if (addedCount > 0) {
-        const displayMeters = addedMeters.slice(0, 5);
-        const more = addedMeters.length > 5 ? `... +${addedMeters.length - 5}` : '';
-        showToast(`✅ Додано лічильників: ${addedCount} (${displayMeters.join(', ')}${more})`);
+        showToast(`✅ Додано лічильників: ${addedCount} (${addedMeters[0]} ... ${addedMeters[addedMeters.length-1]})`);
     } else {
         showToast(`⚠️ Всі лічильники вже існують`);
     }
@@ -1928,11 +1319,7 @@ function showSearchResults(fieldId, query) {
         container.innerHTML = ''; 
         return; 
     }
-    const normalizedQuery = normalizeSealNumber(query).toLowerCase();
-    const filtered = sealsDB.filter(s => {
-        const normalizedSeal = normalizeSealNumber(s).toLowerCase();
-        return normalizedSeal.includes(normalizedQuery);
-    });
+    const filtered = sealsDB.filter(s => s.toLowerCase().includes(query.toLowerCase()));
     if (!filtered.length) { container.classList.add('hidden'); return; }
     container.classList.remove('hidden');
     let html = '';
@@ -1974,11 +1361,7 @@ function showMeterSearchResults(fieldId, query) {
         container.innerHTML = ''; 
         return; 
     }
-    const normalizedQuery = normalizeMeterNumber(query).toLowerCase();
-    const filtered = metersDB.filter(m => {
-        const normalizedMeter = normalizeMeterNumber(m).toLowerCase();
-        return normalizedMeter.includes(normalizedQuery);
-    });
+    const filtered = metersDB.filter(m => m.toLowerCase().includes(query.toLowerCase()));
     if (!filtered.length) { container.classList.add('hidden'); return; }
     container.classList.remove('hidden');
     let html = '';
@@ -2058,7 +1441,6 @@ function getFormData() {
 }
 
 function saveAllFieldsToLog() {
-    if (!validateSeals() || !validateMeters()) return;
     const data = getFormData();
     workLog.unshift(data);
     saveData();
@@ -2170,254 +1552,102 @@ function renderFilteredLog(filteredLog) {
 
 // ========== ВІДПРАВКА В ФОРМУ ==========
 function sendToGoogleForm() {
-    // Защита от двойного нажатия
-    if (isSending) {
-        showToast('⏳ Почекайте, запит вже виконується...');
-        return;
+    if (!workType.value) { 
+        alert('❌ Виберіть виконувану роботу'); 
+        workType.focus(); 
+        return; 
+    }
+    if (!employeeId.value) { 
+        alert('❌ Введіть табельний номер'); 
+        employeeId.focus(); 
+        return; 
+    }
+    if (!accountNumber.value || accountNumber.value.length !== 10) { 
+        alert('❌ Введіть особовий рахунок (10 цифр)'); 
+        accountNumber.focus(); 
+        return; 
     }
     
-    // Получаем актуальные элементы DOM
-    const workTypeEl = document.getElementById('workType');
-    const employeeIdEl = document.getElementById('employeeId');
-    const accountNumberEl = document.getElementById('accountNumber');
-    const oldMeterTypeEl = document.getElementById('oldMeterType');
-    const newMeterTypeEl = document.getElementById('newMeterType');
-    const oldMeterNumberEl = document.getElementById('oldMeterNumber');
-    const newMeterNumberEl = document.getElementById('newMeterNumber');
-    const oldMeterReadingEl = document.getElementById('oldMeterReading');
-    const newMeterReadingEl = document.getElementById('newMeterReading');
-    const workDateEl = document.getElementById('workDate');
-    const replacementReasonEl = document.getElementById('replacementReason');
-    const addressEl = document.getElementById('address');
-    const oldSealCoverEl = document.getElementById('oldSealCover');
-    const oldSealVKPEl = document.getElementById('oldSealVKP');
-    const oldSealSHO1El = document.getElementById('oldSealSHO1');
-    const oldSealSHO2El = document.getElementById('oldSealSHO2');
-    const oldSealOptoEl = document.getElementById('oldSealOpto');
-    const oldIMP1El = document.getElementById('oldIMP1');
-    const oldIMP2El = document.getElementById('oldIMP2');
-    const oldIMP3El = document.getElementById('oldIMP3');
-    const newSealCoverEl = document.getElementById('newSealCover');
-    const newSealVKPEl = document.getElementById('newSealVKP');
-    const newSealSHO1El = document.getElementById('newSealSHO1');
-    const newSealSHO2El = document.getElementById('newSealSHO2');
-    const newSealOptoEl = document.getElementById('newSealOpto');
-    const newIMP1El = document.getElementById('newIMP1');
-    const newIMP2El = document.getElementById('newIMP2');
-    const newIMP3El = document.getElementById('newIMP3');
-
-    // Проверяем обязательные поля
-    if (!workTypeEl || !workTypeEl.value) { 
-        alert('❌ Виберіть виконувану роботу'); 
-        if (workTypeEl) workTypeEl.focus(); 
-        return; 
-    }
-    if (!employeeIdEl || !employeeIdEl.value) { 
-        alert('❌ Введіть табельний номер'); 
-        if (employeeIdEl) employeeIdEl.focus(); 
-        return; 
-    }
-    if (!accountNumberEl || !accountNumberEl.value || accountNumberEl.value.length !== 10) { 
-        alert('❌ Введіть особовий рахунок (10 цифр)'); 
-        if (accountNumberEl) accountNumberEl.focus(); 
-        return; 
-    }
-
-    // Валидация
-    if (!validateSeals()) return;
-    if (!validateMeters()) return;
-
-    // Блокируем кнопку
-    isSending = true;
-    if (sendToFormBtn) {
-        sendToFormBtn.disabled = true;
-        sendToFormBtn.textContent = '⏳ ВІДПРАВЛЯЄТЬСЯ...';
-        sendToFormBtn.style.opacity = '0.6';
-    }
-
-    try {
-        // Получаем значения
-        let workTypeVal = workTypeEl ? workTypeEl.value : '';
-        let oldMeterTypeVal = oldMeterTypeEl ? oldMeterTypeEl.value : '';
-        let newMeterTypeVal = newMeterTypeEl ? newMeterTypeEl.value : '';
-        let workDateVal = workDateEl ? workDateEl.value : '';
-        let replacementReasonVal = replacementReasonEl ? replacementReasonEl.value : '';
-        let employeeIdVal = employeeIdEl ? employeeIdEl.value : '';
-        let accountNumberVal = accountNumberEl ? accountNumberEl.value : '';
-        let addressVal = addressEl ? addressEl.value : '';
-        let oldMeterNumberVal = oldMeterNumberEl ? oldMeterNumberEl.value : '';
-        let newMeterNumberVal = newMeterNumberEl ? newMeterNumberEl.value : '';
-        let oldMeterReadingVal = oldMeterReadingEl ? oldMeterReadingEl.value : '';
-        let newMeterReadingVal = newMeterReadingEl ? newMeterReadingEl.value : '';
-        
-        // Пломбы
-        let oldSealCoverVal = oldSealCoverEl ? oldSealCoverEl.value : '';
-        let oldSealVKPVal = oldSealVKPEl ? oldSealVKPEl.value : '';
-        let oldSealSHO1Val = oldSealSHO1El ? oldSealSHO1El.value : '';
-        let oldSealSHO2Val = oldSealSHO2El ? oldSealSHO2El.value : '';
-        let oldSealOptoVal = oldSealOptoEl ? oldSealOptoEl.value : '';
-        let oldIMP1Val = oldIMP1El ? oldIMP1El.value : '';
-        let oldIMP2Val = oldIMP2El ? oldIMP2El.value : '';
-        let oldIMP3Val = oldIMP3El ? oldIMP3El.value : '';
-        let newSealCoverVal = newSealCoverEl ? newSealCoverEl.value : '';
-        let newSealVKPVal = newSealVKPEl ? newSealVKPEl.value : '';
-        let newSealSHO1Val = newSealSHO1El ? newSealSHO1El.value : '';
-        let newSealSHO2Val = newSealSHO2El ? newSealSHO2El.value : '';
-        let newSealOptoVal = newSealOptoEl ? newSealOptoEl.value : '';
-        let newIMP1Val = newIMP1El ? newIMP1El.value : '';
-        let newIMP2Val = newIMP2El ? newIMP2El.value : '';
-        let newIMP3Val = newIMP3El ? newIMP3El.value : '';
-        
-        // ===== КОНВЕРТУЄМО ДАТУ ДЛЯ GOOGLE FORM =====
-        const googleFormDate = convertDateToGoogleFormat(workDateVal);
-        
-        // ===== НОРМАЛІЗУЄМО ТИП ЗНЯТОГО ЛІЧИЛЬНИКА =====
-        const normalizedOldMeterType = normalizeMeterTypeForGoogleForm(oldMeterTypeVal);
-        const normalizedNewMeterType = normalizeMeterTypeForGoogleForm(newMeterTypeVal);
-        
-        // Маппинг причин
-        const reasonMap = {
-            'ІП (PLC)': 'IN (PLC)',
-            'Непрацюючий лічильник': 'Непрацюючий лічильник',
-            'Планова заміна (протермінований)': 'Планова заміна (протермінований)',
-            'Позапланова заміна (підгорілі клеми і т.д.)': 'Позапланова заміна (підгорілі клеми і т.д.)',
-            'Платна заміна (б/т)': 'Платна заміна (б/т)',
-            'Експертиза': 'Експертиза'
-        };
-        replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
-        
-        console.log('📤 Отправка в Google Form:');
-        console.log('  Дата (entry.814427514):', googleFormDate);
-        console.log('  Робота (entry.1609399626):', workTypeVal);
-        console.log('  Підстава (entry.2001364225):', replacementReasonVal);
-        console.log('  ТИП ЗНЯТОГО (entry.155422969):', normalizedOldMeterType);
-        console.log('  ТИП ВСТАНОВЛЕНОГО (entry.1958360409):', normalizedNewMeterType);
-        console.log('  Номер знятого (entry.1262021573):', oldMeterNumberVal);
-        console.log('  Покази знятого (entry.1666715724):', oldMeterReadingVal);
-        
-        // ===== СОБИРАЕМ ДАННЫЕ ДЛЯ POST =====
-        const formData = new FormData();
-        
-        // Основные поля
-        if (googleFormDate) formData.append('entry.814427514', googleFormDate);
-        if (replacementReasonVal) formData.append('entry.2001364225', replacementReasonVal);
-        if (workTypeVal) formData.append('entry.1609399626', workTypeVal);
-        if (accountNumberVal) formData.append('entry.244962092', accountNumberVal);
-        if (employeeIdVal) formData.append('entry.1583379400', employeeIdVal);
-        
-        // ===== ТИП ЗНЯТОГО ЛІЧИЛЬНИКА =====
-        if (normalizedOldMeterType) {
-            formData.append('entry.155422969', normalizedOldMeterType);
-            console.log('✅ Відправляємо тип знятого:', normalizedOldMeterType);
-        } else {
-            console.warn('⚠️ Тип знятого не вибрано!');
-        }
-        
-        // Тип встановленого
-        if (normalizedNewMeterType) {
-            formData.append('entry.1958360409', normalizedNewMeterType);
-        }
-        
-        // Номера и показания
-        if (oldMeterNumberVal) formData.append('entry.1262021573', oldMeterNumberVal);
-        if (oldMeterReadingVal) formData.append('entry.1666715724', oldMeterReadingVal);
-        if (newMeterNumberVal) formData.append('entry.591456354', newMeterNumberVal);
-        if (newMeterReadingVal) formData.append('entry.686446183', newMeterReadingVal);
-        
-        // Пломбы (знятые)
-        if (oldSealCoverVal) formData.append('entry.980914247', oldSealCoverVal);
-        if (oldSealVKPVal) formData.append('entry.1281985427', oldSealVKPVal);
-        if (oldSealSHO1Val) formData.append('entry.1571141896', oldSealSHO1Val);
-        if (oldSealSHO2Val) formData.append('entry.950038743', oldSealSHO2Val);
-        if (oldSealOptoVal) formData.append('entry.1825187506', oldSealOptoVal);
-        if (oldIMP1Val) formData.append('entry.851707833', oldIMP1Val);
-        if (oldIMP2Val) formData.append('entry.1653188291', oldIMP2Val);
-        if (oldIMP3Val) formData.append('entry.174981808', oldIMP3Val);
-        
-        // Пломбы (встановленные)
-        if (newSealCoverVal) formData.append('entry.1577377109', newSealCoverVal);
-        if (newSealVKPVal) formData.append('entry.1292803469', newSealVKPVal);
-        if (newSealSHO1Val) formData.append('entry.1309070612', newSealSHO1Val);
-        if (newSealSHO2Val) formData.append('entry.1176747559', newSealSHO2Val);
-        if (newSealOptoVal) formData.append('entry.67142835', newSealOptoVal);
-        if (newIMP1Val) formData.append('entry.245114888', newIMP1Val);
-        if (newIMP2Val) formData.append('entry.1581321253', newIMP2Val);
-        if (newIMP3Val) formData.append('entry.865785872', newIMP3Val);
-        
-        // Адреса
-        if (addressVal) formData.append('entry.1234567890', addressVal);
-        
-        // ===== ОТПРАВЛЯЕМ POST ЗАПРОС =====
-        const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/formResponse';
-        
-        console.log('📤 Отправка POST запроса на:', formUrl);
-        console.log('📤 Все данные:', Object.fromEntries(formData));
-        
-        // Создаем скрытую форму и отправляем
-        const hiddenForm = document.createElement('form');
-        hiddenForm.method = 'POST';
-        hiddenForm.action = formUrl;
-        hiddenForm.target = '_blank';
-        hiddenForm.style.display = 'none';
-        
-        // Копируем все данные в скрытую форму
-        for (let [key, value] of formData.entries()) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value;
-            hiddenForm.appendChild(input);
-        }
-        
-        document.body.appendChild(hiddenForm);
-        
-        // Отправляем форму
-        hiddenForm.submit();
-        
-        // Удаляем форму через секунду
-        setTimeout(() => {
-            if (document.body.contains(hiddenForm)) {
-                document.body.removeChild(hiddenForm);
-            }
-        }, 1000);
-        
-        // Сохраняем в журнал
-        const data = getFormData();
-        workLog.unshift(data);
-        saveData();
-        
-        showToast('✅ Форму відправлено!');
-        alert('✅ Дані відправлено до Google Form!\n\nЯкщо форма не відкрилась автоматично, перевірте нову вкладку.');
-        
-    } catch (error) {
-        console.error('Помилка відправки:', error);
-        alert('❌ Помилка відправки: ' + error.message);
-    } finally {
-        // Разблокируем кнопку
-        isSending = false;
-        if (sendToFormBtn) {
-            sendToFormBtn.disabled = false;
-            sendToFormBtn.textContent = '📤 ВІДПРАВИТИ В ФОРМУ';
-            sendToFormBtn.style.opacity = '1';
+    const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
+    const newMeterTypeVal = newMeterType ? newMeterType.value : '';
+    let workDateVal = workDate ? workDate.value : '';
+    let replacementReasonVal = replacementReason ? replacementReason.value : '';
+    
+    const reasonMap = {
+        'ІП (PLC)': 'IN (PLC)',
+        'Непрацюючий лічильник': 'Непрацюючий лічильник',
+        'Планова заміна (протермінований)': 'Планова заміна (протермінований)',
+        'Платна заміна (б/т)': 'Платна заміна (б/т)',
+        'Експертиза': 'Експертиза'
+    };
+    replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
+    
+    if (workDateVal) {
+        const parts = workDateVal.split('.');
+        if (parts.length === 3) {
+            workDateVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
     }
+    
+    console.log('=== ВІДПРАВКА В ФОРМУ ===');
+    console.log('Дата:', workDateVal);
+    console.log('Підстава:', replacementReasonVal);
+    console.log('Тип знятого:', oldMeterTypeVal);
+    console.log('Тип встановленого:', newMeterTypeVal);
+    
+    const params = new URLSearchParams();
+    
+    if (workDateVal) params.append('entry.814427514', workDateVal);
+    if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
+    
+    params.append('entry.1609399626', workType.value);
+    params.append('entry.244962092', accountNumber.value);
+    params.append('entry.1583379400', employeeId.value);
+    
+    if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
+    if (oldMeterNumber && oldMeterNumber.value) params.append('entry.1262021573', oldMeterNumber.value);
+    if (oldMeterReading && oldMeterReading.value) params.append('entry.1666715724', oldMeterReading.value);
+    
+    if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
+    if (oldSealVKP && oldSealVKP.value) params.append('entry.1281985427', oldSealVKP.value);
+    if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.1571141896', oldSealSHO1.value);
+    if (oldSealSHO2 && oldSealSHO2.value) params.append('entry.950038743', oldSealSHO2.value);
+    if (oldSealOpto && oldSealOpto.value) params.append('entry.1825187506', oldSealOpto.value);
+    if (oldIMP1 && oldIMP1.value) params.append('entry.851707833', oldIMP1.value);
+    if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
+    if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
+    
+    if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
+    if (newMeterNumber && newMeterNumber.value) params.append('entry.591456354', newMeterNumber.value);
+    if (newMeterReading && newMeterReading.value) params.append('entry.686446183', newMeterReading.value);
+    
+    if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
+    if (newSealVKP && newSealVKP.value) params.append('entry.1292803469', newSealVKP.value);
+    if (newSealSHO1 && newSealSHO1.value) params.append('entry.1309070612', newSealSHO1.value);
+    if (newSealSHO2 && newSealSHO2.value) params.append('entry.1176747559', newSealSHO2.value);
+    if (newSealOpto && newSealOpto.value) params.append('entry.67142835', newSealOpto.value);
+    if (newIMP1 && newIMP1.value) params.append('entry.245114888', newIMP1.value);
+    if (newIMP2 && newIMP2.value) params.append('entry.1581321253', newIMP2.value);
+    if (newIMP3 && newIMP3.value) params.append('entry.865785872', newIMP3.value);
+    
+    if (address && address.value) params.append('entry.1234567890', address.value);
+    
+    const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
+    console.log('URL форми (довжина):', formUrl.length);
+    window.open(formUrl, '_blank');
+    
+    const data = getFormData();
+    workLog.unshift(data);
+    saveData();
+    alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
 
-// ========== ОТКРЫТИЕ ФОРМЫ ==========
 function openGoogleForm() {
     window.open('https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform', '_blank');
-    showToast('📋 Форму відкрито для ручного заповнення');
 }
 
 // ========== ВІДПРАВКА ВСІХ ДАНИХ ВЛАСНИКУ ==========
 function sendAllDataToOwner() {
-    if (isSending) {
-        showToast('⏳ Почекайте, запит вже виконується...');
-        return;
-    }
-    
-    if (!validateSeals() || !validateMeters()) return;
-    
     if (!workType.value) {
         alert('❌ Виберіть виконувану роботу');
         workType.focus();
@@ -2434,75 +1664,54 @@ function sendAllDataToOwner() {
         return;
     }
     
-    isSending = true;
-    const sendAllBtn = document.getElementById('sendAllBtn');
-    if (sendAllBtn) {
-        sendAllBtn.disabled = true;
-        sendAllBtn.textContent = '⏳ ВІДПРАВЛЯЄТЬСЯ...';
-        sendAllBtn.style.opacity = '0.6';
-    }
-    
-    try {
-        const data = getFormData();
-        let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
-        message += `📅 Дата виконання: ${workDate?.value || '—'}\n`;
-        message += `📋 Підстава: ${replacementReason?.value || '—'}\n`;
-        message += `📋 Робота: ${data.workType}\n`;
-        message += `👤 Табельний: ${data.employeeId}\n`;
-        message += `📋 Особовий: ${data.accountNumber}\n\n`;
-        message += '🔻 **Знятий лічильник**\n';
-        message += `Тип: ${data.oldMeterType || '—'}\n`;
-        message += `Номер: ${data.oldMeterNumber || '—'}\n`;
-        message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
-        message += '🔻 **Зняті пломби**\n';
-        const oldSeals = [
-            `кл. кришка: ${data.oldSealCover || '—'}`,
-            `ВКП: ${data.oldSealVKP || '—'}`,
-            `ШО (1): ${data.oldSealSHO1 || '—'}`,
-            `ШО (2): ${data.oldSealSHO2 || '—'}`,
-            `оптопорт: ${data.oldSealOpto || '—'}`,
-            `ИМП (1): ${data.oldIMP1 || '—'}`,
-            `ИМП (2): ${data.oldIMP2 || '—'}`,
-            `ИМП (3): ${data.oldIMP3 || '—'}`
-        ].filter(s => !s.includes('—'));
-        message += oldSeals.length ? oldSeals.join('\n') : '—\n';
-        message += '\n';
-        message += '🔺 **Встановлений лічильник**\n';
-        message += `Тип: ${data.newMeterType || '—'}\n`;
-        message += `Номер: ${data.newMeterNumber || '—'}\n`;
-        message += `Покази: ${data.newMeterReading || '0000000'}\n\n`;
-        message += '🔺 **Встановлені пломби**\n';
-        const newSeals = [
-            `кл. кришка: ${data.newSealCover || '—'}`,
-            `ВКП: ${data.newSealVKP || '—'}`,
-            `ШО (1): ${data.newSealSHO1 || '—'}`,
-            `ШО (2): ${data.newSealSHO2 || '—'}`,
-            `оптопорт: ${data.newSealOpto || '—'}`,
-            `ИМП (1): ${data.newIMP1 || '—'}`,
-            `ИМП (2): ${data.newIMP2 || '—'}`,
-            `ИМП (3): ${data.newIMP3 || '—'}`
-        ].filter(s => !s.includes('—'));
-        message += newSeals.length ? newSeals.join('\n') : '—\n';
-        message += '\n';
-        message += `📍 Адреса: ${data.address || '—'}\n`;
-        const encodedMessage = encodeURIComponent(message);
-        const telegramUrl = `https://t.me/share/url?url=${encodedMessage}`;
-        window.open(telegramUrl, '_blank');
-        workLog.unshift(data);
-        saveData();
-        showToast('📨 Дані відправлено власнику!');
-    } catch (error) {
-        console.error('Помилка:', error);
-        alert('❌ Помилка: ' + error.message);
-    } finally {
-        isSending = false;
-        const sendAllBtn = document.getElementById('sendAllBtn');
-        if (sendAllBtn) {
-            sendAllBtn.disabled = false;
-            sendAllBtn.textContent = '📨 ВІДПРАВИТИ ВЛАСНИКУ';
-            sendAllBtn.style.opacity = '1';
-        }
-    }
+    const data = getFormData();
+    let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
+    message += `📅 Дата виконання: ${workDate?.value || '—'}\n`;
+    message += `📋 Підстава: ${replacementReason?.value || '—'}\n`;
+    message += `📋 Робота: ${data.workType}\n`;
+    message += `👤 Табельний: ${data.employeeId}\n`;
+    message += `📋 Особовий: ${data.accountNumber}\n\n`;
+    message += '🔻 **Знятий лічильник**\n';
+    message += `Тип: ${data.oldMeterType || '—'}\n`;
+    message += `Номер: ${data.oldMeterNumber || '—'}\n`;
+    message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
+    message += '🔻 **Зняті пломби**\n';
+    const oldSeals = [
+        `кл. кришка: ${data.oldSealCover || '—'}`,
+        `ВКП: ${data.oldSealVKP || '—'}`,
+        `ШО (1): ${data.oldSealSHO1 || '—'}`,
+        `ШО (2): ${data.oldSealSHO2 || '—'}`,
+        `оптопорт: ${data.oldSealOpto || '—'}`,
+        `ИМП (1): ${data.oldIMP1 || '—'}`,
+        `ИМП (2): ${data.oldIMP2 || '—'}`,
+        `ИМП (3): ${data.oldIMP3 || '—'}`
+    ].filter(s => !s.includes('—'));
+    message += oldSeals.length ? oldSeals.join('\n') : '—\n';
+    message += '\n';
+    message += '🔺 **Встановлений лічильник**\n';
+    message += `Тип: ${data.newMeterType || '—'}\n`;
+    message += `Номер: ${data.newMeterNumber || '—'}\n`;
+    message += `Покази: ${data.newMeterReading || '0000000'}\n\n`;
+    message += '🔺 **Встановлені пломби**\n';
+    const newSeals = [
+        `кл. кришка: ${data.newSealCover || '—'}`,
+        `ВКП: ${data.newSealVKP || '—'}`,
+        `ШО (1): ${data.newSealSHO1 || '—'}`,
+        `ШО (2): ${data.newSealSHO2 || '—'}`,
+        `оптопорт: ${data.newSealOpto || '—'}`,
+        `ИМП (1): ${data.newIMP1 || '—'}`,
+        `ИМП (2): ${data.newIMP2 || '—'}`,
+        `ИМП (3): ${data.newIMP3 || '—'}`
+    ].filter(s => !s.includes('—'));
+    message += newSeals.length ? newSeals.join('\n') : '—\n';
+    message += '\n';
+    message += `📍 Адреса: ${data.address || '—'}\n`;
+    const encodedMessage = encodeURIComponent(message);
+    const telegramUrl = `https://t.me/share/url?url=${encodedMessage}`;
+    window.open(telegramUrl, '_blank');
+    workLog.unshift(data);
+    saveData();
+    showToast('📨 Дані відправлено власнику!');
 }
 
 // ========== ЖУРНАЛ ==========
@@ -2661,7 +1870,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     { fps: 10, qrbox: { width: 250, height: 250 } },
                     (decodedText) => {
                         let result = decodedText.trim();
-                        result = normalizeSealNumber(result);
                         if (newSealInput) newSealInput.value = result;
                         reader.stop().then(() => {
                             tempContainer.classList.add('hidden');
