@@ -6,6 +6,7 @@ let metersDB = [];
 let activeScanners = {};
 let currentSearchTerm = "";
 let useAI = false;
+let isSending = false;
 
 // DOM елементи
 const pinDisplay = document.getElementById('pinDisplay');
@@ -498,9 +499,6 @@ function initMeterTypes() {
             newMeterType.appendChild(option);
         });
     }
-    
-    // ===== УБРАНО АВТОМАТИЧНЕ КОПІЮВАННЯ =====
-    // Користувач самостійно обирає тип для кожного лічильника
 }
 
 // ========== ОБРОБКА ВВЕДЕННЯ ПЛОМБ ==========
@@ -1967,98 +1965,164 @@ function renderFilteredLog(filteredLog) {
     });
 }
 
-// ========== ВІДПРАВКА В ФОРМУ ==========
+// ========== ВІДПРАВКА В ФОРМУ (ИСПРАВЛЕННАЯ) ==========
 function sendToGoogleForm() {
-    if (!validateSeals() || !validateMeters()) return;
+    // Защита от двойного нажатия
+    if (isSending) {
+        showToast('⏳ Почекайте, запит вже виконується...');
+        return;
+    }
     
-    if (!workType.value) { 
+    // Получаем актуальные элементы DOM каждый раз при вызове
+    const workTypeEl = document.getElementById('workType');
+    const employeeIdEl = document.getElementById('employeeId');
+    const accountNumberEl = document.getElementById('accountNumber');
+    const oldMeterTypeEl = document.getElementById('oldMeterType');
+    const newMeterTypeEl = document.getElementById('newMeterType');
+    const oldMeterNumberEl = document.getElementById('oldMeterNumber');
+    const newMeterNumberEl = document.getElementById('newMeterNumber');
+    const oldMeterReadingEl = document.getElementById('oldMeterReading');
+    const newMeterReadingEl = document.getElementById('newMeterReading');
+    const workDateEl = document.getElementById('workDate');
+    const replacementReasonEl = document.getElementById('replacementReason');
+    const addressEl = document.getElementById('address');
+    const oldSealCoverEl = document.getElementById('oldSealCover');
+    const oldSealVKPEl = document.getElementById('oldSealVKP');
+    const oldSealSHO1El = document.getElementById('oldSealSHO1');
+    const oldSealSHO2El = document.getElementById('oldSealSHO2');
+    const oldSealOptoEl = document.getElementById('oldSealOpto');
+    const oldIMP1El = document.getElementById('oldIMP1');
+    const oldIMP2El = document.getElementById('oldIMP2');
+    const oldIMP3El = document.getElementById('oldIMP3');
+    const newSealCoverEl = document.getElementById('newSealCover');
+    const newSealVKPEl = document.getElementById('newSealVKP');
+    const newSealSHO1El = document.getElementById('newSealSHO1');
+    const newSealSHO2El = document.getElementById('newSealSHO2');
+    const newSealOptoEl = document.getElementById('newSealOpto');
+    const newIMP1El = document.getElementById('newIMP1');
+    const newIMP2El = document.getElementById('newIMP2');
+    const newIMP3El = document.getElementById('newIMP3');
+
+    // Проверяем обязательные поля
+    if (!workTypeEl || !workTypeEl.value) { 
         alert('❌ Виберіть виконувану роботу'); 
-        workType.focus(); 
+        if (workTypeEl) workTypeEl.focus(); 
         return; 
     }
-    if (!employeeId.value) { 
+    if (!employeeIdEl || !employeeIdEl.value) { 
         alert('❌ Введіть табельний номер'); 
-        employeeId.focus(); 
+        if (employeeIdEl) employeeIdEl.focus(); 
         return; 
     }
-    if (!accountNumber.value || accountNumber.value.length !== 10) { 
+    if (!accountNumberEl || !accountNumberEl.value || accountNumberEl.value.length !== 10) { 
         alert('❌ Введіть особовий рахунок (10 цифр)'); 
-        accountNumber.focus(); 
+        if (accountNumberEl) accountNumberEl.focus(); 
         return; 
     }
-    
-    const oldMeterTypeVal = oldMeterType ? oldMeterType.value : '';
-    const newMeterTypeVal = newMeterType ? newMeterType.value : '';
-    let workDateVal = workDate ? workDate.value : '';
-    let replacementReasonVal = replacementReason ? replacementReason.value : '';
-    
-    const reasonMap = {
-        'ІП (PLC)': 'IN (PLC)',
-        'Непрацюючий лічильник': 'Непрацюючий лічильник',
-        'Планова заміна (протермінований)': 'Планова заміна (протермінований)',
-        'Платна заміна (б/т)': 'Платна заміна (б/т)',
-        'Експертиза': 'Експертиза'
-    };
-    replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
-    
-    if (workDateVal) {
-        const parts = workDateVal.split('.');
-        if (parts.length === 3) {
-            workDateVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+    // Валидация пломб и личильников
+    if (!validateSeals()) return;
+    if (!validateMeters()) return;
+
+    // Блокируем кнопку
+    isSending = true;
+    if (sendToFormBtn) {
+        sendToFormBtn.disabled = true;
+        sendToFormBtn.textContent = '⏳ ВІДПРАВЛЯЄТЬСЯ...';
+        sendToFormBtn.style.opacity = '0.6';
+    }
+
+    try {
+        const oldMeterTypeVal = oldMeterTypeEl ? oldMeterTypeEl.value : '';
+        const newMeterTypeVal = newMeterTypeEl ? newMeterTypeEl.value : '';
+        let workDateVal = workDateEl ? workDateEl.value : '';
+        let replacementReasonVal = replacementReasonEl ? replacementReasonEl.value : '';
+        
+        const reasonMap = {
+            'ІП (PLC)': 'IN (PLC)',
+            'Непрацюючий лічильник': 'Непрацюючий лічильник',
+            'Планова заміна (протермінований)': 'Планова заміна (протермінований)',
+            'Платна заміна (б/т)': 'Платна заміна (б/т)',
+            'Експертиза': 'Експертиза'
+        };
+        replacementReasonVal = reasonMap[replacementReasonVal] || replacementReasonVal;
+        
+        if (workDateVal) {
+            const parts = workDateVal.split('.');
+            if (parts.length === 3) {
+                workDateVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+        
+        console.log('=== ВІДПРАВКА В ФОРМУ ===');
+        console.log('Дата:', workDateVal);
+        console.log('Підстава:', replacementReasonVal);
+        console.log('Тип знятого:', oldMeterTypeVal);
+        console.log('Тип встановленого:', newMeterTypeVal);
+        
+        const params = new URLSearchParams();
+        
+        if (workDateVal) params.append('entry.814427514', workDateVal);
+        if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
+        
+        params.append('entry.1609399626', workTypeEl.value);
+        params.append('entry.244962092', accountNumberEl.value);
+        params.append('entry.1583379400', employeeIdEl.value);
+        
+        if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
+        if (oldMeterNumberEl && oldMeterNumberEl.value) params.append('entry.1262021573', oldMeterNumberEl.value);
+        if (oldMeterReadingEl && oldMeterReadingEl.value) params.append('entry.1666715724', oldMeterReadingEl.value);
+        
+        if (oldSealCoverEl && oldSealCoverEl.value) params.append('entry.980914247', oldSealCoverEl.value);
+        if (oldSealVKPEl && oldSealVKPEl.value) params.append('entry.1281985427', oldSealVKPEl.value);
+        if (oldSealSHO1El && oldSealSHO1El.value) params.append('entry.1571141896', oldSealSHO1El.value);
+        if (oldSealSHO2El && oldSealSHO2El.value) params.append('entry.950038743', oldSealSHO2El.value);
+        if (oldSealOptoEl && oldSealOptoEl.value) params.append('entry.1825187506', oldSealOptoEl.value);
+        if (oldIMP1El && oldIMP1El.value) params.append('entry.851707833', oldIMP1El.value);
+        if (oldIMP2El && oldIMP2El.value) params.append('entry.1653188291', oldIMP2El.value);
+        if (oldIMP3El && oldIMP3El.value) params.append('entry.174981808', oldIMP3El.value);
+        
+        if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
+        if (newMeterNumberEl && newMeterNumberEl.value) params.append('entry.591456354', newMeterNumberEl.value);
+        if (newMeterReadingEl && newMeterReadingEl.value) params.append('entry.686446183', newMeterReadingEl.value);
+        
+        if (newSealCoverEl && newSealCoverEl.value) params.append('entry.1577377109', newSealCoverEl.value);
+        if (newSealVKPEl && newSealVKPEl.value) params.append('entry.1292803469', newSealVKPEl.value);
+        if (newSealSHO1El && newSealSHO1El.value) params.append('entry.1309070612', newSealSHO1El.value);
+        if (newSealSHO2El && newSealSHO2El.value) params.append('entry.1176747559', newSealSHO2El.value);
+        if (newSealOptoEl && newSealOptoEl.value) params.append('entry.67142835', newSealOptoEl.value);
+        if (newIMP1El && newIMP1El.value) params.append('entry.245114888', newIMP1El.value);
+        if (newIMP2El && newIMP2El.value) params.append('entry.1581321253', newIMP2El.value);
+        if (newIMP3El && newIMP3El.value) params.append('entry.865785872', newIMP3El.value);
+        
+        if (addressEl && addressEl.value) params.append('entry.1234567890', addressEl.value);
+        
+        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
+        console.log('URL форми (довжина):', formUrl.length);
+        
+        // Открываем форму в новой вкладке
+        window.open(formUrl, '_blank');
+        
+        // Сохраняем в журнал
+        const data = getFormData();
+        workLog.unshift(data);
+        saveData();
+        
+        showToast('✅ Google Form відкрито!');
+        alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
+        
+    } catch (error) {
+        console.error('Помилка відправки:', error);
+        alert('❌ Помилка відправки: ' + error.message);
+    } finally {
+        // Разблокируем кнопку
+        isSending = false;
+        if (sendToFormBtn) {
+            sendToFormBtn.disabled = false;
+            sendToFormBtn.textContent = '📤 ВІДПРАВИТИ В ФОРМУ';
+            sendToFormBtn.style.opacity = '1';
         }
     }
-    
-    console.log('=== ВІДПРАВКА В ФОРМУ ===');
-    console.log('Дата:', workDateVal);
-    console.log('Підстава:', replacementReasonVal);
-    console.log('Тип знятого:', oldMeterTypeVal);
-    console.log('Тип встановленого:', newMeterTypeVal);
-    
-    const params = new URLSearchParams();
-    
-    if (workDateVal) params.append('entry.814427514', workDateVal);
-    if (replacementReasonVal) params.append('entry.2001364225', replacementReasonVal);
-    
-    params.append('entry.1609399626', workType.value);
-    params.append('entry.244962092', accountNumber.value);
-    params.append('entry.1583379400', employeeId.value);
-    
-    if (oldMeterTypeVal) params.append('entry.155422969', oldMeterTypeVal);
-    if (oldMeterNumber && oldMeterNumber.value) params.append('entry.1262021573', oldMeterNumber.value);
-    if (oldMeterReading && oldMeterReading.value) params.append('entry.1666715724', oldMeterReading.value);
-    
-    if (oldSealCover && oldSealCover.value) params.append('entry.980914247', oldSealCover.value);
-    if (oldSealVKP && oldSealVKP.value) params.append('entry.1281985427', oldSealVKP.value);
-    if (oldSealSHO1 && oldSealSHO1.value) params.append('entry.1571141896', oldSealSHO1.value);
-    if (oldSealSHO2 && oldSealSHO2.value) params.append('entry.950038743', oldSealSHO2.value);
-    if (oldSealOpto && oldSealOpto.value) params.append('entry.1825187506', oldSealOpto.value);
-    if (oldIMP1 && oldIMP1.value) params.append('entry.851707833', oldIMP1.value);
-    if (oldIMP2 && oldIMP2.value) params.append('entry.1653188291', oldIMP2.value);
-    if (oldIMP3 && oldIMP3.value) params.append('entry.174981808', oldIMP3.value);
-    
-    if (newMeterTypeVal) params.append('entry.1958360409', newMeterTypeVal);
-    if (newMeterNumber && newMeterNumber.value) params.append('entry.591456354', newMeterNumber.value);
-    if (newMeterReading && newMeterReading.value) params.append('entry.686446183', newMeterReading.value);
-    
-    if (newSealCover && newSealCover.value) params.append('entry.1577377109', newSealCover.value);
-    if (newSealVKP && newSealVKP.value) params.append('entry.1292803469', newSealVKP.value);
-    if (newSealSHO1 && newSealSHO1.value) params.append('entry.1309070612', newSealSHO1.value);
-    if (newSealSHO2 && newSealSHO2.value) params.append('entry.1176747559', newSealSHO2.value);
-    if (newSealOpto && newSealOpto.value) params.append('entry.67142835', newSealOpto.value);
-    if (newIMP1 && newIMP1.value) params.append('entry.245114888', newIMP1.value);
-    if (newIMP2 && newIMP2.value) params.append('entry.1581321253', newIMP2.value);
-    if (newIMP3 && newIMP3.value) params.append('entry.865785872', newIMP3.value);
-    
-    if (address && address.value) params.append('entry.1234567890', address.value);
-    
-    const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSfj1wXEHe0VsHAmkIY_MWK_a9cbzDgyIPmPJ3h1lCijIwAL-A/viewform?usp=pp_url&${params.toString()}`;
-    console.log('URL форми (довжина):', formUrl.length);
-    window.open(formUrl, '_blank');
-    
-    const data = getFormData();
-    workLog.unshift(data);
-    saveData();
-    alert('✅ Google Form відкрито!\n\nВсі поля заповнені автоматично.\nПеревірте та натисніть "Надіслати".');
 }
 
 function openGoogleForm() {
@@ -2067,6 +2131,11 @@ function openGoogleForm() {
 
 // ========== ВІДПРАВКА ВСІХ ДАНИХ ВЛАСНИКУ ==========
 function sendAllDataToOwner() {
+    if (isSending) {
+        showToast('⏳ Почекайте, запит вже виконується...');
+        return;
+    }
+    
     if (!validateSeals() || !validateMeters()) return;
     
     if (!workType.value) {
@@ -2085,54 +2154,75 @@ function sendAllDataToOwner() {
         return;
     }
     
-    const data = getFormData();
-    let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
-    message += `📅 Дата виконання: ${workDate?.value || '—'}\n`;
-    message += `📋 Підстава: ${replacementReason?.value || '—'}\n`;
-    message += `📋 Робота: ${data.workType}\n`;
-    message += `👤 Табельний: ${data.employeeId}\n`;
-    message += `📋 Особовий: ${data.accountNumber}\n\n`;
-    message += '🔻 **Знятий лічильник**\n';
-    message += `Тип: ${data.oldMeterType || '—'}\n`;
-    message += `Номер: ${data.oldMeterNumber || '—'}\n`;
-    message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
-    message += '🔻 **Зняті пломби**\n';
-    const oldSeals = [
-        `кл. кришка: ${data.oldSealCover || '—'}`,
-        `ВКП: ${data.oldSealVKP || '—'}`,
-        `ШО (1): ${data.oldSealSHO1 || '—'}`,
-        `ШО (2): ${data.oldSealSHO2 || '—'}`,
-        `оптопорт: ${data.oldSealOpto || '—'}`,
-        `ИМП (1): ${data.oldIMP1 || '—'}`,
-        `ИМП (2): ${data.oldIMP2 || '—'}`,
-        `ИМП (3): ${data.oldIMP3 || '—'}`
-    ].filter(s => !s.includes('—'));
-    message += oldSeals.length ? oldSeals.join('\n') : '—\n';
-    message += '\n';
-    message += '🔺 **Встановлений лічильник**\n';
-    message += `Тип: ${data.newMeterType || '—'}\n`;
-    message += `Номер: ${data.newMeterNumber || '—'}\n`;
-    message += `Покази: ${data.newMeterReading || '0000000'}\n\n`;
-    message += '🔺 **Встановлені пломби**\n';
-    const newSeals = [
-        `кл. кришка: ${data.newSealCover || '—'}`,
-        `ВКП: ${data.newSealVKP || '—'}`,
-        `ШО (1): ${data.newSealSHO1 || '—'}`,
-        `ШО (2): ${data.newSealSHO2 || '—'}`,
-        `оптопорт: ${data.newSealOpto || '—'}`,
-        `ИМП (1): ${data.newIMP1 || '—'}`,
-        `ИМП (2): ${data.newIMP2 || '—'}`,
-        `ИМП (3): ${data.newIMP3 || '—'}`
-    ].filter(s => !s.includes('—'));
-    message += newSeals.length ? newSeals.join('\n') : '—\n';
-    message += '\n';
-    message += `📍 Адреса: ${data.address || '—'}\n`;
-    const encodedMessage = encodeURIComponent(message);
-    const telegramUrl = `https://t.me/share/url?url=${encodedMessage}`;
-    window.open(telegramUrl, '_blank');
-    workLog.unshift(data);
-    saveData();
-    showToast('📨 Дані відправлено власнику!');
+    isSending = true;
+    const sendAllBtn = document.getElementById('sendAllBtn');
+    if (sendAllBtn) {
+        sendAllBtn.disabled = true;
+        sendAllBtn.textContent = '⏳ ВІДПРАВЛЯЄТЬСЯ...';
+        sendAllBtn.style.opacity = '0.6';
+    }
+    
+    try {
+        const data = getFormData();
+        let message = '📋 **ЗВІТ ПРО РОБОТУ**\n\n';
+        message += `📅 Дата виконання: ${workDate?.value || '—'}\n`;
+        message += `📋 Підстава: ${replacementReason?.value || '—'}\n`;
+        message += `📋 Робота: ${data.workType}\n`;
+        message += `👤 Табельний: ${data.employeeId}\n`;
+        message += `📋 Особовий: ${data.accountNumber}\n\n`;
+        message += '🔻 **Знятий лічильник**\n';
+        message += `Тип: ${data.oldMeterType || '—'}\n`;
+        message += `Номер: ${data.oldMeterNumber || '—'}\n`;
+        message += `Покази: ${data.oldMeterReading || '—'}\n\n`;
+        message += '🔻 **Зняті пломби**\n';
+        const oldSeals = [
+            `кл. кришка: ${data.oldSealCover || '—'}`,
+            `ВКП: ${data.oldSealVKP || '—'}`,
+            `ШО (1): ${data.oldSealSHO1 || '—'}`,
+            `ШО (2): ${data.oldSealSHO2 || '—'}`,
+            `оптопорт: ${data.oldSealOpto || '—'}`,
+            `ИМП (1): ${data.oldIMP1 || '—'}`,
+            `ИМП (2): ${data.oldIMP2 || '—'}`,
+            `ИМП (3): ${data.oldIMP3 || '—'}`
+        ].filter(s => !s.includes('—'));
+        message += oldSeals.length ? oldSeals.join('\n') : '—\n';
+        message += '\n';
+        message += '🔺 **Встановлений лічильник**\n';
+        message += `Тип: ${data.newMeterType || '—'}\n`;
+        message += `Номер: ${data.newMeterNumber || '—'}\n`;
+        message += `Покази: ${data.newMeterReading || '0000000'}\n\n`;
+        message += '🔺 **Встановлені пломби**\n';
+        const newSeals = [
+            `кл. кришка: ${data.newSealCover || '—'}`,
+            `ВКП: ${data.newSealVKP || '—'}`,
+            `ШО (1): ${data.newSealSHO1 || '—'}`,
+            `ШО (2): ${data.newSealSHO2 || '—'}`,
+            `оптопорт: ${data.newSealOpto || '—'}`,
+            `ИМП (1): ${data.newIMP1 || '—'}`,
+            `ИМП (2): ${data.newIMP2 || '—'}`,
+            `ИМП (3): ${data.newIMP3 || '—'}`
+        ].filter(s => !s.includes('—'));
+        message += newSeals.length ? newSeals.join('\n') : '—\n';
+        message += '\n';
+        message += `📍 Адреса: ${data.address || '—'}\n`;
+        const encodedMessage = encodeURIComponent(message);
+        const telegramUrl = `https://t.me/share/url?url=${encodedMessage}`;
+        window.open(telegramUrl, '_blank');
+        workLog.unshift(data);
+        saveData();
+        showToast('📨 Дані відправлено власнику!');
+    } catch (error) {
+        console.error('Помилка:', error);
+        alert('❌ Помилка: ' + error.message);
+    } finally {
+        isSending = false;
+        const sendAllBtn = document.getElementById('sendAllBtn');
+        if (sendAllBtn) {
+            sendAllBtn.disabled = false;
+            sendAllBtn.textContent = '📨 ВІДПРАВИТИ ВЛАСНИКУ';
+            sendAllBtn.style.opacity = '1';
+        }
+    }
 }
 
 // ========== ЖУРНАЛ ==========
